@@ -1,0 +1,9 @@
+syntax="proto3";
+
+message ClientCommandRequestMessage {
+ string instanceId=1;
+ string sessionId=2;
+ string commandType=3;
+ string command=4;
+ string messageId=5;
+}

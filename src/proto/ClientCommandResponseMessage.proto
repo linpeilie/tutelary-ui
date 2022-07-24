@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+message ClientCommandResponseMessage {
+  string sessionId = 1;
+  string command = 2;
+  string commandType = 3;
+  Object data = 4;
+  bool status = 5;
+  string message = 6;
+  string messageId = 7;
+}
+message Object {
+}
