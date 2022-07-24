@@ -10,6 +10,7 @@
 
 const { configure } = require('quasar/wrappers')
 
+
 module.exports = configure(function (/* ctx */) {
   return {
     eslint: {
@@ -29,7 +30,8 @@ module.exports = configure(function (/* ctx */) {
     // https://v2.quasar.dev/quasar-cli/boot-files
     boot: [
       'protobuf',
-      'axios'
+      'axios',
+      'websocket'
     ],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css

@@ -6,7 +6,6 @@ import { ref } from 'vue'
 
 const PROTOCOL_TAB = ref({})
 
-console.log('protobuf boot')
 for (const ele of CMD_PROTO) {
   const cmd = ele.cmd
   const proto = ele.proto
@@ -23,18 +22,23 @@ for (const ele of CMD_PROTO) {
       console.log('找不到.proto文件', proto)
       throw new Error('找不到对应的.proto文件 : ' + proto)
     }
-    console.log('proto加入协议表成功', proto)
     PROTOCOL_TAB[cmd] = messageCodec
   })
 }
 
-const decode = (cmd, message) => {
+const decode = (message) => {
+  const dataView = new DataView(message)
+  const cmd = dataView.getUint8(0)
+  const dataLength = dataView.getUint32(1)
+  const body = dataView.buffer.slice(5, dataLength + 5)
   const codec = PROTOCOL_TAB[cmd]
   if (!codec) {
     console.warn(`没有找到对应的解码器, cmd : ${cmd}`)
     return
   }
-  return codec.decode(message)
+  const result = codec.decode(new Uint8Array(body))
+  result.cmd = cmd
+  return result
 }
 
 const encode = (cmd, message) => {
@@ -43,9 +47,7 @@ const encode = (cmd, message) => {
     console.warn(`没有找到对应的解码器, cmd : ${cmd}`)
     return
   }
-  console.log('=>(protobuf.js:48) message', message)
   const msg = codec.create(message)
-  console.log('=>(protobuf.js:48) msg', msg)
   const bytes = codec.encode(msg).finish()
   const byteLength = bytes.byteLength
   const buffer = new ArrayBuffer(byteLength + 5)
@@ -62,3 +64,8 @@ export default boot(({ app }) => {
   app.config.globalProperties.$protobufDecode = decode
   app.config.globalProperties.$protobufEncode = encode
 })
+
+export {
+  encode,
+  decode
+}
