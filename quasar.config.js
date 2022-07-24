@@ -10,6 +10,8 @@
 
 const { configure } = require('quasar/wrappers')
 
+import api from 'src/config/api'
+
 module.exports = configure(function (/* ctx */) {
   return {
     eslint: {
@@ -29,7 +31,8 @@ module.exports = configure(function (/* ctx */) {
     // https://v2.quasar.dev/quasar-cli/boot-files
     boot: [
       'protobuf',
-      'axios'
+      'axios',
+      'websocket'
     ],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
@@ -87,7 +90,7 @@ module.exports = configure(function (/* ctx */) {
       // https: true
       open: true, // opens browser window automatically
       proxy: {
-        '/api': 'http://localhost:8080'
+        '/api': api.httpBaseUrl
       }
     },
 

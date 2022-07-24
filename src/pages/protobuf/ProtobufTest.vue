@@ -3,6 +3,7 @@
     <div class="row inline q-gutter-md items-center q-mb-md">
       <q-select outlined v-model="selectedProtobuf" :options="options" label="Protobuf" style="width: 500px"/>
       <q-btn label="确定" color="primary" @click="trans"/>
+      <q-btn label="发送" color="primary" @click="sendMessage"/>
     </div>
     <div class="row">
       <div class="q-pa-md" style="width: 45%">
@@ -29,10 +30,12 @@
 
 <script setup>
 import { computed, ref, getCurrentInstance } from 'vue'
+import { useStore } from 'vuex'
 import { CMD_PROTO } from 'src/proto/proto'
 import { Base64 } from 'js-base64'
 
 const instance = getCurrentInstance()
+const store = useStore()
 
 const input = ref('')
 
@@ -49,16 +52,27 @@ const options = computed(() => {
 
 const selectedProtobuf = ref(options.value[0])
 
-const trans = () => {
+const getEncodeValue = () => {
   console.log('=>(ProtobufTest.vue:59) selectedProtobuf', selectedProtobuf.value)
   let data = input.value
   data = JSON.parse(data)
   console.log('输入内容', data)
-  const value = instance.appContext.config.globalProperties.$protobufEncode(selectedProtobuf.value.value, data)
+  return instance.appContext.config.globalProperties.$protobufEncode(selectedProtobuf.value.value, data)
+}
+
+const trans = () => {
+  const value = getEncodeValue()
   const uint8Array = new Uint8Array(value)
   const base64Value = Base64.fromUint8Array(uint8Array)
   console.log('=>(ProtobufTest.vue:59) base64Value', base64Value)
   output.value = base64Value
+}
+
+const sendMessage = () => {
+  store.dispatch('sendMessage', {
+    cmd: selectedProtobuf.value.value,
+    message: JSON.parse(input.value)
+  })
 }
 
 </script>

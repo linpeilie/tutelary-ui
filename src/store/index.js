@@ -3,6 +3,7 @@ import { createStore } from 'vuex'
 
 // import example from './module-example'
 import permission from './modules/permissions'
+import websocket from './modules/websocket'
 
 /*
  * If not building with SSR mode, you can
@@ -17,7 +18,8 @@ export default store(function (/* { ssrContext } */) {
   const Store = createStore({
     modules: {
       // example
-      permission
+      permission,
+      websocket
     },
 
     // enable strict mode (adds overhead!)
