@@ -10,7 +10,6 @@
 
 const { configure } = require('quasar/wrappers')
 
-import api from 'src/config/api'
 
 module.exports = configure(function (/* ctx */) {
   return {
@@ -90,7 +89,7 @@ module.exports = configure(function (/* ctx */) {
       // https: true
       open: true, // opens browser window automatically
       proxy: {
-        '/api': api.httpBaseUrl
+        '/api': 'http://localhost:8080'
       }
     },
 
