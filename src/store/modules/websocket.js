@@ -1,4 +1,13 @@
 import { encode, decode } from 'boot/protobuf'
+import { COMMAND_RESPONSE_CMD } from 'src/proto/proto'
+import { emitCommand } from 'boot/eventbus'
+
+const handleOnMessage = (message) => {
+  console.log('=>(websocket.js:30) data', message)
+  if (message.cmd === COMMAND_RESPONSE_CMD) {
+    emitCommand(message.commandType, message.command, message)
+  }
+}
 
 export default {
   state: {
@@ -29,7 +38,8 @@ export default {
       const reader = new FileReader()
       reader.onload = () => {
         const data = decode(reader.result)
-        console.log('=>(websocket.js:30) data', data)
+
+        handleOnMessage(data)
       }
       reader.readAsArrayBuffer(message.data)
     }, // 自动重连

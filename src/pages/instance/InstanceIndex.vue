@@ -29,24 +29,27 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import InstanceBaseInfo from './components/InstanceBaseInfo.vue'
+import { ref, shallowRef } from 'vue'
+import InstanceDashboard from './components/InstanceDashboard.vue'
 import InstanceJvmInfo from './components/InstanceJvmInfo.vue'
+
+const instanceDashboard = shallowRef(InstanceDashboard)
+const instanceJvmInfo = shallowRef(InstanceJvmInfo)
 
 const tabOptions = ref([
   {
-    label: '基本信息',
-    value: 'BaseInfo',
-    component: InstanceBaseInfo
+    label: '实例面板',
+    value: 'Dashboard',
+    component: instanceDashboard
   },
   {
     label: 'JVM信息',
     value: 'JvmInfo',
-    component: InstanceJvmInfo
+    component: instanceJvmInfo
   }
 ])
 
-const selectedTab = ref('BaseInfo')
+const selectedTab = ref('Dashboard')
 
 </script>
 
