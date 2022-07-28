@@ -1,13 +1,16 @@
-syntax = "proto3";
-
-message ClientCommandResponseMessage {
-  string sessionId = 1;
-  string command = 2;
-  string commandType = 3;
-  Object data = 4;
-  bool status = 5;
-  string message = 6;
-  string messageId = 7;
+syntax="proto3";
+package com.tutelary.message;
+option java_outer_classname = "ClientCommandResponseMessage$$ByJProtobuf";
+//
+message ClientCommandResponseMessage {  
+ string sessionId=1;
+ string command=2;
+ string commandType=3;
+ Any data=4;
+ bool status=5;
+ string message=6;
 }
-message Object {
+message Any {  
+ string codecClass=1;
+ bytes byteArray=2;
 }

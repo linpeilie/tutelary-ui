@@ -1,9 +1,10 @@
 syntax="proto3";
-
-message ClientCommandRequestMessage {
+package com.tutelary.message;
+option java_outer_classname = "ClientCommandRequestMessage$$ByJProtobuf";
+//
+message ClientCommandRequestMessage {  
  string instanceId=1;
  string sessionId=2;
  string commandType=3;
  string command=4;
- string messageId=5;
 }
