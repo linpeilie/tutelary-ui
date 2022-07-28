@@ -14,6 +14,12 @@ const PrivateRoutes = [
     icon: 'apps'
   },
   {
+    path: '/instance',
+    component: () => import('pages/instance/InstanceIndex.vue'),
+    title: '实例详情',
+    icon: 'monitor_heart'
+  },
+  {
     path: '/protobuf',
     component: () => import('pages/protobuf/ProtobufTest.vue'),
     title: 'Protobuf序列化',

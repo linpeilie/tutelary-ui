@@ -1,8 +1,9 @@
-syntax = "proto3";
-
-message ErrorMessage {
-  string last_cmd = 1;
-  bool status = 2;
-  string message = 3;
-  string message_id = 4;
+syntax="proto3";
+package com.tutelary.message;
+option java_outer_classname = "ErrorMessage$$ByJProtobuf";
+//
+message ErrorMessage {  
+ string lastCmd=1;
+ bool status=2;
+ string message=3;
 }
