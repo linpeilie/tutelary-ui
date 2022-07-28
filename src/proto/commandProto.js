@@ -5,5 +5,11 @@ export const COMMAND_PROTO = [
     command: 'jvm',
     proto: 'JvmCommandResultMessage',
     description: 'JVM 信息'
+  },
+  {
+    type: 'arthas',
+    command: 'dashboard',
+    proto: 'DashboardCommandResultMessage',
+    description: '实例面板'
   }
 ]
