@@ -1,29 +1,41 @@
 <template>
-  <div>
-    <q-table
-      :rows="threadList"
-      :columns="columns"
-      separator="horizontal"
-      hide-pagination
-      flat
-      row-key="id">
-      <template v-slot:top>
-        <div class="col-2 q-table__title">Thread</div>
-        <q-space/>
-        <div class="q-table__title">线程数 : {{ threadList.length }}</div>
-      </template>
-    </q-table>
+  <div class="q-pa-md row justify-evenly">
+    <q-card class="col-8">
+      <q-table
+        :rows="threadList"
+        :columns="threadColumns"
+        separator="horizontal"
+        hide-pagination
+        title="Thread"
+        flat
+        row-key="id">
+        <template v-slot:top-right>
+          <div class="q-table__title">线程数 : {{ threadList.length }}</div>
+        </template>
+      </q-table>
+    </q-card>
   </div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, inject, watch, computed } from 'vue'
 import { onCommand, offCommand } from 'boot/eventbus'
 import { useStore } from 'vuex'
 
 const store = useStore()
 
-const columns = ref([
+const instance = inject('instance')
+
+const instanceId = computed(() => {
+  return instance.value.instanceId
+})
+
+watch(instanceId, (current, prev) => {
+    sendDashboradCommand(current)
+  }
+)
+
+const threadColumns = [
   {
     name: 'ID',
     label: 'ID',
@@ -68,32 +80,42 @@ const columns = ref([
     field: 'daemon',
     align: 'center'
   }
-])
+]
 
 const threadList = ref([])
 
+const runtime = ref({})
+
+const memoryInfo = ref({})
+
+const garbageCollectors = ref([])
+
 const handleDashboardMessage = (message) => {
-  console.log('meeeee', message)
+  console.log('dashboard message ', message)
   if (message.status) {
     threadList.value = message.data.threads
+    runtime.value = message.data.runtime
+    memoryInfo.value = message.data.memoryInfo
+    garbageCollectors.value = message.data.garbageCollectors
   }
 }
 
-onMounted(() => {
-  console.log('InstanceDashboard onMounted')
-  onCommand('arthas', 'dashboard', handleDashboardMessage)
+const sendDashboradCommand = (instanceId) => {
   const param = {
     commandType: 'arthas',
-    instanceId: 'ea417d983e8447ceae064e69fc34142e',
+    instanceId: instanceId,
     command: 'dashboard'
   }
   store.dispatch('sendMessage', {
     cmd: 3,
     message: param
   })
+}
+
+onMounted(() => {
+  onCommand('arthas', 'dashboard', handleDashboardMessage)
 })
 onUnmounted(() => {
-  console.log('InstanceDashboard onUnmounted')
   offCommand('arthas', 'dashboard', handleDashboardMessage)
 })
 </script>

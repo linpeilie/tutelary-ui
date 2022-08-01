@@ -10,17 +10,16 @@
 
 const { configure } = require('quasar/wrappers')
 
-
 module.exports = configure(function (/* ctx */) {
   return {
-    eslint: {
+    // eslint: {
       // fix: true,
       // include = [],
       // exclude = [],
       // rawOptions = {},
-      warnings: true,
-      errors: true
-    },
+      // warnings: true,
+      // errors: true
+    // },
 
     // https://v2.quasar.dev/quasar-cli/prefetch-feature
     // preFetch: true,
@@ -89,7 +88,7 @@ module.exports = configure(function (/* ctx */) {
       // https: true
       open: true, // opens browser window automatically
       proxy: {
-        '/api': 'http://localhost:8080'
+        '/api': 'http://localhost:9988'
       }
     },
 
