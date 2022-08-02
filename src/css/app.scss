@@ -3,5 +3,9 @@
 // q-card
 .q-card {
   box-shadow: 0 0 20px rgb(0 0 0 / 5%);
-  border-radius: 12px;
+}
+
+
+.q-field--filled .q-field__control {
+  border-radius: $generic-border-radius $generic-border-radius $generic-border-radius $generic-border-radius;
 }

@@ -1,18 +1,27 @@
 <template>
   <div class="q-pa-md row justify-evenly">
-    <q-card class="col-8">
+    <q-card style="width: 66%">
       <q-table
         :rows="threadList"
         :columns="threadColumns"
         separator="horizontal"
-        hide-pagination
         title="Thread"
         flat
-        row-key="id">
+        row-key="name">
         <template v-slot:top-right>
           <div class="q-table__title">线程数 : {{ threadList.length }}</div>
         </template>
       </q-table>
+    </q-card>
+    <q-card style="width: 30%">
+      <descriptions :column="2" title="Runtime">
+        <description-item label="OS Name" :content="runtime.osName"/>
+        <description-item label="OS Version" :content="runtime.osVersion"/>
+        <description-item label="JavaHome" :content="runtime.javaHome" :span="2"/>
+        <description-item label="javaVersion" :content="runtime.javaVersion" :span="2"/>
+        <description-item label="processors" :content="runtime.processors" :span="2"/>
+        <description-item label="uptime" :content="formatDate(runtime.uptime)" :span="2"/>
+      </descriptions>
     </q-card>
   </div>
 </template>
@@ -21,6 +30,7 @@
 import { onMounted, onUnmounted, ref, inject, watch, computed } from 'vue'
 import { onCommand, offCommand } from 'boot/eventbus'
 import { useStore } from 'vuex'
+import { formatDate } from 'src/utils/date'
 
 const store = useStore()
 

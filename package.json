@@ -12,6 +12,7 @@
   "dependencies": {
     "@quasar/extras": "^1.0.0",
     "axios": "^0.21.1",
+    "dayjs": "^1.11.4",
     "js-base64": "^3.7.2",
     "protobufjs": "^7.0.0",
     "quasar": "^2.6.0",
