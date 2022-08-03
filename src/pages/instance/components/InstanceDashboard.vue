@@ -96,7 +96,7 @@ const threadList = ref([])
 
 const runtime = ref({})
 
-const memoryInfo = ref({})
+const memoryInfo = ref([])
 
 const garbageCollectors = ref([])
 
@@ -105,7 +105,11 @@ const handleDashboardMessage = (message) => {
   if (message.status) {
     threadList.value = message.data.threads
     runtime.value = message.data.runtime
-    memoryInfo.value = message.data.memoryInfo
+    let memoryInfoList = []
+    memoryInfoList = memoryInfoList.concat(message.data.memoryInfo.heap)
+    memoryInfoList = memoryInfoList.concat(message.data.memoryInfo.nonHeap)
+    memoryInfoList = memoryInfoList.concat(message.data.memoryInfo.bufferPool)
+    memoryInfo.value = memoryInfoList
     garbageCollectors.value = message.data.garbageCollectors
   }
 }
