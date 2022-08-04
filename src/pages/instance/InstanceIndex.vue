@@ -32,7 +32,7 @@
           />
         </q-card-section>
 
-        <q-tabs v-model="selectedTab">
+        <q-tabs v-model="selectedTab" align="left">
           <q-tab v-for="tabItem of tabOptions"
                  :key="tabItem.value"
                  :label="tabItem.label"

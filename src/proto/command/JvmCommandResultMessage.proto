@@ -16,6 +16,25 @@ repeated MemoryManager memoryManagers=5;
  string message=11;
 }
 //
+message GarbageCollector {  
+ string name=1;
+ int64 collectionCount=2;
+ int64 collectionTime=3;
+}
+//
+message MemoryManager {  
+ string name=1;
+repeated string memoryPoolNames=2;
+}
+//
+message OperatingSystem {  
+ string os=1;
+ string arch=2;
+ int32 processorsCount=3;
+ double loadAverage=4;
+ string version=5;
+}
+//
 message RuntimeInfo {  
  string machineName=1;
  string jvmStartTime=2;
@@ -37,31 +56,12 @@ message MemoryInfo {
 //
 message MemoryUsage {  
  string name=1;
- int64 init=2;
- int64 used=3;
- int64 committed=4;
- int64 max=5;
-}
-//
-message OperatingSystem {  
- string os=1;
- string arch=2;
- int32 processorsCount=3;
- double loadAverage=4;
- string version=5;
-}
-//
-message ThreadInfo {  
- int32 count=1;
- int32 daemonCount=2;
- int32 peakCount=3;
- int64 startedCount=4;
- int32 deadlockCount=5;
-}
-//
-message Compilation {  
- string name=1;
- int64 totalCompileTime=2;
+ string type=2;
+ int64 init=3;
+ int64 used=4;
+ int64 committed=5;
+ int64 max=6;
+ int64 total=7;
 }
 //
 message ClassLoading {  
@@ -71,13 +71,15 @@ message ClassLoading {
  bool isVerbose=4;
 }
 //
-message GarbageCollector {  
+message Compilation {  
  string name=1;
- int64 collectionCount=2;
- int64 collectionTime=3;
+ int64 totalCompileTime=2;
 }
 //
-message MemoryManager {  
- string name=1;
-repeated string memoryPoolNames=2;
+message ThreadInfo {  
+ int32 count=1;
+ int32 daemonCount=2;
+ int32 peakCount=3;
+ int64 startedCount=4;
+ int32 deadlockCount=5;
 }

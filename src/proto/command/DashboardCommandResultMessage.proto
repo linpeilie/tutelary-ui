@@ -25,19 +25,10 @@ message ThreadDetailInfo {
  bool daemon=10;
 }
 //
-message DashboardMemoryInfo {  
-repeated MemoryUsage heap=1;
-repeated MemoryUsage nonHeap=2;
-repeated MemoryUsage bufferPool=3;
-}
-//
-message MemoryUsage {  
+message GarbageCollector {  
  string name=1;
- string type=2;
- int64 init=3;
- int64 used=4;
- int64 committed=5;
- int64 max=6;
+ int64 collectionCount=2;
+ int64 collectionTime=3;
 }
 //
 message DashboardRuntime {  
@@ -51,8 +42,18 @@ message DashboardRuntime {
  int64 uptime=8;
 }
 //
-message GarbageCollector {  
+message DashboardMemoryInfo {  
+repeated MemoryUsage heap=1;
+repeated MemoryUsage nonHeap=2;
+repeated MemoryUsage bufferPool=3;
+}
+//
+message MemoryUsage {  
  string name=1;
- int64 collectionCount=2;
- int64 collectionTime=3;
+ string type=2;
+ int64 init=3;
+ int64 used=4;
+ int64 committed=5;
+ int64 max=6;
+ int64 total=7;
 }
