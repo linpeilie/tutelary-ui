@@ -32,6 +32,14 @@
           />
         </q-card-section>
 
+        <q-card-section v-if="selectedInstance">
+          <descriptions :column="1">
+            <description-item label="App Name" :content="selectedInstance.appName"/>
+            <description-item label="IP" :content="selectedInstance.ip"/>
+            <description-item label="Register Date" :content="selectedInstance.registerDate"/>
+          </descriptions>
+        </q-card-section>
+
         <q-tabs v-model="selectedTab" align="left">
           <q-tab v-for="tabItem of tabOptions"
                  :key="tabItem.value"
@@ -55,9 +63,11 @@ import { ref, shallowRef, onMounted, provide, readonly } from 'vue'
 import { getAction, postAction } from 'src/api/manage'
 import InstanceDashboard from './components/InstanceDashboard.vue'
 import InstanceJvmInfo from './components/InstanceJvmInfo.vue'
+import InstanceThreadList from 'pages/instance/components/InstanceThreadList.vue'
 
 const instanceDashboard = shallowRef(InstanceDashboard)
 const instanceJvmInfo = shallowRef(InstanceJvmInfo)
+const instanceThreadList = shallowRef(InstanceThreadList)
 
 const originalAppList = ref([])
 const originalInstanceList = ref([])
@@ -128,6 +138,11 @@ const tabOptions = ref([
     label: 'JVM信息',
     value: 'JvmInfo',
     component: instanceJvmInfo
+  },
+  {
+    label: '线程信息',
+    value: 'ThreadList',
+    component: instanceThreadList
   }
 ])
 

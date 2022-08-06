@@ -80,20 +80,8 @@
         row-key="name"></q-table>
     </q-card>
   </div>
-  <q-page-sticky position="bottom-right" :offset="[18, 18]">
-    <q-card class="q-pa-md bottom-right-card">
-      <span class="q-mr-md">更新时间 {{ updateTime }}</span>
-      <q-toggle
-        class="q-mr-md"
-        v-model="autoRefresh"
-        color="teal-10"
-        checked-icon="check"
-        unchecked-icon="clear"
-        label="自动刷新"
-      />
-      <q-btn outline round color="black" icon="refresh" @click="refresh"/>
-    </q-card>
-  </q-page-sticky>
+  <auto-refresh-sticky :update-time="updateTime"
+                        @refresh="refresh"/>
 </template>
 
 <script setup>
@@ -103,6 +91,7 @@ import { useStore } from 'vuex'
 import { formatDate } from 'src/utils/date'
 import { divide } from 'src/utils/math'
 import dayjs from 'dayjs'
+import AutoRefreshSticky from 'pages/instance/components/AutoRefreshSticky.vue'
 
 const store = useStore()
 
@@ -217,14 +206,12 @@ const garbageCollectors = ref([])
 
 const updateTime = ref('')
 
-const autoRefresh = ref(false)
-
 const handleDashboardMessage = (message) => {
   console.log('dashboard message ', message)
   updateTime.value = dayjs().format('MM-DD HH:mm:ss')
   if (message.status) {
     threadList.value = message.data.threads
-    runtime.value = message.data.runtime
+    runtime.value = message.data.runtime || {}
     let memoryInfoList = []
     let memoryData = message.data.memoryInfo
     const heapChildren = memoryData.heap.slice(1)
@@ -284,9 +271,4 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.bottom-right-card {
-  background: $blue-grey-2;
-  color: black;
-  opacity: 0.5;
-}
 </style>
