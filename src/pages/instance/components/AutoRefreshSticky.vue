@@ -1,6 +1,6 @@
 <template>
-  <q-page-sticky position="bottom-right" :offset="[18, 18]">
-    <q-card class="q-pa-md bottom-right-card">
+  <q-page-sticky position="bottom-right" :offset="fabPos">
+    <q-card class="q-pa-md bottom-right-card" v-touch-pan.prevent.mouse="moveFab">
       <span class="q-mr-md" v-if="updateTime">更新时间 {{ updateTime }}</span>
       <q-toggle
         class="q-mr-md"
@@ -12,16 +12,22 @@
         @update:model-value="changeAutoRefreshStatus"
       />
       <q-btn outline round color="black" icon="refresh" @click="refresh"/>
+      <q-tooltip :delay="1000"> 可长按拖动</q-tooltip>
     </q-card>
   </q-page-sticky>
 </template>
 
 <script setup>
-import { defineProps, ref, defineEmits } from 'vue'
+import { defineProps, ref, defineEmits, onUnmounted } from 'vue'
 
 const props = defineProps({
-  updateTime: { type: String, default: '' }
+  updateTime: {
+    type: String,
+    default: ''
+  }
 })
+
+const fabPos = ref([18, 18])
 
 const emits = defineEmits(['refresh'])
 
@@ -40,6 +46,17 @@ const changeAutoRefreshStatus = (value) => {
     clearInterval(timer)
   }
 }
+
+const moveFab = (ev) => {
+  fabPos.value = [
+    fabPos.value[0] - ev.delta.x,
+    fabPos.value[1] - ev.delta.y
+  ]
+}
+
+onUnmounted(() => {
+  clearInterval(timer)
+})
 </script>
 
 <style scoped lang="scss">

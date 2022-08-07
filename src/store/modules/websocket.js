@@ -4,7 +4,7 @@ import { emitCommand } from 'boot/eventbus'
 
 const handleOnMessage = (message) => {
   if (message.cmd === COMMAND_RESPONSE_CMD) {
-    emitCommand(message.commandType, message.command, message)
+    emitCommand(message.commandType, message.commandCode, message)
   }
 }
 

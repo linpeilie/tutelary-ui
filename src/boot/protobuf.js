@@ -34,7 +34,7 @@ for (const ele of CMD_PROTO) {
 
 for (const ele of COMMAND_PROTO) {
   const type = ele.type
-  const command = ele.command
+  const commandCode = ele.commandCode
   const proto = ele.proto
   if (!proto) {
     continue
@@ -49,14 +49,14 @@ for (const ele of COMMAND_PROTO) {
       console.error('找不到.proto文件', proto)
       throw new Error('找不到对应的.proto文件 : ' + proto)
     }
-    const commandKey = getCommandKey(type, command)
+    const commandKey = getCommandKey(type, commandCode)
     COMMAND_PROTOCCOL_TAB[commandKey] = messageCodec
   })
 }
 
 const handleCommandResponse = (result) => {
   if (result.status) {
-    const commandKey = getCommandKey(result.commandType, result.command)
+    const commandKey = getCommandKey(result.commandType, result.commandCode)
     const codec = COMMAND_PROTOCCOL_TAB[commandKey]
     if (!codec) {
       result.status = false

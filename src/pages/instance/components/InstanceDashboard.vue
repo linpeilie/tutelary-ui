@@ -63,7 +63,9 @@
           </q-tr>
           <q-tr v-show="props.expand" :props="props" v-for="child in props.row.children">
             <q-td></q-td>
-            <q-td v-for="col in props.cols" :key="col.name + '-' + child.name" class="text-center text-weight-light">{{ child[col.field] }}</q-td>
+            <q-td v-for="col in props.cols" :key="col.name + '-' + child.name" class="text-center text-weight-light">
+              {{ child[col.field] }}
+            </q-td>
           </q-tr>
         </template>
       </q-table>
@@ -81,7 +83,7 @@
     </q-card>
   </div>
   <auto-refresh-sticky :update-time="updateTime"
-                        @refresh="refresh"/>
+                       @refresh="refresh"/>
 </template>
 
 <script setup>
@@ -92,8 +94,11 @@ import { formatDate } from 'src/utils/date'
 import { divide } from 'src/utils/math'
 import dayjs from 'dayjs'
 import AutoRefreshSticky from 'pages/instance/components/AutoRefreshSticky.vue'
+import useGetGlobalProperties from 'src/composables/useGetGlobalProperties'
+import { dashboardCommandCode } from 'src/proto/commandProto'
 
 const store = useStore()
+const globalProperties = useGetGlobalProperties()
 
 const instance = inject('instance')
 
@@ -101,10 +106,9 @@ const instanceId = computed(() => {
   return instance.value.instanceId
 })
 
-watch(instanceId, (current, prev) => {
-    sendDashboradCommand(current)
-  }
-)
+watch(instanceId, (val) => {
+  sendDashboradCommand(val)
+})
 
 const threadColumns = [
   {
@@ -191,9 +195,25 @@ const memoryColumns = [
 ]
 
 const garbageCollectorsColumns = [
-  { name: 'name', label: 'Name', field: 'name', align: 'center' },
-  { name: 'collectionCount', label: 'CollectionCount', field: 'collectionCount', align: 'center' },
-  { name: 'collectionTime', label: 'CollectionTime', field: 'collectionTime', align: 'center', format: val => `${val} ms` },
+  {
+    name: 'name',
+    label: 'Name',
+    field: 'name',
+    align: 'center'
+  },
+  {
+    name: 'collectionCount',
+    label: 'CollectionCount',
+    field: 'collectionCount',
+    align: 'center'
+  },
+  {
+    name: 'collectionTime',
+    label: 'CollectionTime',
+    field: 'collectionTime',
+    align: 'center',
+    format: val => `${val} ms`
+  },
 ]
 
 const threadList = ref([])
@@ -207,13 +227,16 @@ const garbageCollectors = ref([])
 const updateTime = ref('')
 
 const handleDashboardMessage = (message) => {
-  console.log('dashboard message ', message)
   updateTime.value = dayjs().format('MM-DD HH:mm:ss')
   if (message.status) {
-    threadList.value = message.data.threads
+    threadList.value = message.data.threads || []
     runtime.value = message.data.runtime || {}
+    garbageCollectors.value = message.data.garbageCollectors || []
     let memoryInfoList = []
-    let memoryData = message.data.memoryInfo
+    let memoryData = message.data.memoryInfo || {}
+    if (!memoryData.heap) {
+      return
+    }
     const heapChildren = memoryData.heap.slice(1)
     heapChildren.forEach(v => {
       v.useRatio = divide(v.used, v.max, 2) + '%'
@@ -242,31 +265,34 @@ const handleDashboardMessage = (message) => {
     memoryInfoList.push(nonHeap)
     memoryInfoList.push(bufferPool)
     memoryInfo.value = memoryInfoList
-    garbageCollectors.value = message.data.garbageCollectors
   }
 }
 
 const refresh = () => {
-  sendDashboradCommand(instanceId.value)
+  if (instanceId.value) {
+    sendDashboradCommand(instanceId.value)
+  }
 }
 
 const sendDashboradCommand = (instanceId) => {
   const param = {
-    commandType: 'arthas',
+    commandType: globalProperties.$arthasType,
     instanceId: instanceId,
-    command: 'dashboard'
+    command: 'dashboard',
+    commandCode: dashboardCommandCode
   }
   store.dispatch('sendMessage', {
-    cmd: 3,
+    cmd: globalProperties.$commandRequestCmd,
     message: param
   })
 }
 
 onMounted(() => {
-  onCommand('arthas', 'dashboard', handleDashboardMessage)
+  onCommand(globalProperties.$arthasType, dashboardCommandCode, handleDashboardMessage)
+  refresh()
 })
 onUnmounted(() => {
-  offCommand('arthas', 'dashboard', handleDashboardMessage)
+  offCommand(globalProperties.$arthasType, dashboardCommandCode, handleDashboardMessage)
 })
 </script>
 

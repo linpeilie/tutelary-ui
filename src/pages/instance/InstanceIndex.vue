@@ -1,7 +1,7 @@
 <template>
   <q-page>
     <div>
-      <q-card class="q-gutter-md">
+      <q-card class="q-gutter-md bg-grey-1">
         <q-card-section class="row q-gutter-md">
           <q-select
             filled
@@ -40,8 +40,9 @@
           </descriptions>
         </q-card-section>
 
-        <q-tabs v-model="selectedTab" align="left">
+        <q-tabs v-model="selectedTab" align="left" active-class="shadow-3">
           <q-tab v-for="tabItem of tabOptions"
+                 class="rounded-borders"
                  :key="tabItem.value"
                  :label="tabItem.label"
                  :name="tabItem.value"/>
@@ -115,12 +116,9 @@ const appUpdated = (appName) => {
 }
 
 const instanceUpdated = (instance) => {
-  console.log('=>(InstanceIndex.vue:98) val', instance)
-  console.log('selected instance index : ', instance.instanceId)
 }
 
 onMounted(() => {
-  console.log('on mounted')
   postAction('/api/app/list', {})
     .then(res => {
       originalAppList.value = res.data.data.map(v => v.appName)
@@ -150,9 +148,18 @@ const selectedTab = ref('Dashboard')
 
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 .q-tab-panel {
   padding: 0 !important;
   background: #fafafa;
 }
+
+.q-tabs__content {
+  padding: 14px;
+}
+
+.q-tab__indicator {
+  background: transparent;
+}
+
 </style>
