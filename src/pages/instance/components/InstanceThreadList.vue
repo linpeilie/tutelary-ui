@@ -6,6 +6,7 @@
         :columns="threadColumns"
         separator="horizontal"
         flat
+        @row-click="handleRowClick"
         row-key="name">
         <template v-slot:top-left>
           <div class="row inline items-center">
@@ -143,11 +144,13 @@ watch(instanceId, (val) => {
 
 onMounted(() => {
   onCommand(globalPropertiese.$arthasType, threadListCommandCode, handleThreadListMessage)
+  onCommand(globalPropertiese.$arthasType, threadStackTraceCommandCode, handleThreadStackTraceMessage)
   refresh()
 })
 
 onUnmounted(() => {
   offCommand(globalPropertiese.$arthasType, threadListCommandCode, handleThreadListMessage)
+  offCommand(globalPropertiese.$arthasType, threadStackTraceCommandCode, handleThreadStackTraceMessage)
 })
 
 const threadInfo = ref({})
@@ -200,6 +203,30 @@ const handleThreadListMessage = (message) => {
   updatedTime.value = dayjs().format('MM-DD HH:mm:ss')
   console.log('=>(InstanceThreadList.vue:57) message', message)
   threadInfo.value = message.data
+}
+
+const handleRowClick = (evt, row, index) => {
+  console.log("=>(InstanceThreadList.vue:206) index", index);
+  console.log("=>(InstanceThreadList.vue:206) row", row);
+  console.log("=>(InstanceThreadList.vue:206) evt", evt);
+  sendThreadStackTraceCommand(row.id)
+}
+
+const sendThreadStackTraceCommand = (threadId) => {
+  const param = {
+    commandType: globalPropertiese.$arthasType,
+    instanceId: instanceId.value,
+    command: `thread ${threadId}`,
+    commandCode: threadStackTraceCommandCode
+  }
+  store.dispatch('sendMessage', {
+    cmd: globalPropertiese.$commandRequestCmd,
+    message: param
+  })
+}
+
+const handleThreadStackTraceMessage = (message) => {
+  console.log("=>(InstanceThreadList.vue:213) message", message);
 }
 
 </script>

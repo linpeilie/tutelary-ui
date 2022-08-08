@@ -25,11 +25,17 @@ message ThreadInfo {
  int64 waitedTime=13;
  int64 waitedCount=14;
  string lockName=15;
- int64 lockOwnerName=16;
- bool inNative=17;
- bool suspended=18;
-repeated StackTraceElement stackTrace=19;
-repeated MonitorInfo lockedMonitors=20;
+ int64 lockOwnerId=16;
+ string lockOwnerName=17;
+ bool inNative=18;
+ bool suspended=19;
+repeated StackTraceElement stackTrace=20;
+repeated MonitorInfo lockedMonitors=21;
+}
+//
+message MonitorInfo {  
+ int32 stackDepth=1;
+ StackTraceElement stackFrame=2;
 }
 //
 message StackTraceElement {  
@@ -37,9 +43,4 @@ message StackTraceElement {
  string methodName=2;
  string fileName=3;
  int32 lineNumber=4;
-}
-//
-message MonitorInfo {  
- int32 stackDepth=1;
- StackTraceElement stackFrame=2;
 }
