@@ -53,6 +53,9 @@
     <auto-refresh-sticky
       :update-time="updatedTime"
       @refresh="refresh"/>
+    <q-dialog v-model="threadTraceDialogShow">
+      <instance-thread-trace :thread-id="selectedThreadId"/>
+    </q-dialog>
   </div>
 </template>
 
@@ -60,8 +63,6 @@
 import { onMounted, onUnmounted, ref, inject, watch, computed, reactive } from 'vue'
 import { onCommand, offCommand } from 'boot/eventbus'
 import { useStore } from 'vuex'
-import { formatDate } from 'src/utils/date'
-import { divide } from 'src/utils/math'
 import useGetGlobalProperties from 'src/composables/useGetGlobalProperties'
 import {
   threadListCommandCode, threadStackTraceCommandCode
@@ -69,6 +70,7 @@ import {
 import dayjs from 'dayjs'
 import AutoRefreshSticky from 'pages/instance/components/AutoRefreshSticky.vue'
 import _ from 'lodash'
+import InstanceThreadTrace from 'pages/instance/components/InstanceThreadTrace.vue'
 
 const store = useStore()
 const globalPropertiese = useGetGlobalProperties()
@@ -81,7 +83,9 @@ const instanceId = computed(() => {
 
 const updatedTime = ref('')
 
-const selectedStates = ref([])
+const threadTraceDialogShow = ref(false)
+
+const selectedThreadId = ref(-1)
 
 const threadColumns = [
   {
@@ -144,13 +148,11 @@ watch(instanceId, (val) => {
 
 onMounted(() => {
   onCommand(globalPropertiese.$arthasType, threadListCommandCode, handleThreadListMessage)
-  onCommand(globalPropertiese.$arthasType, threadStackTraceCommandCode, handleThreadStackTraceMessage)
   refresh()
 })
 
 onUnmounted(() => {
   offCommand(globalPropertiese.$arthasType, threadListCommandCode, handleThreadListMessage)
-  offCommand(globalPropertiese.$arthasType, threadStackTraceCommandCode, handleThreadStackTraceMessage)
 })
 
 const threadInfo = ref({})
@@ -209,24 +211,8 @@ const handleRowClick = (evt, row, index) => {
   console.log("=>(InstanceThreadList.vue:206) index", index);
   console.log("=>(InstanceThreadList.vue:206) row", row);
   console.log("=>(InstanceThreadList.vue:206) evt", evt);
-  sendThreadStackTraceCommand(row.id)
-}
-
-const sendThreadStackTraceCommand = (threadId) => {
-  const param = {
-    commandType: globalPropertiese.$arthasType,
-    instanceId: instanceId.value,
-    command: `thread ${threadId}`,
-    commandCode: threadStackTraceCommandCode
-  }
-  store.dispatch('sendMessage', {
-    cmd: globalPropertiese.$commandRequestCmd,
-    message: param
-  })
-}
-
-const handleThreadStackTraceMessage = (message) => {
-  console.log("=>(InstanceThreadList.vue:213) message", message);
+  selectedThreadId.value = row.id
+  threadTraceDialogShow.value = true
 }
 
 </script>

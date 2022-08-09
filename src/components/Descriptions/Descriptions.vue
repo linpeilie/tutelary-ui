@@ -7,6 +7,7 @@
     </div>
     <div class="descriptions-body">
       <q-markup-table :bordered="bordered"
+                      :class="contentClass"
                       flat
                       :separator="bordered ? 'horizontal' : 'none'"
                       wrap-cells>
@@ -38,6 +39,10 @@ const props = defineProps({
   bordered: {
     type: Boolean,
     default: false
+  },
+  contentClass: {
+    type: String,
+    default: ''
   }
 })
 

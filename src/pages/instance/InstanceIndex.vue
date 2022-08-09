@@ -33,7 +33,7 @@
         </q-card-section>
 
         <q-card-section v-if="selectedInstance">
-          <descriptions :column="1">
+          <descriptions :column="1" content-class="bg-grey-1">
             <description-item label="App Name" :content="selectedInstance.appName"/>
             <description-item label="IP" :content="selectedInstance.ip"/>
             <description-item label="Register Date" :content="selectedInstance.registerDate"/>
