@@ -2,6 +2,12 @@
 
 tutelary ui
 
+## Install Yarn
+
+```bash
+npm install -g yarn
+```
+
 ## Install the dependencies
 ```bash
 yarn
@@ -11,22 +17,14 @@ npm install
 
 ### Start the app in development mode (hot-code reloading, error reporting, etc.)
 ```bash
-quasar dev
-```
-
-
-### Lint the files
-```bash
-yarn lint
-# or
-npm run lint
+yarn run dev
 ```
 
 
 
 ### Build the app for production
 ```bash
-quasar build
+yarn run build
 ```
 
 ### Customize the configuration
