@@ -1,0 +1,11 @@
+syntax="proto3";
+package com.tutelary.message.command;
+option java_outer_classname = "EnhanceCommandComplete$$ByJProtobuf";
+//
+message EnhanceCommandComplete {  
+ string sessionId=1;
+ int32 commandCode=2;
+ int32 jobId=3;
+ int32 state=4;
+ string message=5;
+}

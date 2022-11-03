@@ -1,0 +1,21 @@
+syntax="proto3";
+package com.tutelary.message.command;
+option java_outer_classname = "TraceResult$$ByJProtobuf";
+//
+message TraceResult {  
+ TraceNode node=1;
+ int32 jobId=2;
+ int32 state=3;
+ string message=4;
+}
+//
+message TraceNode {  
+ string className=1;
+ string methodName=2;
+ int32 line=3;
+ bool isThrow=4;
+ string mark=5;
+ int64 beginTimestamp=6;
+ int64 endTimestamp=7;
+repeated TraceNode children=8;
+}

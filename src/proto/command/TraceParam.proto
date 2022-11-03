@@ -1,0 +1,10 @@
+syntax="proto3";
+package com.tutelary.message.command;
+option java_outer_classname = "TraceParam$$ByJProtobuf";
+//
+message TraceParam {  
+ string className=1;
+repeated string methodNames=2;
+ int32 times=3;
+ int32 cost=4;
+}

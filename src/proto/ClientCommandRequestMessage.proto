@@ -5,6 +5,11 @@ option java_outer_classname = "ClientCommandRequestMessage$$ByJProtobuf";
 message ClientCommandRequestMessage {  
  string instanceId=1;
  string sessionId=2;
- string commandType=3;
- string command=4;
+ int32 commandType=3;
+ int32 commandCode=4;
+ Any param=5;
+}
+message Any {  
+ string codecClass=1;
+ bytes byteArray=2;
 }

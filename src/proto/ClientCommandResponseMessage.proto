@@ -4,8 +4,8 @@ option java_outer_classname = "ClientCommandResponseMessage$$ByJProtobuf";
 //
 message ClientCommandResponseMessage {  
  string sessionId=1;
- string command=2;
- string commandType=3;
+ int32 commandType=2;
+ int32 commandCode=3;
  Any data=4;
  bool status=5;
  string message=6;

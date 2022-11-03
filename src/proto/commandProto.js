@@ -1,15 +1,22 @@
 export const COMMAND_PATH_PREF = 'src/proto/command/'
 export const COMMAND_PROTO = [
   {
-    type: 'arthas',
-    command: 'jvm',
-    proto: 'JvmCommandResultMessage',
-    description: 'JVM 信息'
+    type: '2',
+    command: '21010',
+    result: 'EnhanceAffect',
+    description: 'enhance affect'
   },
   {
-    type: 'arthas',
-    command: 'dashboard',
-    proto: 'DashboardCommandResultMessage',
-    description: '实例面板'
+    type: '2',
+    command: '21011',
+    param: 'TraceParam',
+    result: 'TraceResult',
+    description: 'trace method'
+  },
+  {
+    type: '2',
+    command: '21099',
+    result: 'EnhanceCommandComplete',
+    description: 'enhance command complete hint'
   }
 ]
