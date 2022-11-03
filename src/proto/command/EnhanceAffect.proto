@@ -1,0 +1,19 @@
+syntax="proto3";
+package com.tutelary.message.command;
+option java_outer_classname = "EnhanceAffect$$ByJProtobuf";
+//
+message EnhanceAffect {  
+ int32 cCnt=1;
+ int32 mCnt=2;
+repeated BaseMethod methods=3;
+ int32 jobId=4;
+ int32 state=5;
+ string message=6;
+}
+//
+message BaseMethod {  
+ string classLoader=1;
+ string className=2;
+ string methodName=3;
+ string methodDesc=4;
+}

@@ -7,5 +7,9 @@ message ClientCommandRequestMessage {
  string sessionId=2;
  int32 commandType=3;
  int32 commandCode=4;
- string command=5;
+ Any param=5;
+}
+message Any {  
+ string codecClass=1;
+ bytes byteArray=2;
 }

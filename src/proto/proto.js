@@ -1,4 +1,5 @@
 export const PATH_PREF = 'src/proto/'
+export const COMMAND_REQUEST_CMD = 3
 export const COMMAND_RESPONSE_CMD = 4
 export const COMMAND_REQUEST_CMD = 3
 export const CMD_PROTO = [

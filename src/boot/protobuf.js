@@ -1,12 +1,13 @@
 import { boot } from 'quasar/wrappers'
 
 import protobuf from 'protobufjs'
-import { PATH_PREF, COMMAND_RESPONSE_CMD, CMD_PROTO } from 'src/proto/proto'
+import { PATH_PREF, COMMAND_REQUEST_CMD, COMMAND_RESPONSE_CMD, CMD_PROTO } from 'src/proto/proto'
 import { COMMAND_PATH_PREF, COMMAND_PROTO } from 'src/proto/commandProto'
 import { ref } from 'vue'
 
 const PROTOCOL_TAB = ref({})
-const COMMAND_PROTOCCOL_TAB = ref({})
+const COMMAND_REQ_PROTOCOL_TAB = ref({})
+const COMMNND_RES_PROTOCOL_TAB = ref({})
 
 const getCommandKey = (commandType, command) => {
   return commandType + '#' + command
@@ -34,30 +35,46 @@ for (const ele of CMD_PROTO) {
 
 for (const ele of COMMAND_PROTO) {
   const type = ele.type
-  const commandCode = ele.commandCode
-  const proto = ele.proto
-  if (!proto) {
-    continue
+  const command = ele.command
+  const paramProto = ele.param
+  const resultProto = ele.result
+  if (paramProto) {
+    protobuf.load(COMMAND_PATH_PREF + paramProto + '.proto', (err, root) => {
+      if (err) {
+        console.error('protobuf load err', err)
+        throw err
+      }
+      const messageCodec = root.lookupType(paramProto)
+      if (!messageCodec) {
+        console.error('找不到.proto文件', paramProto)
+        throw new Error('找不到对应的.proto文件 : ' + paramProto)
+      }
+      const commandKey = getCommandKey(type, command)
+      COMMAND_REQ_PROTOCOL_TAB[commandKey] = messageCodec
+    })
   }
-  protobuf.load(COMMAND_PATH_PREF + proto + '.proto', (err, root) => {
-    if (err) {
-      console.error('protobuf load err', err)
-      throw err
-    }
-    const messageCodec = root.lookupType(proto)
-    if (!messageCodec) {
-      console.error('找不到.proto文件', proto)
-      throw new Error('找不到对应的.proto文件 : ' + proto)
-    }
-    const commandKey = getCommandKey(type, commandCode)
-    COMMAND_PROTOCCOL_TAB[commandKey] = messageCodec
-  })
+  if (resultProto) {
+    protobuf.load(COMMAND_PATH_PREF + resultProto + '.proto', (err, root) => {
+      if (err) {
+        console.error('protobuf load err', err)
+        throw err
+      }
+      const messageCodec = root.lookupType(resultProto)
+      if (!messageCodec) {
+        console.error('找不到.proto文件', resultProto)
+        throw new Error('找不到对应的.proto文件 : ' + resultProto)
+      }
+      const commandKey = getCommandKey(type, command)
+      COMMNND_RES_PROTOCOL_TAB[commandKey] = messageCodec
+    })
+  }
 }
 
 const handleCommandResponse = (result) => {
   if (result.status) {
+    debugger
     const commandKey = getCommandKey(result.commandType, result.commandCode)
-    const codec = COMMAND_PROTOCCOL_TAB[commandKey]
+    const codec = COMMNND_RES_PROTOCOL_TAB[commandKey]
     if (!codec) {
       result.status = false
       result.message = `no match proto codec , command type : ${result.commandType}, command : ${result.command}, discard the data`
@@ -68,6 +85,16 @@ const handleCommandResponse = (result) => {
       result.data = data
     }
   }
+}
+
+const encodeCommandParam = (commandType, command, param) => {
+  const commandKey = getCommandKey(commandType, command)
+  const codec = COMMAND_REQ_PROTOCOL_TAB[commandKey]
+  if (!codec) {
+    throw new Error(`找不到 ${commandType} - ${command} 对应的 proto 文件`)
+  }
+  codec.create(param)
+  return codec.encode(param).finish()
 }
 
 const decode = (message) => {
@@ -94,7 +121,13 @@ const encode = (cmd, message) => {
     console.warn(`没有找到对应的解码器, cmd : ${cmd}`)
     return
   }
+  debugger
   const msg = codec.create(message)
+  if (cmd === COMMAND_REQUEST_CMD) {
+    msg.param = {
+      byteArray: encodeCommandParam(message.commandType, message.commandCode, message.param)
+    }
+  }
   const bytes = codec.encode(msg).finish()
   const byteLength = bytes.byteLength
   const buffer = new ArrayBuffer(byteLength + 5)
