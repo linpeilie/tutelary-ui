@@ -121,9 +121,8 @@ const encode = (cmd, message) => {
     console.warn(`没有找到对应的解码器, cmd : ${cmd}`)
     return
   }
-  debugger
   const msg = codec.create(message)
-  if (cmd === COMMAND_REQUEST_CMD) {
+  if (cmd === COMMAND_REQUEST_CMD && message.param) {
     msg.param = {
       byteArray: encodeCommandParam(message.commandType, message.commandCode, message.param)
     }

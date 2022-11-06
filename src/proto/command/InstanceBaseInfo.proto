@@ -1,0 +1,16 @@
+syntax="proto3";
+package com.tutelary.message.command;
+option java_outer_classname = "InstanceBaseInfo$$ByJProtobuf";
+//
+message InstanceBaseInfo {  
+ HostBaseInfo hostInfo=1;
+ int32 jobId=2;
+ int32 state=3;
+ string message=4;
+}
+//
+message HostBaseInfo {  
+ string osName=1;
+ string osVersion=2;
+ int32 availableProcessors=3;
+}

@@ -1,5 +1,13 @@
 export const COMMAND_PATH_PREF = 'src/proto/command/'
+export const TYPE_ARTHAS = 1
+export const TYPE_TUTELARY = 2
 export const COMMAND_PROTO = [
+  {
+    type: '2',
+    command: '20010',
+    result: 'InstanceBaseInfo',
+    description: 'instance base info'
+  },
   {
     type: '2',
     command: '21010',
