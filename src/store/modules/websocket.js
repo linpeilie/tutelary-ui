@@ -37,7 +37,7 @@ export default {
       const reader = new FileReader()
       reader.onload = () => {
         const data = decode(reader.result)
-
+        console.log("-> data", data);
         handleOnMessage(data)
       }
       reader.readAsArrayBuffer(message.data)
