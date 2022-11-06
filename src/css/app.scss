@@ -1,1 +1,11 @@
 // app global css in SCSS form
+
+// q-card
+.q-card {
+  box-shadow: 0 0 20px rgb(0 0 0 / 5%);
+}
+
+
+.q-field--filled .q-field__control {
+  border-radius: $generic-border-radius $generic-border-radius $generic-border-radius $generic-border-radius;
+}

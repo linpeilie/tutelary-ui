@@ -8,6 +8,12 @@ export const PublicRoutes = [
 
 const PrivateRoutes = [
   {
+    path: '/',
+    component: () => import('pages/home/HomeIndex.vue'),
+    title: '首页',
+    icon: 'home'
+  },
+  {
     path: '/app/list',
     component: () => import('pages/app/AppList.vue'),
     title: '应用列表',

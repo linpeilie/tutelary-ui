@@ -46,7 +46,6 @@ export default function useTableData (url) {
     params = Object.assign(params, queryParams.value)
     await postAction(url.list, params)
       .then(res => {
-        console.log('=>(useTableData.js:55) res', res)
         pagination.value = props.pagination
         pagination.value.total = res.data.data.total
         tableData.value = res.data.data.records

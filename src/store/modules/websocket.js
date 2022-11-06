@@ -3,9 +3,8 @@ import { COMMAND_RESPONSE_CMD } from 'src/proto/proto'
 import { emitCommand } from 'boot/eventbus'
 
 const handleOnMessage = (message) => {
-  console.log('=>(websocket.js:30) data', message)
   if (message.cmd === COMMAND_RESPONSE_CMD) {
-    emitCommand(message.commandType, message.command, message)
+    emitCommand(message.commandType, message.commandCode, message)
   }
 }
 
@@ -57,6 +56,7 @@ export default {
     }) {
       const value = encode(cmd, message)
       console.log('state.socketTarget', state.socketTarget)
+      console.log('send message : ', message)
       state.socketTarget.send(value)
     }
   }

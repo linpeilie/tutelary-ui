@@ -39,7 +39,6 @@ const hasChildren = computed(() => {
 })
 
 const chooseComponent = computed(() => {
-  console.log('=>(SideBarItem.vue:40) addRoutesItem', addRoutesItem.value)
   if (hasChildren.value) {
     return ItemMultiple
   } else {

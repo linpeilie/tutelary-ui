@@ -53,10 +53,8 @@ const options = computed(() => {
 const selectedProtobuf = ref(options.value[0])
 
 const getEncodeValue = () => {
-  console.log('=>(ProtobufTest.vue:59) selectedProtobuf', selectedProtobuf.value)
   let data = input.value
   data = JSON.parse(data)
-  console.log('输入内容', data)
   return instance.appContext.config.globalProperties.$protobufEncode(selectedProtobuf.value.value, data)
 }
 
@@ -64,7 +62,6 @@ const trans = () => {
   const value = getEncodeValue()
   const uint8Array = new Uint8Array(value)
   const base64Value = Base64.fromUint8Array(uint8Array)
-  console.log('=>(ProtobufTest.vue:59) base64Value', base64Value)
   output.value = base64Value
 }
 

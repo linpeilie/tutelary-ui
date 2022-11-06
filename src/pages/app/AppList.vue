@@ -31,10 +31,10 @@ const tableColumns = [
     field: 'appName'
   },
   {
-    name: 'instanceCount',
+    name: 'instanceNum',
     label: '实例数',
     align: 'center',
-    field: 'instanceCount'
+    field: 'instanceNum'
   },
   {
     name: 'registerDate',

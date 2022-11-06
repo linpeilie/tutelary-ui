@@ -1,22 +1,18 @@
 <template>
-  <q-layout view="hHh Lpr fFf">
+  <q-layout view="lHh lpR fFf">
 
-    <q-header elevated class="bg-primary text-white">
+    <q-header class="text-black" style="background: #fafafa">
       <q-toolbar>
         <q-btn dense flat round icon="menu" @click="toggleLeftDrawer"/>
-
-        <q-toolbar-title>
-          Tutelary
-        </q-toolbar-title>
       </q-toolbar>
     </q-header>
 
-    <q-drawer show-if-above v-model="leftDrawerOpen" elevated side="left" bordered>
+    <q-drawer show-if-above v-model="leftDrawerOpen" side="left" class="bg-grey-1">
       <!-- drawer content -->
       <side-bar :menus="menus"/>
     </q-drawer>
 
-    <q-page-container>
+    <q-page-container class="page-container bg-grey-1">
       <router-view/>
     </q-page-container>
 
@@ -51,3 +47,8 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.page-container {
+}
+</style>

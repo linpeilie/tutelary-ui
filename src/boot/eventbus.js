@@ -4,16 +4,16 @@ import eventBus from 'vue3-eventbus'
 const commandEventPrefix = 'command'
 const separator = '#'
 
-const onCommand = (type, command, callback) => {
-  eventBus.on(commandEventPrefix + separator + type + separator + command, callback)
+const onCommand = (type, commandCode, callback) => {
+  eventBus.on(commandEventPrefix + separator + type + separator + commandCode, callback)
 }
 
-const emitCommand = (type, command, e) => {
-  eventBus.emit(commandEventPrefix + separator + type + separator + command, e)
+const emitCommand = (type, commandCode, e) => {
+  eventBus.emit(commandEventPrefix + separator + type + separator + commandCode, e)
 }
 
-const offCommand = (type, command, callback) => {
-  eventBus.off(commandEventPrefix + separator + type + separator + command, callback)
+const offCommand = (type, commandCode, callback) => {
+  eventBus.off(commandEventPrefix + separator + type + separator + commandCode, callback)
 }
 
 export default boot(({ app }) => {
