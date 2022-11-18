@@ -6,18 +6,22 @@
       <q-btn label="重置" type="reset" flat/>
     </q-form>
 
-    <q-table :rows="tableData" :columns="tableColumns" row-key="appName" :loading="loading" :pagination="pagination" :rows-per-page-options="pageOptions">
-      <template v-slot:body-cell-action="props">
-        <q-td :props="props">
-          <q-btn color="primary" label="详情"/>
-        </q-td>
-      </template>
+    <q-table :rows="tableData"
+             :columns="tableColumns"
+             row-key="appName"
+             :loading="loading"
+             :pagination="pagination"
+             :rows-per-page-options="pageOptions"
+             @row-click="handleRowClick">
     </q-table>
   </q-page>
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import useTableData from 'src/composables/useTableData'
+
+const router = useRouter()
 
 const url = {
   list: '/api/app/pageQuery'
@@ -41,11 +45,6 @@ const tableColumns = [
     label: '注册时间',
     align: 'center',
     field: 'registerDate'
-  },
-  {
-    name: 'action',
-    label: '操作',
-    align: 'center'
   }
 ]
 
@@ -58,6 +57,20 @@ const {
   pagination,
   pageOptions
 } = useTableData(url)
+
+const handleRowClick = (evt, row, index) => {
+  console.log('-> index', index)
+  console.log('-> row', row)
+  console.log('-> evt', evt)
+  router.push({
+    path: '/instance/list',
+    query: {
+      appName: row.appName
+    }
+  })
+}
+
+
 </script>
 
 <style scoped>

@@ -1,11 +1,28 @@
 // app global css in SCSS form
 
-// q-card
-.q-card {
-  box-shadow: 0 0 20px rgb(0 0 0 / 5%);
+// 默认背景色
+$background-color-default: #f4f5f7;
+
+// 页面背景色
+$page-background-color: $background-color-default;
+
+$header-height: 60px;
+
+.t-common-page {
+  background-color: $page-background-color;
 }
 
+.t-page-header {
+  background-color: inherit !important;
+  height: $header-height;
+}
 
-.q-field--filled .q-field__control {
-  border-radius: $generic-border-radius $generic-border-radius $generic-border-radius $generic-border-radius;
+.t-side-bar {
+  .menu-item {
+    border-radius: $generic-border-radius;
+  }
+
+  .menu-item__active {
+    background-color: #ffffff;
+  }
 }

@@ -1,5 +1,22 @@
 export const PublicRoutes = [
   {
+    path: '/',
+    redirect: '/app/list',
+    hidden: true
+  },
+  {
+    path: '/app/list',
+    component: () => import('pages/app/AppList.vue'),
+    title: '应用中心',
+    icon: 'apps'
+  },
+  {
+    path: '/instance/list',
+    component: () => import('pages/instance/InstanceList.vue'),
+    title: '实例列表',
+    hidden: true
+  },
+  {
     path: '/:catchAll(.*)*',
     hidden: true,
     component: () => import('pages/ErrorNotFound.vue')
@@ -7,18 +24,6 @@ export const PublicRoutes = [
 ]
 
 const PrivateRoutes = [
-  {
-    path: '/',
-    component: () => import('pages/home/HomeIndex.vue'),
-    title: '首页',
-    icon: 'home'
-  },
-  {
-    path: '/app/list',
-    component: () => import('pages/app/AppList.vue'),
-    title: '应用列表',
-    icon: 'apps'
-  },
   {
     path: '/instance',
     component: () => import('pages/instance/InstanceIndex.vue'),
@@ -33,4 +38,4 @@ const PrivateRoutes = [
   }
 ]
 
-export default [...PrivateRoutes, ...PublicRoutes]
+export default [...PublicRoutes, ...PrivateRoutes]
