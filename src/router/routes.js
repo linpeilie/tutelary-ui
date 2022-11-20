@@ -14,6 +14,14 @@ export const PublicRoutes = [
     path: '/instance/list',
     component: () => import('pages/instance/InstanceList.vue'),
     title: '实例列表',
+    hidden: true,
+    props: true
+  },
+  {
+    path: '/instance/:instanceId',
+    component: () => import('pages/instance/InstanceIndex.vue'),
+    title: '实例详情',
+    icon: 'monitor_heart',
     hidden: true
   },
   {
@@ -24,12 +32,6 @@ export const PublicRoutes = [
 ]
 
 const PrivateRoutes = [
-  {
-    path: '/instance',
-    component: () => import('pages/instance/InstanceIndex.vue'),
-    title: '实例详情',
-    icon: 'monitor_heart'
-  },
   {
     path: '/protobuf',
     component: () => import('pages/protobuf/ProtobufTest.vue'),

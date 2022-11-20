@@ -8,6 +8,7 @@
           <span v-if="!miniDrawer"> Tutelary </span>
         </q-toolbar-title>
       </q-toolbar>
+      <q-separator vertical inset />
       <q-toolbar :style="{width: `calc(100% - ${titleWidth})`}">
         <q-btn dense flat round icon="menu" @click="toggleLeftDrawer"/>
         <q-space/>
@@ -23,6 +24,7 @@
     <q-drawer show-if-above
               :width="sideBarWidth"
               @click.capture="drawerClick"
+              behavior="desktop"
               side="left"
               :mini="miniDrawer"
               class="t-side-bar">

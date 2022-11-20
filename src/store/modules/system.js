@@ -1,6 +1,6 @@
 export default {
   state: () => ({
-    miniSideBar: false,
+    miniSideBar: true,
     sideBarWidth: 300,
     miniSideBarWidth: 60
   }),

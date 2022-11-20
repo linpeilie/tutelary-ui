@@ -59,9 +59,6 @@ const {
 } = useTableData(url)
 
 const handleRowClick = (evt, row, index) => {
-  console.log('-> index', index)
-  console.log('-> row', row)
-  console.log('-> evt', evt)
   router.push({
     path: '/instance/list',
     query: {
