@@ -10,6 +10,7 @@
                    :key="tabItem.value"
                    :name="tabItem.value">
 <!--        <component :is="tabItem.component"/>-->
+        <div>{{ tabItem.label }}</div>
       </q-tab-panel>
     </q-tab-panels>
   </q-page>
