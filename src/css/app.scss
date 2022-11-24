@@ -26,3 +26,14 @@ $header-height: 60px;
     background-color: #ffffff;
   }
 }
+
+.t-tabs {
+  background-color: $page-background-color;
+  flex: 0 1 auto;
+  border-radius: $generic-border-radius !important;
+
+  .t-tab {
+    border-radius: inherit;
+  }
+
+}

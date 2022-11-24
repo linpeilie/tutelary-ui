@@ -2,24 +2,37 @@
   <q-page padding>
 
     <q-card>
-
+      <q-card-section>
+        <q-tabs v-model="selectedTab"
+                content-class="t-tabs"
+                class="justify-center"
+                active-bg-color="white"
+                dense>
+          <q-tab v-for="tabItem of tabOptions"
+                 :key="tabItem.value"
+                 :label="tabItem.label"
+                 :name="tabItem.value"
+                 class="t-tab q-mx-sm"/>
+        </q-tabs>
+      </q-card-section>
+      <q-card-section>
+        <q-tab-panels v-model="selectedTab" animated>
+          <q-tab-panel v-for="tabItem of tabOptions"
+                       :key="tabItem.value"
+                       :name="tabItem.value">
+            <!--        <component :is="tabItem.component"/>-->
+            <div class="text-h6">{{ tabItem.label }}</div>
+          </q-tab-panel>
+        </q-tab-panels>
+      </q-card-section>
     </q-card>
-
-    <q-tab-panels v-model="selectedTab" animated>
-      <q-tab-panel v-for="tabItem of tabOptions"
-                   :key="tabItem.value"
-                   :name="tabItem.value">
-<!--        <component :is="tabItem.component"/>-->
-        <div>{{ tabItem.label }}</div>
-      </q-tab-panel>
-    </q-tab-panels>
   </q-page>
 </template>
 
 <script setup>
-import { ref, shallowRef, onMounted, provide, readonly } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { getAction } from "src/api/manage"
+import {ref, shallowRef, onMounted, provide, readonly} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {getAction} from "src/api/manage"
 // import InstanceDashboard from './components/InstanceDashboard.vue'
 // import InstanceJvmInfo from './components/InstanceJvmInfo.vue'
 // import InstanceThreadList from 'pages/instance/components/InstanceThreadList.vue'
@@ -54,18 +67,30 @@ provide('instance', readonly(selectedInstance))
 const tabOptions = ref([
   {
     label: '实例面板',
-    value: 'Dashboard',
+    value: 'Dashboard'
     // component: instanceDashboard
   },
   {
     label: 'JVM信息',
-    value: 'JvmInfo',
+    value: 'JvmInfo'
     // component: instanceJvmInfo
   },
   {
     label: '线程信息',
-    value: 'ThreadList',
+    value: 'ThreadList'
     // component: instanceThreadList
+  },
+  {
+    label: '方法追踪',
+    value: 'MethodTrace'
+  },
+  {
+    label: '方法监控',
+    value: 'MethodMonitor'
+  },
+  {
+    label: '源码查看',
+    value: 'SourceCode'
   }
 ])
 
@@ -74,6 +99,8 @@ const selectedTab = ref('Dashboard')
 </script>
 
 <style lang="scss">
+
+
 .q-tab-panel {
   padding: 0 !important;
   background: #fafafa;
