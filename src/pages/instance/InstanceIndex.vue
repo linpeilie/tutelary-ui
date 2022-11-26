@@ -7,6 +7,8 @@
                 content-class="t-tabs"
                 class="justify-center"
                 active-bg-color="white"
+                mobile-arrows
+                inline-label
                 dense>
           <q-tab v-for="tabItem of tabOptions"
                  :key="tabItem.value"
@@ -15,13 +17,13 @@
                  class="t-tab q-mx-sm"/>
         </q-tabs>
       </q-card-section>
+      <q-separator inset/>
       <q-card-section>
         <q-tab-panels v-model="selectedTab" animated>
           <q-tab-panel v-for="tabItem of tabOptions"
                        :key="tabItem.value"
                        :name="tabItem.value">
-            <!--        <component :is="tabItem.component"/>-->
-            <div class="text-h6">{{ tabItem.label }}</div>
+            <component :is="tabItem.component"/>
           </q-tab-panel>
         </q-tab-panels>
       </q-card-section>
@@ -30,16 +32,18 @@
 </template>
 
 <script setup>
-import {ref, shallowRef, onMounted, provide, readonly} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
-import {getAction} from "src/api/manage"
+import { ref, shallowRef, onMounted, provide, readonly } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { getAction } from 'src/api/manage'
 // import InstanceDashboard from './components/InstanceDashboard.vue'
 // import InstanceJvmInfo from './components/InstanceJvmInfo.vue'
 // import InstanceThreadList from 'pages/instance/components/InstanceThreadList.vue'
+import InstanceOverview from './tabs/InstanceOverview.vue'
 
 // const instanceDashboard = shallowRef(InstanceDashboard)
 // const instanceJvmInfo = shallowRef(InstanceJvmInfo)
 // const instanceThreadList = shallowRef(InstanceThreadList)
+const instanceOverview = shallowRef(InstanceOverview)
 
 const route = useRoute()
 const router = useRouter()
@@ -67,8 +71,8 @@ provide('instance', readonly(selectedInstance))
 const tabOptions = ref([
   {
     label: '实例面板',
-    value: 'Dashboard'
-    // component: instanceDashboard
+    value: 'Dashboard',
+    component: instanceOverview
   },
   {
     label: 'JVM信息',
@@ -103,7 +107,6 @@ const selectedTab = ref('Dashboard')
 
 .q-tab-panel {
   padding: 0 !important;
-  background: #fafafa;
 }
 
 .q-tabs__content {
