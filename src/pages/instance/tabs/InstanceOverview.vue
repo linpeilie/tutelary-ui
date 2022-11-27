@@ -1,63 +1,171 @@
 <template>
   <div class="row justify-center">
-    <q-card bordered flat class="col-md-7 col-xs-11 q-ma-md">
-      <q-card-section>
-        <div class="text-h5">线程概况</div>
-      </q-card-section>
-      <q-separator inset/>
-      <q-card-section>
-        <q-responsive :ratio="16/9" style="min-width: 300px">
-          <div ref="main" style="width: 100%;height: 300px">
-          </div>
-        </q-responsive>
-      </q-card-section>
+    <q-card bordered flat class="col-md-7 col-xs-11 q-ma-md q-pa-md">
+      <q-responsive :ratio="7/2" style="min-height: 300px">
+        <div ref="threadStatisticRef"></div>
+      </q-responsive>
     </q-card>
-    <q-card bordered flat class="col-md-4 col-xs-11 q-ma-md">
-      <div class="q-pa-md">TODO</div>
+    <q-card bordered flat class="col-md-4 col-xs-11 q-ma-md q-pa-md">
+      
+    </q-card>
+  </div>
+  <div class="row justify-center">
+    <q-card bordered flat class="col-md-7 col-xs-11 q-ma-md q-pa-md">
+      <q-responsive :ratio="7/2" style="min-height: 300px">
+        <div ref="heapMemoryStatisticRef"></div>
+      </q-responsive>
+    </q-card>
+    <q-card bordered flat class="col-md-4 col-xs-11 q-ma-md q-pa-md">
+
     </q-card>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, inject} from 'vue'
 import * as echarts from 'echarts/core'
-import { GridComponent } from 'echarts/components'
-import { LineChart } from 'echarts/charts'
-import { UniversalTransition } from 'echarts/features'
-import { CanvasRenderer } from 'echarts/renderers'
+import {
+  GridComponent,
+  TitleComponent,
+  LegendComponent,
+  ToolboxComponent,
+  TooltipComponent
+} from 'echarts/components'
+import {LineChart, BarChart} from 'echarts/charts'
+import {UniversalTransition} from 'echarts/features'
+import {CanvasRenderer} from 'echarts/renderers'
+import {postAction} from "src/api/manage";
+import dayjs from "dayjs";
 
-const main = ref()
-echarts.use([GridComponent, LineChart, CanvasRenderer, UniversalTransition])
-let chart
+const instanceId = inject('instanceId')
+
+echarts.use([GridComponent, LineChart, CanvasRenderer, UniversalTransition, TitleComponent,
+  ToolboxComponent, TooltipComponent, LegendComponent, BarChart])
+
+// echarts instance
+let threadStatisticChart
+let heapMemoryStatisticChart
+
+// ref
+const threadStatisticRef = ref()
+const heapMemoryStatisticRef = ref()
 
 onMounted(() => {
-  loadChart()
+  threadStatisticChart = echarts.init(threadStatisticRef.value)
+  heapMemoryStatisticChart = echarts.init(heapMemoryStatisticRef.value)
+  loadData()
   window.onresize = () => {
-    if (chart) {
-      chart.resize()
+    if (threadStatisticChart) {
+      threadStatisticChart.resize()
     }
   }
 })
 
-const loadChart = () => {
-  chart = echarts.init(main.value)
+
+const loadData = () => {
+  const param = {
+    instanceId: instanceId,
+    reportStartTime: dayjs().subtract(1, 'day').format('YYYY-MM-DD HH:mm:ss'),
+    reportEndTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
+  }
+  postAction('/api/instance/overview', param).then(res => {
+    console.log('overview res ', res)
+    // thread statistic
+    const data = res.data.data
+    const threadStatistic = data.threadStatistic
+    refreshThreadStatistic(threadStatistic)
+    refreshHeapMemoryChart(data.heapMemory)
+  }).finally(() => {
+  })
+}
+
+const refreshHeapMemoryChart = (heapMemoryList) => {
   const option = {
+    title: { text: 'Heap Memory' },
+    legend: {
+      data: heapMemoryList.map(item => item.name)
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'cross',
+        label: {
+          backgroundColor: '#6a7985'
+        }
+      }
+    },
+    toolbox: {
+      feature: {
+        saveAsImage: {}
+      }
+    },
+    xAxis: [
+      {
+        type: 'category',
+        boundaryGap: false,
+        data: heapMemoryList[0].reportTimestamps
+      }
+    ],
+    yAxis: [
+      { type: 'value' }
+    ],
+    series: heapMemoryList.map(item => {
+      return {
+        name: item.name,
+        type: 'line',
+        stack: 'Total',
+        areaStyle: {},
+        emphasis: {
+          focus: 'series'
+        },
+        data: item.used,
+        smooth: true,
+        symbol: 'none'
+      }
+    })
+  }
+  console.log('option', option)
+  heapMemoryStatisticChart.setOption(option)
+}
+
+const refreshThreadStatistic = (threadStatistic) => {
+  const option = {
+    title: { text: 'Thread Statistic' },
+    legend: {
+      data: ['ThreadCount', 'DaemonThreadCount']
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'cross'
+      }
+    },
+    toolbox: {
+      show: true,
+      showTitle: true,
+      feature: {
+        dataZoom: {
+          yAxisIndex: 'none'
+        },
+        dataView: {readOnly: false},
+        restore: {},
+        saveAsImage: {}
+      }
+    },
     xAxis: {
       type: 'category',
-      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+      boundaryGap: false,
+      data: threadStatistic.reportTimestamps
     },
     yAxis: {
       type: 'value'
     },
     series: [
-      {
-        data: [820, 932, 901, 934, 1290, 1330, 1320],
-        type: 'line',
-        smooth: true
-      }
+      {name: 'ThreadCount', data: threadStatistic.threadCount, type: 'line', smooth: true, symbol: 'none'},
+      {name: 'DaemonThreadCount', data: threadStatistic.daemonThreadCount, type: 'line', smooth: true, symbol: 'none'}
     ]
   }
-  chart.setOption(option)
+  threadStatisticChart.setOption(option)
 }
 
 

@@ -63,10 +63,7 @@ onMounted(() => {
   })
 })
 
-const selectedAppName = ref('')
-const selectedInstance = ref('')
-
-provide('instance', readonly(selectedInstance))
+provide('instanceId', readonly(instanceId))
 
 const tabOptions = ref([
   {
