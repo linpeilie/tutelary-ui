@@ -1,5 +1,5 @@
 syntax="proto3";
-package com.tutelary.message.command;
+package com.tutelary.message.command.result;
 option java_outer_classname = "TraceResult$$ByJProtobuf";
 //
 message TraceResult {  

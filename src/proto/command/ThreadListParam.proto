@@ -2,6 +2,6 @@ syntax="proto3";
 package com.tutelary.message.command.param;
 option java_outer_classname = "ThreadListParam$$ByJProtobuf";
 //
-message ThreadListParam {
+message ThreadListParam {  
  int32 samplerInterval=1;
 }

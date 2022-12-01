@@ -1,0 +1,22 @@
+syntax="proto3";
+package com.tutelary.message.command.result;
+option java_outer_classname = "StackResult$$ByJProtobuf";
+//
+message StackResult {  
+ int64 startTimestamp=1;
+ int64 endTimestamp=2;
+ string threadName=3;
+ int64 threadId=4;
+ bool daemon=5;
+ string classloader=6;
+repeated StackTraceNode stackTraceNodeList=7;
+ int32 jobId=8;
+ int32 state=9;
+ string message=10;
+}
+//
+message StackTraceNode {  
+ string declaringClass=1;
+ string methodName=2;
+ int32 lineNumber=3;
+}

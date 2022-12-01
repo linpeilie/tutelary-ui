@@ -6,7 +6,7 @@
       </q-responsive>
     </q-card>
     <q-card bordered flat class="col-md-4 col-xs-11 q-ma-md q-pa-md">
-      
+
     </q-card>
   </div>
   <div class="row justify-center">
@@ -80,6 +80,7 @@ const loadData = () => {
 }
 
 const refreshHeapMemoryChart = (heapMemoryList) => {
+  const reportTime = heapMemoryList[0].reportTimestamps
   const option = {
     title: { text: 'Heap Memory' },
     legend: {
@@ -101,9 +102,9 @@ const refreshHeapMemoryChart = (heapMemoryList) => {
     },
     xAxis: [
       {
-        type: 'category',
+        type: 'time',
         boundaryGap: false,
-        data: heapMemoryList[0].reportTimestamps
+        data: reportTime
       }
     ],
     yAxis: [
@@ -118,7 +119,9 @@ const refreshHeapMemoryChart = (heapMemoryList) => {
         emphasis: {
           focus: 'series'
         },
-        data: item.used,
+        data: item.used.map((currentValue, index) => {
+          return [reportTime[index], currentValue]
+        }),
         smooth: true,
         symbol: 'none'
       }

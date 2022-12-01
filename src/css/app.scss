@@ -8,6 +8,14 @@ $page-background-color: $background-color-default;
 
 $header-height: 60px;
 
+.icon {
+  //width: 1em;
+  //height: 1em;
+  //vertical-align: -0.15em;
+  fill: currentColor;
+  //overflow: hidden;
+}
+
 .t-common-page {
   background-color: $page-background-color;
 }
