@@ -1,5 +1,16 @@
 <template>
-  <q-page padding>
+  <q-page padding class="q-gutter-y-md">
+    <q-card class="q-py-md row items-center">
+      <q-icon name="grain" class="text-h3" left right></q-icon>
+      <div>
+        <div class="text-h5">{{ instanceInfo.appName }}</div>
+        <div class="row q-gutter-x-md">
+          <div class="text-h6 text-grey">{{ instanceInfo.instanceId }}</div>
+          <q-chip square color="primary" text-color="white">{{ instanceInfo.ip }}</q-chip>
+          <q-chip square color="secondary" text-color="white" icon="flag">{{ instanceInfo.registerDate }}</q-chip>
+        </div>
+      </div>
+    </q-card>
 
     <q-card>
       <q-card-section>
@@ -14,6 +25,7 @@
                  :key="tabItem.value"
                  :label="tabItem.label"
                  :name="tabItem.value"
+                 :icon="tabItem.icon"
                  class="t-tab q-mx-sm"/>
         </q-tabs>
       </q-card-section>
@@ -32,17 +44,11 @@
 </template>
 
 <script setup>
-import { ref, shallowRef, onMounted, provide, readonly } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { getAction } from 'src/api/manage'
-// import InstanceDashboard from './components/InstanceDashboard.vue'
-// import InstanceJvmInfo from './components/InstanceJvmInfo.vue'
-// import InstanceThreadList from 'pages/instance/components/InstanceThreadList.vue'
+import {ref, shallowRef, onMounted, provide, readonly} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {getAction} from 'src/api/manage'
 import InstanceOverview from './tabs/InstanceOverview.vue'
 
-// const instanceDashboard = shallowRef(InstanceDashboard)
-// const instanceJvmInfo = shallowRef(InstanceJvmInfo)
-// const instanceThreadList = shallowRef(InstanceThreadList)
 const instanceOverview = shallowRef(InstanceOverview)
 
 const route = useRoute()
@@ -50,8 +56,9 @@ const router = useRouter()
 
 const instanceId = route.params.instanceId
 
+const instanceInfo = ref({})
+
 onMounted(() => {
-  console.log('instanceId', instanceId)
   if (!instanceId) {
     router.push('/')
     return
@@ -59,7 +66,7 @@ onMounted(() => {
   getAction('/api/instance/detail', {
     instanceId: instanceId
   }).then(res => {
-    console.log('res', res)
+    instanceInfo.value = res.data.data
   })
 })
 
@@ -69,16 +76,19 @@ const tabOptions = ref([
   {
     label: '实例面板',
     value: 'Dashboard',
+    icon: 'dashboard',
     component: instanceOverview
   },
   {
     label: 'JVM信息',
-    value: 'JvmInfo'
+    value: 'JvmInfo',
+    icon: 'memory'
     // component: instanceJvmInfo
   },
   {
     label: '线程信息',
-    value: 'ThreadList'
+    value: 'ThreadList',
+    icon: 'analytics'
     // component: instanceThreadList
   },
   {
