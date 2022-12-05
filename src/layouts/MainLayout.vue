@@ -4,7 +4,6 @@
     <q-header class="text-black row no-wrap t-page-header">
       <q-toolbar :style="{width: titleWidth}">
         <q-toolbar-title class="text-center">
-<!--          <q-img src="logo.png" width="30px" height="30px"/>-->
           <q-icon name="svguse:icons.svg#logo" size="36px"></q-icon>
           <q-icon name="svguse:icons.svg#logo-title|0 0 100 40" v-if="!miniDrawer" style="width: 100px;height: 40px" right></q-icon>
         </q-toolbar-title>

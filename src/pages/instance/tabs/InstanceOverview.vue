@@ -9,37 +9,45 @@
       <q-list separator>
         <q-item>
           <q-item-section class="text-grey">Host Name</q-item-section>
-          <q-item-section>linpldeiMac.lan</q-item-section>
+          <q-item-section>{{ host.hostName }}</q-item-section>
         </q-item>
         <q-item>
           <q-item-section class="text-grey">OS Name</q-item-section>
-          <q-item-section>Mac OS</q-item-section>
+          <q-item-section>{{ host.osName }}</q-item-section>
         </q-item>
         <q-item>
           <q-item-section class="text-grey">Available Processors</q-item-section>
-          <q-item-section>12</q-item-section>
+          <q-item-section>{{ host.availableProcessors }}</q-item-section>
         </q-item>
         <q-item>
           <q-item-section class="text-grey">Physical Memory</q-item-section>
           <q-item-section>
-            <q-linear-progress rounded :value="0.4" size="xl" color="amber-4">
-              <div class="absolute-center flex flex-center text-black">23Mb / 422Mb</div>
+            <q-linear-progress rounded
+                               :value="(host.totalPhysicalMemorySize - host.freePhysicalMemorySize) / host.totalPhysicalMemorySize"
+                               size="18px" color="amber-4">
+              <div class="absolute-full flex flex-center text-black text-caption">
+                {{ $memoryFormat(host.totalPhysicalMemorySize - host.freePhysicalMemorySize) }} / {{ $memoryFormat(host.totalPhysicalMemorySize) }}
+              </div>
             </q-linear-progress>
           </q-item-section>
         </q-item>
         <q-item>
           <q-item-section class="text-grey">Swap Space</q-item-section>
           <q-item-section>
-            <q-linear-progress rounded :value="0.4" size="xl" color="lime-4">
-              <div class="absolute-center flex flex-center text-black">23Mb / 422Mb</div>
+            <q-linear-progress rounded :value="(host.totalSwapSpaceSize - host.freeSwapSpaceSize) / host.totalSwapSpaceSize" size="18px" color="lime-4">
+              <div class="absolute-full flex flex-center text-black text-caption">
+                {{ $memoryFormat(host.totalSwapSpaceSize - host.freeSwapSpaceSize) }} / {{ $memoryFormat(host.totalSwapSpaceSize) }}
+              </div>
             </q-linear-progress>
           </q-item-section>
         </q-item>
         <q-item>
           <q-item-section class="text-grey">Disk Space</q-item-section>
           <q-item-section>
-            <q-linear-progress rounded :value="888516976/999871418368" size="xl" color="light-4">
-              <div class="absolute-center flex flex-center text-black">23Mb / 422Mb</div>
+            <q-linear-progress rounded :value="(host.diskFreeSpace) / host.diskTotalSpace" size="18px" color="lime-4">
+              <div class="absolute-full flex flex-center text-black text-caption">
+                {{ $memoryFormat(host.diskFreeSpace) }} / {{ $memoryFormat(host.diskTotalSpace) }}
+              </div>
             </q-linear-progress>
           </q-item-section>
         </q-item>
@@ -91,6 +99,8 @@ const threadStatisticRef = ref()
 const heapMemoryStatisticRef = ref()
 const garbageCollectorRef = ref()
 
+const host = ref({})
+
 onMounted(() => {
   threadStatisticChart = echarts.init(threadStatisticRef.value)
   heapMemoryStatisticChart = echarts.init(heapMemoryStatisticRef.value)
@@ -120,8 +130,8 @@ const loadData = () => {
     console.log('overview res ', res)
     // thread statistic
     const data = res.data.data
-    const threadStatistic = data.threadStatistic
-    refreshThreadStatistic(threadStatistic)
+    host.value = data.host
+    refreshThreadStatistic(data.threadStatistic)
     refreshHeapMemoryChart(data.heapMemory)
     refreshGarbageCollectorChart(data.garbageCollectors)
   }).finally(() => {
@@ -170,6 +180,37 @@ const refreshGarbageCollectorChart = (garbageCollectors) => {
 
 const refreshHeapMemoryChart = (heapMemoryList) => {
   const reportTime = heapMemoryList[0].reportTimestamps
+  const heapMemorySeries = heapMemoryList.map(item => {
+    return {
+      name: item.name,
+      type: 'line',
+      stack: 'Total',
+      areaStyle: {},
+      emphasis: {
+        focus: 'series'
+      },
+      data: item.used.map((currentValue, index) => {
+        return [reportTime[index], currentValue]
+      }),
+      smooth: true,
+      symbol: 'none'
+    }
+  })
+  const len = heapMemoryList.length
+  const totalMemorySeries = {
+    name: 'Committed',
+    type: 'line',
+    data: heapMemoryList[0].committed.map((currentValue, index) => {
+      for (let i = 1; i < len; i++) {
+        currentValue += heapMemoryList[i].committed[index]
+      }
+      return [reportTime[index], currentValue]
+    }),
+    smooth: true,
+    symbol: 'none'
+  }
+  heapMemorySeries.push(totalMemorySeries)
+  console.log(heapMemorySeries)
   const option = {
     title: {text: 'Heap Memory'},
     legend: {
@@ -199,22 +240,7 @@ const refreshHeapMemoryChart = (heapMemoryList) => {
     yAxis: [
       {type: 'value'}
     ],
-    series: heapMemoryList.map(item => {
-      return {
-        name: item.name,
-        type: 'line',
-        stack: 'Total',
-        areaStyle: {},
-        emphasis: {
-          focus: 'series'
-        },
-        data: item.used.map((currentValue, index) => {
-          return [reportTime[index], currentValue]
-        }),
-        smooth: true,
-        symbol: 'none'
-      }
-    })
+    series: heapMemorySeries
   }
   heapMemoryStatisticChart.setOption(option)
 }

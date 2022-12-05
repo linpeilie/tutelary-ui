@@ -72,7 +72,6 @@ for (const ele of COMMAND_PROTO) {
 
 const handleCommandResponse = (result) => {
   if (result.status) {
-    debugger
     const commandKey = getCommandKey(result.commandType, result.commandCode)
     const codec = COMMNND_RES_PROTOCOL_TAB[commandKey]
     if (!codec) {
