@@ -6,52 +6,35 @@
       </q-responsive>
     </q-card>
     <q-card bordered flat class="col-md-4 col-xs-11 q-ma-md q-pa-md">
-      <q-list separator>
-        <q-item>
-          <q-item-section class="text-grey">Host Name</q-item-section>
-          <q-item-section>{{ host.hostName }}</q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section class="text-grey">OS Name</q-item-section>
-          <q-item-section>{{ host.osName }}</q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section class="text-grey">Available Processors</q-item-section>
-          <q-item-section>{{ host.availableProcessors }}</q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section class="text-grey">Physical Memory</q-item-section>
-          <q-item-section>
-            <q-linear-progress rounded
-                               :value="(host.totalPhysicalMemorySize - host.freePhysicalMemorySize) / host.totalPhysicalMemorySize"
-                               size="18px" color="amber-4">
-              <div class="absolute-full flex flex-center text-black text-caption">
-                {{ $memoryFormat(host.totalPhysicalMemorySize - host.freePhysicalMemorySize) }} / {{ $memoryFormat(host.totalPhysicalMemorySize) }}
-              </div>
-            </q-linear-progress>
-          </q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section class="text-grey">Swap Space</q-item-section>
-          <q-item-section>
-            <q-linear-progress rounded :value="(host.totalSwapSpaceSize - host.freeSwapSpaceSize) / host.totalSwapSpaceSize" size="18px" color="lime-4">
-              <div class="absolute-full flex flex-center text-black text-caption">
-                {{ $memoryFormat(host.totalSwapSpaceSize - host.freeSwapSpaceSize) }} / {{ $memoryFormat(host.totalSwapSpaceSize) }}
-              </div>
-            </q-linear-progress>
-          </q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section class="text-grey">Disk Space</q-item-section>
-          <q-item-section>
-            <q-linear-progress rounded :value="(host.diskFreeSpace) / host.diskTotalSpace" size="18px" color="lime-4">
-              <div class="absolute-full flex flex-center text-black text-caption">
-                {{ $memoryFormat(host.diskFreeSpace) }} / {{ $memoryFormat(host.diskTotalSpace) }}
-              </div>
-            </q-linear-progress>
-          </q-item-section>
-        </q-item>
-      </q-list>
+
+      <descriptions :column="1">
+        <description-item label="Host Name" :content="host.hostName" labelClassName="col-5" className="col-7"/>
+        <description-item label="Os Name" :content="host.osName" labelClassName="col-5" className="col-7"/>
+        <description-item label="Available Processors" :content="host.availableProcessors" labelClassName="col-5" className="col-7"/>
+        <description-item label="Physical Memory" labelClassName="col-5" className="col-7">
+          <q-linear-progress rounded
+                             :value="(host.totalPhysicalMemorySize - host.freePhysicalMemorySize) / host.totalPhysicalMemorySize"
+                             size="18px" color="amber-4">
+            <div class="absolute-full flex flex-center text-black text-caption">
+              {{ $memoryFormat(host.totalPhysicalMemorySize - host.freePhysicalMemorySize) }} / {{ $memoryFormat(host.totalPhysicalMemorySize) }}
+            </div>
+          </q-linear-progress>
+        </description-item>
+        <description-item label="Swap Space" labelClassName="col-5" className="col-7">
+          <q-linear-progress rounded :value="(host.totalSwapSpaceSize - host.freeSwapSpaceSize) / host.totalSwapSpaceSize" size="18px" color="lime-4">
+            <div class="absolute-full flex flex-center text-black text-caption">
+              {{ $memoryFormat(host.totalSwapSpaceSize - host.freeSwapSpaceSize) }} / {{ $memoryFormat(host.totalSwapSpaceSize) }}
+            </div>
+          </q-linear-progress>
+        </description-item>
+        <description-item label="Disk Space" labelClassName="col-5" className="col-7">
+          <q-linear-progress rounded :value="(host.diskFreeSpace) / host.diskTotalSpace" size="18px" color="lime-4">
+            <div class="absolute-full flex flex-center text-black text-caption">
+              {{ $memoryFormat(host.diskFreeSpace) }} / {{ $memoryFormat(host.diskTotalSpace) }}
+            </div>
+          </q-linear-progress>
+        </description-item>
+      </descriptions>
     </q-card>
   </div>
   <div class="row justify-center">
@@ -210,7 +193,6 @@ const refreshHeapMemoryChart = (heapMemoryList) => {
     symbol: 'none'
   }
   heapMemorySeries.push(totalMemorySeries)
-  console.log(heapMemorySeries)
   const option = {
     title: {text: 'Heap Memory'},
     legend: {

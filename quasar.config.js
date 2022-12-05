@@ -40,6 +40,7 @@ module.exports = configure(function (/* ctx */) {
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
     css: [
       'app.scss',
+      'components.scss',
       'quasar.custom.scss'
     ],
 
