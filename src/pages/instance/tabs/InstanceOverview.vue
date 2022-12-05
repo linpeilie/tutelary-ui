@@ -6,19 +6,16 @@
       </q-responsive>
     </q-card>
     <q-card bordered flat class="col-md-4 col-xs-11 q-ma-md q-pa-md">
+
+      <descriptions :column="1">
+<!--        <description-item label="Host Name" :content="host.hostName"/>-->
+<!--        <description-item label="OS Name" :content="host.osName"/>-->
+        <description-item label="Available Processors" :content="host.availableProcessors">
+          <span>sss</span>
+        </description-item>
+      </descriptions>
+
       <q-list separator>
-        <q-item>
-          <q-item-section class="text-grey">Host Name</q-item-section>
-          <q-item-section>{{ host.hostName }}</q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section class="text-grey">OS Name</q-item-section>
-          <q-item-section>{{ host.osName }}</q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section class="text-grey">Available Processors</q-item-section>
-          <q-item-section>{{ host.availableProcessors }}</q-item-section>
-        </q-item>
         <q-item>
           <q-item-section class="text-grey">Physical Memory</q-item-section>
           <q-item-section>

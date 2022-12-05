@@ -3,12 +3,20 @@
     <template v-for="(cell, index) in row" :key="'description-row-' + index" class="description-item-cell">
       <template v-if="descriptions.bordered">
         <td>{{ cell.props.label }}</td>
-        <td :colspan="cell.props.span * 2 - 1">{{ cell.props.content }}</td>
+        <td :colspan="cell.props.span * 2 - 1">
+          <slot>
+            {{ cell.props.content }}
+          </slot>
+        </td>
       </template>
       <template v-else>
-        <td :colspan="cell.props.span * 2 - 1">
-          <span class="description-item-cell__label">{{ cell.props.label }}</span>
-          <span class="description-item-cell__content">{{ cell.props.content }}</span>
+        <td :colspan="cell.props.span * 2 - 1" class="row items-center">
+          <div class="description-item-cell__label col-6">{{ cell.props.label }}</div>
+          <div class="description-item-cell__content col-6">
+            <slot>
+              {{ cell.props.content }}
+            </slot>
+          </div>
         </td>
       </template>
     </template>
@@ -16,7 +24,7 @@
 </template>
 
 <script setup>
-import { defineProps, inject } from 'vue'
+import {defineProps, inject} from 'vue'
 
 const props = defineProps({
   row: {
