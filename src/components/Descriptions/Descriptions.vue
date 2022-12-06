@@ -1,6 +1,7 @@
 <template>
   <div class="descriptions-container">
-    <div class="descriptions-header q-table__top" v-if="title">
+    <div class="descriptions-header q-table__top"
+         v-if="title">
       <div class="q-table__control q-table__title">
         <slot name="title">{{ title }}</slot>
       </div>
@@ -68,7 +69,6 @@ const getRows = () => {
   const defaultSlots = slots.default?.().filter(
     node => node?.type?.__name === 'DescriptionItem'
   )
-  console.log('=>(Descriptions.vue:60) defaultSlots', defaultSlots)
   if (!defaultSlots) {
     return rows
   }
@@ -84,7 +84,6 @@ const getRows = () => {
       const lastSpan = props.column - (totalSpan % props.column)
       temp.push(filledNode(node, lastSpan, count, true))
       rows.push(temp)
-      console.log('=>(Descriptions.vue:75) rows', rows)
       return rows
     }
     if (span < count) {
@@ -96,7 +95,6 @@ const getRows = () => {
       count = props.column
       temp = []
     }
-    console.log('=>(Descriptions.vue:88) rows', rows)
     return rows
   })
   return rows

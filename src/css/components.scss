@@ -1,0 +1,10 @@
+.description-item-cell__label {
+  color: $grey-7;
+}
+
+.description-item-cell__label::after {
+  display: inline-block;
+  content: ':';
+  margin-left: 5px;
+  margin-right: 5px;
+}

@@ -8,10 +8,7 @@
     <q-card bordered flat class="col-md-4 col-xs-11 q-ma-md q-pa-md">
 
       <descriptions :column="1">
-<!--        <description-item label="Host Name" :content="host.hostName"/>-->
-<!--        <description-item label="OS Name" :content="host.osName"/>-->
         <description-item label="Available Processors" :content="host.availableProcessors">
-          <span>sss</span>
         </description-item>
       </descriptions>
 
