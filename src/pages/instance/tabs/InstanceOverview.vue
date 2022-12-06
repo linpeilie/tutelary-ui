@@ -8,8 +8,7 @@
     <q-card bordered flat class="col-md-4 col-xs-11 q-ma-md q-pa-md">
 
       <descriptions :column="1">
-        <description-item label="Available Processors" :content="host.availableProcessors">
-        </description-item>
+        <description-item label="Available Processors" :content="host.availableProcessors"/>
       </descriptions>
 
       <q-list separator>

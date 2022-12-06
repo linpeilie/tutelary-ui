@@ -67,7 +67,7 @@ const filledNode = (node, span, count, isLast = false) => {
 const getRows = () => {
   const rows = []
   const defaultSlots = slots.default?.().filter(
-    node => node?.type?.__name === 'DescriptionItem'
+    node => node?.type?.name === 'DescriptionItem'
   )
   if (!defaultSlots) {
     return rows
@@ -76,6 +76,12 @@ const getRows = () => {
   let count = props.column
   let totalSpan = 0
   defaultSlots.forEach((node, index) => {
+    Object.keys(node.type.props).forEach(key => {
+      if (node.type.props[key].default) {
+        node.props[key] = node.props[key] || node.type.props[key].default
+      }
+    })
+
     const span = node.props?.span || 1
     if (index < defaultSlots.length - 1) {
       totalSpan += span > count ? count : span
