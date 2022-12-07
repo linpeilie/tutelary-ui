@@ -9,7 +9,6 @@ export default defineComponent({
   },
   render() {
     const item = this.cell
-    console.log("-> item", item);
     const label = item.props.label
     const content = this.cell?.children?.default?.() || item.props.content
     const span = item.props.span
@@ -54,19 +53,19 @@ export default defineComponent({
           'td',
           {
             style,
-            class: ['row', 'items-center', align],
+            class: [`items-${align}`],
             colSpan: span
           },
           [
             h(
-              'div',
+              'span',
               {
                 class: ['description-item-cell__label', labelClassName]
               },
               label
             ),
             h(
-              'div',
+              'span',
               {
                 class: ['description-item-cell__content', className]
               },

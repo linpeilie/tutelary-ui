@@ -3,12 +3,18 @@
     <q-card class="q-py-md row items-center">
       <q-icon name="grain" class="text-h3" left right></q-icon>
       <div>
-        <div class="text-h5">{{ instanceInfo.appName }}</div>
-        <div class="row q-gutter-x-md">
-          <div class="text-h6 text-grey">{{ instanceInfo.instanceId }}</div>
-          <q-chip square color="primary" text-color="white">{{ instanceInfo.ip }}</q-chip>
-          <q-chip square color="secondary" text-color="white" icon="flag">{{ instanceInfo.registerDate }}</q-chip>
+        <div class="row">
+          <div class="text-h5 q-mr-md">{{ instanceInfo.appName }}</div>
+          <q-chip square color="secondary" text-color="white">{{ instanceInfo.instanceId }}</q-chip>
         </div>
+        <descriptions :column="3">
+          <description-item label="IP" :content="instanceInfo.ip"/>
+          <description-item label="Start Date" :content="instanceInfo.startTime"/>
+          <description-item label="Register Date" :content="instanceInfo.registerDate"/>
+          <description-item label="VmName" :content="instanceInfo.vmName"/>
+          <description-item label="VmVendor" :content="instanceInfo.vmVendor"/>
+          <description-item label="Jdk Version" :content="instanceInfo.jdkVersion"/>
+        </descriptions>
       </div>
     </q-card>
 
@@ -44,9 +50,9 @@
 </template>
 
 <script setup>
-import {ref, shallowRef, onMounted, provide, readonly} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
-import {getAction} from 'src/api/manage'
+import { ref, shallowRef, onMounted, provide, readonly } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { getAction } from 'src/api/manage'
 import InstanceOverview from './tabs/InstanceOverview.vue'
 
 const instanceOverview = shallowRef(InstanceOverview)
@@ -70,7 +76,7 @@ onMounted(() => {
   })
 })
 
-provide('instanceId', readonly(instanceId))
+provide('instanceId', instanceId)
 
 const tabOptions = ref([
   {
