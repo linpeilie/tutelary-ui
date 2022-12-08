@@ -34,7 +34,8 @@ module.exports = configure(function (/* ctx */) {
       'components',
       'constants',
       'eventbus',
-      'format'
+      'format',
+      'datepicker'
     ],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css

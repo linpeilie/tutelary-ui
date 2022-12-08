@@ -1,6 +1,6 @@
 <template>
   <div>
-    
+    <t-datetime-picker v-model="statisticTime"/>
   </div>
   <div class="row justify-center">
     <q-card bordered flat class="col-md-7 col-xs-11 q-ma-md q-pa-md">
@@ -13,20 +13,25 @@
       <descriptions :column="1">
         <description-item label="Host Name" :content="host.hostName" labelClassName="col-5" className="col-7"/>
         <description-item label="Os Name" :content="host.osName" labelClassName="col-5" className="col-7"/>
-        <description-item label="Available Processors" :content="host.availableProcessors" labelClassName="col-5" className="col-7"/>
+        <description-item label="Available Processors" :content="host.availableProcessors" labelClassName="col-5"
+                          className="col-7"/>
         <description-item label="Physical Memory" labelClassName="col-5" className="col-7">
           <q-linear-progress rounded
                              :value="(host.totalPhysicalMemorySize - host.freePhysicalMemorySize) / host.totalPhysicalMemorySize"
                              size="18px" color="amber-4">
             <div class="absolute-full flex flex-center text-black text-caption">
-              {{ $memoryFormat(host.totalPhysicalMemorySize - host.freePhysicalMemorySize) }} / {{ $memoryFormat(host.totalPhysicalMemorySize) }}
+              {{ $memoryFormat(host.totalPhysicalMemorySize - host.freePhysicalMemorySize) }} /
+              {{ $memoryFormat(host.totalPhysicalMemorySize) }}
             </div>
           </q-linear-progress>
         </description-item>
         <description-item label="Swap Space" labelClassName="col-5" className="col-7">
-          <q-linear-progress rounded :value="(host.totalSwapSpaceSize - host.freeSwapSpaceSize) / host.totalSwapSpaceSize" size="18px" color="lime-4">
+          <q-linear-progress rounded
+                             :value="(host.totalSwapSpaceSize - host.freeSwapSpaceSize) / host.totalSwapSpaceSize"
+                             size="18px" color="lime-4">
             <div class="absolute-full flex flex-center text-black text-caption">
-              {{ $memoryFormat(host.totalSwapSpaceSize - host.freeSwapSpaceSize) }} / {{ $memoryFormat(host.totalSwapSpaceSize) }}
+              {{ $memoryFormat(host.totalSwapSpaceSize - host.freeSwapSpaceSize) }} /
+              {{ $memoryFormat(host.totalSwapSpaceSize) }}
             </div>
           </q-linear-progress>
         </description-item>
@@ -55,7 +60,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted, inject} from 'vue'
+import { ref, onMounted, inject } from 'vue'
 import * as echarts from 'echarts/core'
 import {
   GridComponent,
@@ -64,11 +69,11 @@ import {
   ToolboxComponent,
   TooltipComponent
 } from 'echarts/components'
-import {LineChart, BarChart} from 'echarts/charts'
-import {UniversalTransition} from 'echarts/features'
-import {CanvasRenderer} from 'echarts/renderers'
-import {postAction} from "src/api/manage";
-import dayjs from "dayjs";
+import { LineChart, BarChart } from 'echarts/charts'
+import { UniversalTransition } from 'echarts/features'
+import { CanvasRenderer } from 'echarts/renderers'
+import { postAction } from 'src/api/manage'
+import dayjs from 'dayjs'
 
 const instanceId = inject('instanceId')
 
@@ -87,6 +92,8 @@ const garbageCollectorRef = ref()
 
 const host = ref({})
 
+const statisticTime = ref([])
+
 onMounted(() => {
   threadStatisticChart = echarts.init(threadStatisticRef.value)
   heapMemoryStatisticChart = echarts.init(heapMemoryStatisticRef.value)
@@ -104,7 +111,6 @@ onMounted(() => {
     }
   }
 })
-
 
 const loadData = () => {
   const param = {
@@ -143,7 +149,7 @@ const refreshGarbageCollectorChart = (garbageCollectors) => {
         dataZoom: {
           yAxisIndex: false
         },
-        dataView: {readOnly: false},
+        dataView: { readOnly: false },
         saveAsImage: {}
       }
     },
@@ -197,7 +203,7 @@ const refreshHeapMemoryChart = (heapMemoryList) => {
   }
   heapMemorySeries.push(totalMemorySeries)
   const option = {
-    title: {text: 'Heap Memory'},
+    title: { text: 'Heap Memory' },
     legend: {
       data: heapMemoryList.map(item => item.name)
     },
@@ -211,7 +217,7 @@ const refreshHeapMemoryChart = (heapMemoryList) => {
         dataZoom: {
           yAxisIndex: false
         },
-        dataView: {readOnly: false},
+        dataView: { readOnly: false },
         saveAsImage: {}
       }
     },
@@ -223,7 +229,10 @@ const refreshHeapMemoryChart = (heapMemoryList) => {
       }
     ],
     yAxis: [
-      {type: 'value', axisLabel: { formatter: '{value} MB'}}
+      {
+        type: 'value',
+        axisLabel: { formatter: '{value} MB' }
+      }
     ],
     series: heapMemorySeries
   }
@@ -233,7 +242,7 @@ const refreshHeapMemoryChart = (heapMemoryList) => {
 const refreshThreadStatistic = (threadStatistic) => {
   const reportTime = threadStatistic.reportTimestamps
   const option = {
-    title: {text: 'Thread Statistic'},
+    title: { text: 'Thread Statistic' },
     legend: {
       data: ['ThreadCount', 'DaemonThreadCount']
     },
@@ -250,7 +259,7 @@ const refreshThreadStatistic = (threadStatistic) => {
         dataZoom: {
           yAxisIndex: 'none'
         },
-        dataView: {readOnly: false},
+        dataView: { readOnly: false },
         saveAsImage: {}
       }
     },
@@ -264,13 +273,19 @@ const refreshThreadStatistic = (threadStatistic) => {
     },
     series: [
       {
-        name: 'ThreadCount', type: 'line', smooth: true, symbol: 'none',
+        name: 'ThreadCount',
+        type: 'line',
+        smooth: true,
+        symbol: 'none',
         data: threadStatistic.threadCount.map((currentValue, index) => {
           return [reportTime[index], currentValue]
         })
       },
       {
-        name: 'DaemonThreadCount', type: 'line', smooth: true, symbol: 'none',
+        name: 'DaemonThreadCount',
+        type: 'line',
+        smooth: true,
+        symbol: 'none',
         data: threadStatistic.daemonThreadCount.map((currentValue, index) => {
           return [reportTime[index], currentValue]
         })

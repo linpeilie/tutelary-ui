@@ -3,6 +3,11 @@
     border-radius: 0;
   }
 
+  .descriptions-body {
+    width: 100%;
+    overflow: hidden;
+  }
+
   .description-item-cell__label {
     color: $grey-7;
   }
