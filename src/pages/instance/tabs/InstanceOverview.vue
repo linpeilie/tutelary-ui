@@ -1,4 +1,7 @@
 <template>
+  <div>
+    
+  </div>
   <div class="row justify-center">
     <q-card bordered flat class="col-md-7 col-xs-11 q-ma-md q-pa-md">
       <q-responsive :ratio="7/2" style="min-height: 300px">
@@ -220,7 +223,7 @@ const refreshHeapMemoryChart = (heapMemoryList) => {
       }
     ],
     yAxis: [
-      {type: 'value'}
+      {type: 'value', axisLabel: { formatter: '{value} MB'}}
     ],
     series: heapMemorySeries
   }
