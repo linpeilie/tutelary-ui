@@ -1,21 +1,19 @@
 <template>
   <q-page padding class="q-gutter-y-md">
-    <q-card class="q-py-md row items-center">
-      <q-icon name="grain" class="text-h3" left right></q-icon>
-      <div>
-        <div class="row">
-          <div class="text-h5 q-mr-md">{{ instanceInfo.appName }}</div>
-          <q-chip square color="secondary" text-color="white">{{ instanceInfo.instanceId }}</q-chip>
-        </div>
-        <descriptions :column="3">
-          <description-item label="IP" :content="instanceInfo.ip"/>
-          <description-item label="Start Date" :content="instanceInfo.startTime"/>
-          <description-item label="Register Date" :content="instanceInfo.registerDate"/>
-          <description-item label="VmName" :content="instanceInfo.vmName"/>
-          <description-item label="VmVendor" :content="instanceInfo.vmVendor"/>
-          <description-item label="Jdk Version" :content="instanceInfo.jdkVersion"/>
-        </descriptions>
+    <q-card class="q-py-md items-center">
+      <div class="row items-center">
+        <q-icon name="grain" class="text-h4" left right></q-icon>
+        <div class="text-h5 q-mr-md">{{ instanceInfo.appName }}</div>
+        <q-chip square color="secondary" text-color="white">{{ instanceInfo.instanceId }}</q-chip>
       </div>
+      <descriptions :column="3">
+        <description-item label="IP" :content="instanceInfo.ip"/>
+        <description-item label="Start Date" :content="instanceInfo.startTime"/>
+        <description-item label="Register Date" :content="instanceInfo.registerDate"/>
+        <description-item label="VmName" :content="instanceInfo.vmName"/>
+        <description-item label="VmVendor" :content="instanceInfo.vmVendor"/>
+        <description-item label="Jdk Version" :content="instanceInfo.jdkVersion"/>
+      </descriptions>
     </q-card>
 
     <q-card>

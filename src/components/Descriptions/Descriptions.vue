@@ -107,13 +107,3 @@ const getRows = () => {
 }
 
 </script>
-
-<style scoped lang="scss">
-.descriptions-container {
-  .descriptions-body {
-    width: 100%;
-    overflow: hidden;
-  }
-
-}
-</style>
