@@ -1,6 +1,11 @@
 <template>
-  <div>
-    <t-datetime-picker v-model="statisticTime"/>
+  <div class="row items-center justify-end q-mx-md">
+    <t-datetime-picker v-model="statisticTime" :shortcuts="shortcuts"/>
+    <q-btn class="q-mx-md" color="primary" label="刷新" icon="refresh" @click="loadData"/>
+    <div class="row column items-end">
+      <div class="text-grey">更新时间：{{ statisticCurrentTime }}</div>
+      <div class="text-grey">最新数据时间：{{ date.formatDate(host.reportTimestamps, 'YYYY-MM-DD HH:mm:ss') }}</div>
+    </div>
   </div>
   <div class="row justify-center">
     <q-card bordered flat class="col-md-7 col-xs-11 q-ma-md q-pa-md">
@@ -73,7 +78,7 @@ import { LineChart, BarChart } from 'echarts/charts'
 import { UniversalTransition } from 'echarts/features'
 import { CanvasRenderer } from 'echarts/renderers'
 import { postAction } from 'src/api/manage'
-import dayjs from 'dayjs'
+import { date } from 'quasar'
 
 const instanceId = inject('instanceId')
 
@@ -94,10 +99,58 @@ const host = ref({})
 
 const statisticTime = ref([])
 
+const shortcuts = [
+  {
+    text: 'Last 15 Minutes',
+    value: () => {
+      const end = Date.now()
+      const start = date.subtractFromDate(end, {minute: 15})
+      return [start, end]
+    }
+  },
+  {
+    text: 'Last 30 Minutes',
+    value: () => {
+      const end = Date.now()
+      const start = date.subtractFromDate(end, {minute: 30})
+      return [start, end]
+    }
+  },
+  {
+    text: 'Last Hour',
+    value: () => {
+      const end = Date.now()
+      const start = date.subtractFromDate(end, {hour: 1})
+      return [start, end]
+    }
+  },
+  {
+    text: 'Last Day',
+    value: () => {
+      const end = Date.now()
+      const start = date.subtractFromDate(end, {day: 1})
+      return [start, end]
+    }
+  },
+  {
+    text: 'Last 3 Days',
+    value: () => {
+      const end = Date.now()
+      const start = date.subtractFromDate(end, {day: 3})
+      return [start, end]
+    }
+  }
+]
+
+const statisticCurrentTime = ref('')
+
 onMounted(() => {
   threadStatisticChart = echarts.init(threadStatisticRef.value)
   heapMemoryStatisticChart = echarts.init(heapMemoryStatisticRef.value)
   garbageCollectorChart = echarts.init(garbageCollectorRef.value)
+  let now = Date.now()
+  statisticTime.value.push(date.subtractFromDate(now, { days: 1 }))
+  statisticTime.value.push(now)
   loadData()
   window.onresize = () => {
     if (threadStatisticChart) {
@@ -113,14 +166,14 @@ onMounted(() => {
 })
 
 const loadData = () => {
+
   const param = {
     instanceId: instanceId,
-    reportStartTime: dayjs().subtract(1, 'day').format('YYYY-MM-DD HH:mm:ss'),
-    reportEndTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
+    reportStartTime: date.formatDate(statisticTime.value[0], 'YYYY-MM-DD HH:mm:ss'),
+    reportEndTime: date.formatDate(statisticTime.value[1], 'YYYY-MM-DD HH:mm:ss')
   }
   postAction('/api/instance/statistic/overview', param).then(res => {
-    console.log('overview res ', res)
-    // thread statistic
+    statisticCurrentTime.value = date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm:ss')
     const data = res.data.data
     host.value = data.host
     refreshThreadStatistic(data.threadStatistic)
@@ -131,8 +184,12 @@ const loadData = () => {
 }
 
 const refreshGarbageCollectorChart = (garbageCollectors) => {
+  if (!garbageCollectors || garbageCollectors.length === 0) {
+    garbageCollectorChart.clear()
+    return
+  }
   const reportTime = garbageCollectors[0].reportTimestamps.map(timestamp => {
-    return dayjs(timestamp).format('MM/DD HH:mm')
+    return date.formatDate(timestamp, 'MM/DD HH:mm')
   })
   const option = {
     title: { text: 'Garbage Collectors' },
@@ -171,7 +228,11 @@ const refreshGarbageCollectorChart = (garbageCollectors) => {
 }
 
 const refreshHeapMemoryChart = (heapMemoryList) => {
-  const reportTime = heapMemoryList[0].reportTimestamps
+  const reportTime = heapMemoryList?.[0].reportTimestamps
+  if(!reportTime || reportTime.length === 0) {
+    heapMemoryStatisticChart.clear()
+    return
+  }
   const heapMemorySeries = heapMemoryList.map(item => {
     return {
       name: item.name,
@@ -240,7 +301,11 @@ const refreshHeapMemoryChart = (heapMemoryList) => {
 }
 
 const refreshThreadStatistic = (threadStatistic) => {
-  const reportTime = threadStatistic.reportTimestamps
+  const reportTime = threadStatistic?.reportTimestamps
+  if (!reportTime || reportTime.length === 0) {
+    threadStatisticChart.clear()
+    return
+  }
   const option = {
     title: { text: 'Thread Statistic' },
     legend: {
