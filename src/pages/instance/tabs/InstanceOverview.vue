@@ -79,6 +79,7 @@ import { UniversalTransition } from 'echarts/features'
 import { CanvasRenderer } from 'echarts/renderers'
 import { postAction } from 'src/api/manage'
 import { date } from 'quasar'
+import { divide } from "src/utils/math";
 
 const instanceId = inject('instanceId')
 
@@ -292,7 +293,7 @@ const refreshHeapMemoryChart = (heapMemoryList) => {
     yAxis: [
       {
         type: 'value',
-        axisLabel: { formatter: '{value} MB' }
+        axisLabel: { formatter: `{value} MB` }
       }
     ],
     series: heapMemorySeries
