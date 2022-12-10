@@ -52,8 +52,10 @@ import { ref, shallowRef, onMounted, provide, readonly } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getAction } from 'src/api/manage'
 import InstanceOverview from './tabs/InstanceOverview.vue'
+import InstanceJvm from './tabs/InstanceJvm.vue'
 
 const instanceOverview = shallowRef(InstanceOverview)
+const instanceJvm = shallowRef(InstanceJvm)
 
 const route = useRoute()
 const router = useRouter()
@@ -86,8 +88,8 @@ const tabOptions = ref([
   {
     label: 'JVM信息',
     value: 'JvmInfo',
-    icon: 'memory'
-    // component: instanceJvmInfo
+    icon: 'memory',
+    component: instanceJvm
   },
   {
     label: '线程信息',

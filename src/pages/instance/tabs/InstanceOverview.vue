@@ -1,12 +1,7 @@
 <template>
-  <div class="row items-center justify-end q-mx-md">
-    <t-datetime-picker v-model="statisticTime" :shortcuts="shortcuts"/>
-    <q-btn class="q-mx-md" color="primary" label="刷新" icon="refresh" @click="loadData"/>
-    <div class="row column items-end">
-      <div class="text-grey">更新时间：{{ statisticCurrentTime }}</div>
-      <div class="text-grey">最新数据时间：{{ date.formatDate(host.reportTimestamps, 'YYYY-MM-DD HH:mm:ss') }}</div>
-    </div>
-  </div>
+  <statistic-time-picker
+    :statistic-latest-time="date.formatDate(host.reportTimestamps, 'YYYY-MM-DD HH:mm:ss')"
+    @load-data="loadData"/>
   <div class="row justify-center">
     <q-card bordered flat class="col-md-7 col-xs-11 q-ma-md q-pa-md">
       <q-responsive :ratio="7/2" style="min-height: 300px">
@@ -74,17 +69,17 @@ import {
   ToolboxComponent,
   TooltipComponent
 } from 'echarts/components'
-import { LineChart, BarChart } from 'echarts/charts'
+import { LineChart } from 'echarts/charts'
 import { UniversalTransition } from 'echarts/features'
 import { CanvasRenderer } from 'echarts/renderers'
 import { postAction } from 'src/api/manage'
 import { date } from 'quasar'
-import { divide } from "src/utils/math";
+import StatisticTimePicker from "../components/StatisticTimePicker.vue";
 
 const instanceId = inject('instanceId')
 
 echarts.use([GridComponent, LineChart, CanvasRenderer, UniversalTransition, TitleComponent,
-  ToolboxComponent, TooltipComponent, LegendComponent, BarChart])
+  ToolboxComponent, TooltipComponent, LegendComponent])
 
 // echarts instance
 let threadStatisticChart
@@ -98,61 +93,10 @@ const garbageCollectorRef = ref()
 
 const host = ref({})
 
-const statisticTime = ref([])
-
-const shortcuts = [
-  {
-    text: 'Last 15 Minutes',
-    value: () => {
-      const end = Date.now()
-      const start = date.subtractFromDate(end, {minute: 15})
-      return [start, end]
-    }
-  },
-  {
-    text: 'Last 30 Minutes',
-    value: () => {
-      const end = Date.now()
-      const start = date.subtractFromDate(end, {minute: 30})
-      return [start, end]
-    }
-  },
-  {
-    text: 'Last Hour',
-    value: () => {
-      const end = Date.now()
-      const start = date.subtractFromDate(end, {hour: 1})
-      return [start, end]
-    }
-  },
-  {
-    text: 'Last Day',
-    value: () => {
-      const end = Date.now()
-      const start = date.subtractFromDate(end, {day: 1})
-      return [start, end]
-    }
-  },
-  {
-    text: 'Last 3 Days',
-    value: () => {
-      const end = Date.now()
-      const start = date.subtractFromDate(end, {day: 3})
-      return [start, end]
-    }
-  }
-]
-
-const statisticCurrentTime = ref('')
-
 onMounted(() => {
   threadStatisticChart = echarts.init(threadStatisticRef.value)
   heapMemoryStatisticChart = echarts.init(heapMemoryStatisticRef.value)
   garbageCollectorChart = echarts.init(garbageCollectorRef.value)
-  let now = Date.now()
-  statisticTime.value.push(date.subtractFromDate(now, { days: 1 }))
-  statisticTime.value.push(now)
-  loadData()
   window.onresize = () => {
     if (threadStatisticChart) {
       threadStatisticChart.resize()
@@ -166,15 +110,13 @@ onMounted(() => {
   }
 })
 
-const loadData = () => {
-
+const loadData = (statisticTimes) => {
   const param = {
     instanceId: instanceId,
-    reportStartTime: date.formatDate(statisticTime.value[0], 'YYYY-MM-DD HH:mm:ss'),
-    reportEndTime: date.formatDate(statisticTime.value[1], 'YYYY-MM-DD HH:mm:ss')
+    reportStartTime: date.formatDate(statisticTimes.value[0], 'YYYY-MM-DD HH:mm:ss'),
+    reportEndTime: date.formatDate(statisticTimes.value[1], 'YYYY-MM-DD HH:mm:ss')
   }
   postAction('/api/instance/statistic/overview', param).then(res => {
-    statisticCurrentTime.value = date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm:ss')
     const data = res.data.data
     host.value = data.host
     refreshThreadStatistic(data.threadStatistic)
@@ -195,7 +137,8 @@ const refreshGarbageCollectorChart = (garbageCollectors) => {
   const option = {
     title: { text: 'Garbage Collectors' },
     legend: {
-      data: garbageCollectors.map(item => item.name)
+      data: garbageCollectors.map(item => item.name),
+      bottom: 0
     },
     tooltip: {
       trigger: 'axis'
@@ -251,7 +194,7 @@ const refreshHeapMemoryChart = (heapMemoryList) => {
     }
   })
   const len = heapMemoryList.length
-  const totalMemorySeries = {
+  const committedMemorySeries = {
     name: 'Committed',
     type: 'line',
     data: heapMemoryList[0].committed.map((currentValue, index) => {
@@ -263,11 +206,12 @@ const refreshHeapMemoryChart = (heapMemoryList) => {
     smooth: true,
     symbol: 'none'
   }
-  heapMemorySeries.push(totalMemorySeries)
+  heapMemorySeries.push(committedMemorySeries)
   const option = {
     title: { text: 'Heap Memory' },
     legend: {
-      data: heapMemoryList.map(item => item.name)
+      data: heapMemoryList.map(item => item.name),
+      bottom: 0
     },
     tooltip: {
       trigger: 'axis'
@@ -310,7 +254,8 @@ const refreshThreadStatistic = (threadStatistic) => {
   const option = {
     title: { text: 'Thread Statistic' },
     legend: {
-      data: ['ThreadCount', 'DaemonThreadCount']
+      data: ['ThreadCount', 'DaemonThreadCount'],
+      bottom: 0
     },
     tooltip: {
       trigger: 'axis',
