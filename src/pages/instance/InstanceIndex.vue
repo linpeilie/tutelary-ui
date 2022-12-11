@@ -53,9 +53,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { getAction } from 'src/api/manage'
 import InstanceOverview from './tabs/InstanceOverview.vue'
 import InstanceJvm from './tabs/InstanceJvm.vue'
+import InstanceThread from './tabs/InstanceThread.vue'
 
 const instanceOverview = shallowRef(InstanceOverview)
 const instanceJvm = shallowRef(InstanceJvm)
+const instanceThread = shallowRef(InstanceThread)
 
 const route = useRoute()
 const router = useRouter()
@@ -94,8 +96,8 @@ const tabOptions = ref([
   {
     label: '线程信息',
     value: 'ThreadList',
-    icon: 'analytics'
-    // component: instanceThreadList
+    icon: 'analytics',
+    component: instanceThread
   },
   {
     label: '方法追踪',

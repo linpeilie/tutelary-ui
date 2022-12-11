@@ -20,6 +20,10 @@ const offCommand = (type, commandCode, callback) => {
 
 export default boot(({ app }) => {
   app.config.globalProperties.$bus = bus
+  app.provide('$bus', bus)
+  app.provide('onCommand', onCommand)
+  app.provide('emitCommand', emitCommand)
+  app.provide('offCommand', offCommand)
 })
 
 export {
