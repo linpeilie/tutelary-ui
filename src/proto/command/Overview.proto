@@ -13,6 +13,13 @@ repeated GarbageCollector garbageCollectors=5;
  string message=8;
 }
 //
+message GarbageCollector {  
+ string name=1;
+ int64 collectionCount=2;
+ int64 collectionTime=3;
+repeated string memoryPoolNames=4;
+}
+//
 message JvmMemory {  
  string name=1;
  int64 used=2;
@@ -25,13 +32,6 @@ message ThreadStatistic {
  int32 peakThreadCount=2;
  int32 daemonThreadCount=3;
  int64 totalStartedThreadCount=4;
-}
-//
-message GarbageCollector {  
- string name=1;
- int64 collectionCount=2;
- int64 collectionTime=3;
-repeated string memoryPoolNames=4;
 }
 //
 message HostInfo {  

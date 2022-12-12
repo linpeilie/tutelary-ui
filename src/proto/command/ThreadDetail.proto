@@ -16,14 +16,14 @@ repeated StackTraceNode stackTrace=8;
  string message=11;
 }
 //
+message LockInfo {  
+ string className=1;
+ int32 identityHashCode=2;
+}
+//
 message StackTraceNode {  
  string declaringClass=1;
  string methodName=2;
  int32 lineNumber=3;
  bool isNative=4;
-}
-//
-message LockInfo {  
- string className=1;
- int32 identityHashCode=2;
 }

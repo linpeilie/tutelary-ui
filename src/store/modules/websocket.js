@@ -1,9 +1,18 @@
 import { encode, decode } from 'boot/protobuf'
-import { COMMAND_RESPONSE_CMD } from 'src/proto/proto'
-import { emitCommand } from 'boot/eventbus'
+import { ERROR_MESSAGE, COMMAND_RESPONSE_CMD } from 'src/proto/proto'
+import { emitCommand, emitError } from 'boot/eventbus'
+
+import { Notify } from 'quasar'
 
 const handleOnMessage = (message) => {
-  if (message.cmd === COMMAND_RESPONSE_CMD) {
+  if (message.cmd === ERROR_MESSAGE) {
+    Notify.create({
+      type: 'negative',
+      message: message.message,
+      position: 'top-right'
+    })
+    emitError(message.message)
+  } if (message.cmd === COMMAND_RESPONSE_CMD) {
     emitCommand(message.commandType, message.commandCode, message)
   }
 }

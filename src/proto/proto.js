@@ -1,9 +1,10 @@
 export const PATH_PREF = 'src/proto/'
+export const ERROR_MESSAGE = 0
 export const COMMAND_REQUEST_CMD = 3
 export const COMMAND_RESPONSE_CMD = 4
 export const CMD_PROTO = [
   {
-    cmd: 0,
+    cmd: ERROR_MESSAGE,
     proto: 'ErrorMessage',
     description: '异常信息'
   },

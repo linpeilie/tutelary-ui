@@ -10,13 +10,6 @@ repeated BaseThreadInfo threads=2;
  string message=5;
 }
 //
-message ThreadStatistic {  
- int32 threadCount=1;
- int32 peakThreadCount=2;
- int32 daemonThreadCount=3;
- int64 totalStartedThreadCount=4;
-}
-//
 message BaseThreadInfo {  
  int64 id=1;
  string name=2;
@@ -25,4 +18,11 @@ message BaseThreadInfo {
  string state=5;
  double cpu=6;
  bool daemon=7;
+}
+//
+message ThreadStatistic {  
+ int32 threadCount=1;
+ int32 peakThreadCount=2;
+ int32 daemonThreadCount=3;
+ int64 totalStartedThreadCount=4;
 }
