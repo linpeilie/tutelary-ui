@@ -12,7 +12,7 @@
   "scripts": {
     "build": "vite build",
     "build:github": "vite build --mode github",
-    "dev": "vite --debug",
+    "dev": "vite",
     "lint": "eslint --ext .js,.ts,.vue .",
     "lint:fix": "eslint --fix --ext .js,.ts,.vue .",
     "lint:staged": "lint-staged",
@@ -34,7 +34,6 @@
   },
   "dependencies": {
     "@vueuse/core": "^10.1.2",
-    "@zclzone/crud": "^0.0.13",
     "axios": "^1.4.0",
     "crypto-js": "^4.1.1",
     "dayjs": "^1.11.8",

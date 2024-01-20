@@ -45,7 +45,8 @@ export const useUserStore = defineStore('user', {
         const { userId, username, nickName } = res
         this.userInfo = { userId, username, nickName }
         return Promise.resolve(res)
-      } catch (error) {
+      }
+      catch (error) {
         return Promise.reject(error)
       }
     },
@@ -53,13 +54,14 @@ export const useUserStore = defineStore('user', {
       try {
         const permissions = await api.getPermissions()
         this.menus = permissions
-          .filter((permission) => permission.permissionType === permissionType__Menu)
-          .map((permission) => permission.identification)
+          .filter(permission => permission.permissionType === permissionType__Menu)
+          .map(permission => permission.identification)
         this.resources = permissions
-          .filter((permission) => permission.permissionType === permissionType__Resource)
-          .map((permission) => permission.identification)
+          .filter(permission => permission.permissionType === permissionType__Resource)
+          .map(permission => permission.identification)
         return Promise.resolve(permissions)
-      } catch (error) {
+      }
+      catch (error) {
         return Promise.reject(error)
       }
     },

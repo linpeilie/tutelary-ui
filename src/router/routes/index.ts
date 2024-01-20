@@ -49,7 +49,7 @@ export const basicRoutes: RoutesType = [
         },
       },
     ],
-  }
+  },
 ]
 
 export const NOT_FOUND_ROUTE: RouteType = {

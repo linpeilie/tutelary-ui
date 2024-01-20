@@ -1,5 +1,5 @@
-import { UserQuery, UserInfo, UserAddRequest } from './types/userTypes'
-import { PermissionInfo } from './types/permissionTypes'
+import type { UserAddRequest, UserInfo, UserQuery } from './types/userTypes'
+import type { PermissionInfo } from './types/permissionTypes'
 import { request } from '@/utils'
 
 export default {

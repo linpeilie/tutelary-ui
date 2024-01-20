@@ -29,8 +29,8 @@ export default {
       component: () => import('@/views/system/role/list.vue'),
       meta: {
         title: '角色管理',
-        requireAuth: true
-      }
-    }
+        requireAuth: true,
+      },
+    },
   ],
 } as RouteType

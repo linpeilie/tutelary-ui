@@ -1,5 +1,7 @@
+import type { SelectBaseOption } from 'naive-ui/es/select/src/interface'
+
 // 枚举类型接口
-interface EnumArrayObj {
+interface EnumArrayObj extends SelectBaseOption {
   value: number | string
   label: string
 }
@@ -14,14 +16,14 @@ type GetObjType<T extends Record<string, any>, K extends keyof T> = T extends {
 // 讲数组中所有对象的 value 转换为联合对象
 export type GetObjValuesType<Arr extends readonly Record<string, any>[]> = Arr extends readonly [
   infer First,
-  ...infer Rest
+  ...infer Rest,
 ]
   ? GetObjType<First & Record<string, any>, 'value'> | GetObjValuesType<Rest & Record<string, any>[]>
   : never
 
 export type GetObjLabelsType<Arr extends readonly Record<string, any>[]> = Arr extends readonly [
   infer First,
-  ...infer Rest
+  ...infer Rest,
 ]
   ? GetObjType<First & Record<string, any>, 'label'> | GetObjLabelsType<Rest & Record<string, any>[]>
   : never
@@ -35,17 +37,17 @@ class EnumArray<T extends readonly EnumArrayObj[]> extends Array<EnumArrayObj> {
 
   // 根据值获取标签
   getLabelByValue(value: GetObjValuesType<T>) {
-    return this.find((item) => item.value === value)?.label || '-'
+    return this.find(item => item.value === value)?.label || '-'
   }
 
   // 根据标签获取值
   getValueByLavel(label: GetObjLabelsType<T>) {
-    return this.find((item) => item.label === label)?.value || '-'
+    return this.find(item => item.label === label)?.value || '-'
   }
 
   // 根据值获取对应的枚举对象
   getCorrespondEnumObjByValue(value: GetObjValuesType<T>) {
-    return this.find((item) => item.value === value)
+    return this.find(item => item.value === value)
   }
 }
 

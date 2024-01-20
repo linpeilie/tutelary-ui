@@ -4,3 +4,13 @@ interface Window {
   $message: import('naive-ui').MessageProviderInst
   $notification: import('naive-ui').NotificationProviderInst
 }
+
+interface QueryParam {
+  pageIndex: number;
+  pageSize: number;
+}
+
+interface PageResult<T> {
+  total: number;
+  records: Array<T>
+}
