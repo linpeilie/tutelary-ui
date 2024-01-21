@@ -105,6 +105,7 @@ function handleSearch() {
 async function handleReset() {
   const queryItems = { ...props.queryItems }
   for (const key in queryItems) queryItems[key] = ''
+  for (const key in queryItems) queryItems[key] = ''
 
   emit('update:queryItems', { ...queryItems, ...initQuery })
   await nextTick()
