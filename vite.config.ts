@@ -17,8 +17,8 @@ export default defineConfig((configEnv: ConfigEnv) => {
     base: VITE_PUBLIC_PATH,
     resolve: {
       alias: {
-        '~': rootPath,
         '@': srcPath,
+        '~': rootPath,
       },
     },
     define: viteDefine,
