@@ -51,7 +51,7 @@ onMounted(() => {
         刷新
       </NButton>
     </template>
-    <crud-table ref="$table" :columns="columns" :get-data="loadInstances" row-key="instanceId" :auto-search="false" />
+    <crud-table ref="$table" :columns="columns" :get-data="loadInstances" row-key="instanceId" :auto-search="false" :is-pagination="false" />
   </common-page>
 </template>
 
