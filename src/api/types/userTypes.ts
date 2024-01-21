@@ -1,6 +1,5 @@
-export interface UserQuery {
-  pageIndex: number
-  pageSize: number
+export interface UserQuery extends QueryParam {
+  username?: string
 }
 
 export interface UserInfo {
@@ -8,6 +7,7 @@ export interface UserInfo {
   username: string
   nickName: string
   phoneNumber: string
+  password: string
   state: string
   loginIp?: string
   loginDate?: string
@@ -17,4 +17,14 @@ export interface UserInfo {
 export interface UserAddRequest {
   username: string
   nickName: string
+  phoneNumber: string
+  password: string
+  remark?: string
+}
+
+export interface UserEditRequest {
+  userId: string
+  nickName: string
+  phoneNumber: string
+  remark?: string
 }

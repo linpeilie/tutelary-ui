@@ -4,7 +4,7 @@ import { usePermissionStore, useTabStore } from '@/store'
 import { resetRouter } from '@/router'
 import api from '@/api/userApi'
 
-import { permissionType__Menu, permissionType__Resource } from '~/src/enums/permissionEnums'
+import { permissionTypeEnum } from '~/src/enums/permissionEnums'
 
 interface UserInfo {
   userId?: string
@@ -54,10 +54,10 @@ export const useUserStore = defineStore('user', {
       try {
         const permissions = await api.getPermissions()
         this.menus = permissions
-          .filter(permission => permission.permissionType === permissionType__Menu)
+          .filter(permission => permission.permissionType === permissionTypeEnum.MENU.value)
           .map(permission => permission.identification)
         this.resources = permissions
-          .filter(permission => permission.permissionType === permissionType__Resource)
+          .filter(permission => permission.permissionType === permissionTypeEnum.RESOURCE.value)
           .map(permission => permission.identification)
         return Promise.resolve(permissions)
       }

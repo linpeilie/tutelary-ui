@@ -8,8 +8,8 @@ export default {
   component: Layout,
   meta: {
     title: '系统管理',
-    customIcon: 'logo',
     requireAuth: true,
+    icon: 'line-md:list-3-filled',
     order: 2,
   },
   children: [
@@ -19,7 +19,6 @@ export default {
       component: () => import('@/views/system/user/list.vue'),
       meta: {
         title: '用户管理',
-        icon: 'logos:unocss',
         requireAuth: true,
       },
     },

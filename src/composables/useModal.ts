@@ -27,7 +27,7 @@ export function useModal<V>(options: ModalOptions<V>) {
   const modalAction: Ref<ActionKeyScope> = ref('view')
   const modalTitle = computed(() => computedModalTitle(modalAction.value))
   const modalLoading = ref(false)
-  const modalFormRef = ref(null)
+  const modalFormRef = ref<any>(null)
   const modalForm: Ref<V> = ref<V>({} as V) as Ref<V>
 
   function computedModalTitle(key: ActionKeyScope): string {

@@ -87,6 +87,11 @@ export class AxiosRequest {
     return this.axiosInstance.post(url, data, config)
   }
 
+  public postForm<D, R>(url: string, data?: D, config: ExpandAxiosRequestConfig<D> = {}): Promise<R> {
+    config.transform = true
+    return this.axiosInstance.postForm(url, data, config)
+  }
+
   /**
    * post 请求
    */

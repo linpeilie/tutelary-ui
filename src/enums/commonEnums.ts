@@ -1,12 +1,6 @@
-import { createEnum } from '@/utils/common/enum'
+import { EnumItem } from '@/utils/common/enum'
 
-export const enableStatusEnum = createEnum([
-  {
-    label: '启用',
-    value: 1,
-  },
-  {
-    label: '未启用',
-    value: 0,
-  },
-] as const)
+export const enableStatusEnum = Object.freeze({
+  ENABLED: EnumItem.of(1, '启用', { type: 'info' }),
+  DISABLED: EnumItem.of(0, '未启用', { type: 'error' }),
+} as const)

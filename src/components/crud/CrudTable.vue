@@ -67,7 +67,15 @@ const emit = defineEmits(['update:queryItems', 'onChecked', 'onDataChange'])
 const loading = ref(false)
 const initQuery = { ...props.queryItems }
 const tableData = ref([])
-const pagination = reactive({ page: 1, pageSize: 10 })
+const pagination = reactive({
+  page: 1,
+  pageSize: 10,
+  pageSizes: [10, 20, 50, 100],
+  showSizePicker: true,
+  prefix({ itemCount }) {
+    return `总数：${itemCount}`
+  },
+})
 
 async function handleQuery() {
   try {
@@ -96,8 +104,7 @@ function handleSearch() {
 }
 async function handleReset() {
   const queryItems = { ...props.queryItems }
-  for (const key in queryItems)
-    queryItems[key] = ''
+  for (const key in queryItems) queryItems[key] = ''
 
   emit('update:queryItems', { ...queryItems, ...initQuery })
   await nextTick()
@@ -109,6 +116,14 @@ function onPageChange(currentPage) {
   if (props.remote)
     handleQuery()
 }
+
+function onPageSizeChange(currentPageSize) {
+  pagination.pageSize = currentPageSize
+  pagination.page = 1
+  if (props.remote)
+    handleQuery()
+}
+
 function onChecked(rowKeys) {
   if (props.columns.some(item => item.type === 'selection'))
     emit('onChecked', rowKeys)
@@ -131,14 +146,8 @@ defineExpose({
   </QueryBar>
 
   <NDataTable
-    :remote="remote"
-    :loading="loading"
-    :scroll-x="scrollX"
-    :columns="columns"
-    :data="tableData"
-    :row-key="(row) => row[rowKey]"
-    :pagination="isPagination ? pagination : false"
-    @update:checked-row-keys="onChecked"
-    @update:page="onPageChange"
+    :remote="remote" :loading="loading" :scroll-x="scrollX" :columns="columns" :data="tableData"
+    :row-key="(row) => row[rowKey]" :pagination="isPagination ? pagination : false" @update:checked-row-keys="onChecked"
+    @update:page="onPageChange" @update:page-size="onPageSizeChange"
   />
 </template>
