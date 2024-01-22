@@ -7,10 +7,7 @@ export function setupNaiveDiscreteApi() {
     theme: themeStore.naiveTheme,
     themeOverrides: themeStore.naiveThemeOverrides,
   }))
-  const { message, dialog, notification, loadingBar } = NaiveUI.createDiscreteApi(
-    ['message', 'dialog', 'notification', 'loadingBar'],
-    { configProviderProps },
-  )
+  const { message, dialog, notification, loadingBar } = NaiveUI.createDiscreteApi(['message', 'dialog', 'notification', 'loadingBar'], { configProviderProps })
 
   window.$loadingBar = loadingBar
   window.$notification = notification

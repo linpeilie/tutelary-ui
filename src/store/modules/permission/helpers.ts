@@ -27,6 +27,7 @@ export function filterAsyncRoutes(routes: RoutesType = [], authPermissions: Arra
       }
       if (route.children && route.children.length)
         curRoute.children = filterAsyncRoutes(route.children, authPermissions) || []
+
       else
         Reflect.deleteProperty(curRoute, 'children')
 

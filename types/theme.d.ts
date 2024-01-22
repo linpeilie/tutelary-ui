@@ -12,17 +12,15 @@ interface Header {
   /** 是否显示 */
   visible: boolean
   /** 头部高度 */
-  height: number;
+  height: number
 }
-
-
 
 /** 标多页签样式 */
 interface Tab {
   /** 是否显示 */
   visible: boolean
   /** 头部高度 */
-  height: number;
+  height: number
 }
 
 interface OtherColor {

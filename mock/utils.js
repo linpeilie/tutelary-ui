@@ -1,7 +1,7 @@
 export function resolveToken(authorization) {
   /**
-   * * jwt token
-   * * Bearer + token
+   * jwt token
+   * Bearer + token
    * ! 认证方案: Bearer
    */
   const reqTokenSplit = authorization.split(' ')

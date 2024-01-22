@@ -50,7 +50,9 @@ function getMenuItem(route: RouteType, basePath = ''): MenuItem {
     order: route.meta?.order || 0,
   }
 
-  const visibleChildren = route.children ? route.children.filter((item: RouteType) => item.name && !item.isHidden) : []
+  const visibleChildren = route.children
+    ? route.children.filter((item: RouteType) => item.name && !item.isHidden)
+    : []
 
   if (!visibleChildren.length)
     return menuItem
@@ -65,10 +67,13 @@ function getMenuItem(route: RouteType, basePath = ''): MenuItem {
       icon: getIcon(singleRoute.meta),
       order: menuItem.order,
     }
-    const visibleItems = singleRoute.children ? singleRoute.children.filter((item: RouteType) => item.name && !item.isHidden) : []
+    const visibleItems = singleRoute.children
+      ? singleRoute.children.filter((item: RouteType) => item.name && !item.isHidden)
+      : []
 
     if (visibleItems.length === 1)
       menuItem = getMenuItem(visibleItems[0], menuItem.path)
+
     else if (visibleItems.length > 1)
       menuItem.children = visibleItems.map(item => getMenuItem(item, menuItem.path)).sort((a, b) => a.order - b.order)
   }
@@ -84,8 +89,10 @@ function getMenuItem(route: RouteType, basePath = ''): MenuItem {
 function getIcon(meta?: Meta): (() => import('vue').VNodeChild) | null {
   if (meta?.customIcon)
     return renderCustomIcon(meta.customIcon, { size: 18 })
+
   if (meta?.icon)
     return renderIcon(meta.icon, { size: 18 })
+
   return null
 }
 
@@ -97,6 +104,7 @@ function handleMenuSelect(key: string, item: MenuOption) {
   }
   if (menuItem.path === currentRoute.path && !currentRoute.meta?.keepAlive)
     appStore.reloadPage()
+
   else
     router.push(menuItem.path)
 

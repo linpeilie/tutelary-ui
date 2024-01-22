@@ -1,22 +1,22 @@
 {
   "compilerOptions": {
+    "target": "ESNext",
+    "jsx": "preserve",
+    "lib": ["DOM", "ESNext"],
     "baseUrl": ".",
     "module": "ESNext",
-    "target": "ESNext",
-    "lib": ["DOM", "ESNext"],
-    "strict": true,
-    "esModuleInterop": true,
-    "jsx": "preserve",
     "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "noUnusedLocals": true,
-    "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true,
     "paths": {
       "@/*": ["./src/*"],
       "~/*": ["./*"]
     },
-    "types": ["node", "vite/client", "unplugin-icons/types/vue"]
+    "resolveJsonModule": true,
+    "types": ["node", "vite/client", "unplugin-icons/types/vue"],
+    "strict": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true
   },
   "exclude": ["node_modules", "dist"]
 }

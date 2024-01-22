@@ -1,4 +1,4 @@
-type ProxyType = 'dev' | 'test' | 'prod';
+type ProxyType = 'dev' | 'test' | 'prod'
 
 interface ViteEnv {
   VITE_PORT: number
@@ -19,4 +19,3 @@ interface ProxyConfig {
   /** 代理目标地址，后端真实接口地址 */
   target: string
 }
-

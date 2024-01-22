@@ -77,37 +77,25 @@ const columns: any = [
     hideInExcel: true,
     render(row: any) {
       return [
-        h(
-          NButton,
-          {
-            size: 'small',
-            type: 'primary',
-            secondary: true,
-            onClick: () => handleView(row),
-          },
-          { default: () => '查看', icon: renderIcon('majesticons:eye-line', { size: 14 }) },
-        ),
-        h(
-          NButton,
-          {
-            size: 'small',
-            type: 'primary',
-            style: 'margin-left: 15px;',
-            onClick: () => handleEdit(row),
-          },
-          { default: () => '编辑', icon: renderIcon('material-symbols:edit-outline', { size: 14 }) },
-        ),
+        h(NButton, {
+          size: 'small',
+          type: 'primary',
+          secondary: true,
+          onClick: () => handleView(row),
+        }, { default: () => '查看', icon: renderIcon('majesticons:eye-line', { size: 14 }) }),
+        h(NButton, {
+          size: 'small',
+          type: 'primary',
+          style: 'margin-left: 15px;',
+          onClick: () => handleEdit(row),
+        }, { default: () => '编辑', icon: renderIcon('material-symbols:edit-outline', { size: 14 }) }),
 
-        h(
-          NButton,
-          {
-            size: 'small',
-            type: 'error',
-            style: 'margin-left: 15px;',
-            onClick: () => handleDelete(row.id),
-          },
-          { default: () => '删除', icon: renderIcon('material-symbols:delete-outline', { size: 14 }) },
-        ),
+        h(NButton, {
+          size: 'small',
+          type: 'error',
+          style: 'margin-left: 15px;',
+          onClick: () => handleDelete(row.id),
+        }, { default: () => '删除', icon: renderIcon('material-symbols:delete-outline', { size: 14 }) }),
       ]
     },
   },

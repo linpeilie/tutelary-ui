@@ -1,6 +1,8 @@
 import type { RouteModule, RouteType, RoutesType } from '~/types/router'
 
-const Layout = () => import('@/layout/index.vue')
+function Layout() {
+  return import('@/layout/index.vue')
+}
 
 export const basicRoutes: RoutesType = [
   {

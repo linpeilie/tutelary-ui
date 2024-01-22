@@ -11,7 +11,7 @@
 </p>
 
 <p align='center'>
-  <b>简体中文</b> | 
+  <b>简体中文</b> |
   <a href="https://github.com/zclzone/qs-admin">English</a>
 </p>
 
@@ -109,5 +109,3 @@ pnpm cz
 <a href="https://blog.isme.top/about/">
   <img src="https://static.isme.top/images/about.png" style="max-width: 400px" />
 </a>
-
-

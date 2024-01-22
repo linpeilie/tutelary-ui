@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { TableColumns } from 'naive-ui/es/data-table/src/interface'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { NButton } from 'naive-ui'
 import instanceApi from '@/api/instanceApi'
 import type { InstanceInfo } from '@/api/types/instanceTypes'
 
 const route = useRoute()
+const router = useRouter()
 
 const $table = ref<any>(null)
 
@@ -21,11 +22,7 @@ const columns: TableColumns<any> = [
     title: '操作',
     key: 'action',
     render(row: InstanceInfo) {
-      return h(
-        NButton,
-        { size: 'small', type: 'primary', onClick: () => toInstanceDetail() },
-        { default: () => '实例详情' },
-      )
+      return h(NButton, { size: 'small', type: 'primary', onClick: () => toInstanceDetail(row) }, { default: () => '实例详情' })
     },
   },
 ]
@@ -34,7 +31,8 @@ function loadInstances() {
   return instanceApi.listByAppName(appName.value)
 }
 
-function toInstanceDetail() {
+function toInstanceDetail(instance: InstanceInfo) {
+  router.push({ name: 'InstanceDetailIndex', params: { instanceId: instance.instanceId } })
 }
 
 onMounted(() => {
@@ -51,7 +49,10 @@ onMounted(() => {
         刷新
       </NButton>
     </template>
-    <crud-table ref="$table" :columns="columns" :get-data="loadInstances" row-key="instanceId" :auto-search="false" :is-pagination="false" />
+    <crud-table
+      ref="$table" :columns="columns" :get-data="loadInstances" row-key="instanceId" :auto-search="false"
+      :is-pagination="false"
+    />
   </common-page>
 </template>
 

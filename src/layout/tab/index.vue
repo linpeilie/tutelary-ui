@@ -23,15 +23,11 @@ const contextMenuOption = reactive<ContextMenuOption>({
   currentPath: '',
 })
 
-watch(
-  () => route.path,
-  () => {
-    const { name, fullPath: path } = route
-    const title = route.meta?.title as string || ''
-    tabStore.addTab({ name: name as string, path, title })
-  },
-  { immediate: true },
-)
+watch(() => route.path, () => {
+  const { name, fullPath: path } = route
+  const title = route.meta?.title as string || ''
+  tabStore.addTab({ name: name as string, path, title })
+}, { immediate: true })
 
 function handleTagClick(path: string) {
   tabStore.setActiveTab(path)
@@ -63,7 +59,7 @@ async function handleContextMenu(e: MouseEvent, tabItem: TabItem) {
     <n-tag
       v-for="tab in tabStore.tabs"
       :key="tab.path"
-      px-15 mx-5 rounded-4 cursor-pointer
+      mx-5 cursor-pointer rounded-4 px-15
       :type="tabStore.activeTab === tab.path ? 'primary' : 'default'"
       :closable="tabStore.tabs.length > 1"
       @click="handleTagClick(tab.path)"
@@ -88,7 +84,7 @@ async function handleContextMenu(e: MouseEvent, tabItem: TabItem) {
   border-radius: 50%;
   font-size: 12px;
   padding: 2px;
-  transform: scale(.9);
+  transform: scale(0.9);
   transform: translateX(5px);
   transition: all 0.3s;
 }

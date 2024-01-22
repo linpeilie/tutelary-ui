@@ -1,4 +1,4 @@
-import { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
 interface Meta {
   title?: string
@@ -13,7 +13,7 @@ interface RouteItem {
   path: string
   redirect?: string
   isHidden?: boolean
-  meta?: Meta,
+  meta?: Meta
   children?: RoutesType
 }
 

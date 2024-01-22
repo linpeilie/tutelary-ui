@@ -6,12 +6,12 @@ interface Props {
   prefix?: string
   color?: string
 }
+defineOptions({ name: 'SvgIcon' })
+
 const props = withDefaults(defineProps<Props>(), {
   prefix: 'icon-custom',
   color: 'currentColor',
 })
-
-defineOptions({ name: 'SvgIcon' })
 
 const symbolId = computed(() => `#${props.prefix}-${props.icon}`)
 </script>

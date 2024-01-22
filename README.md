@@ -11,7 +11,7 @@
 </p>
 
 <p align='center'>
-  <b>English</b> | 
+  <b>English</b> |
   <a href="https://github.com/zclzone/qs-admin/blob/main/README.zh-CN.md">简体中文</a>
 </p>
 
@@ -41,7 +41,6 @@ js version: https://github.com/zclzone/vue-naive-admin
 [https://admin-ts.isme.top](https://admin-ts.isme.top)
 
 [https://zclzone.github.io/qs-admin](https://zclzone.github.io/qs-admin)
-
 
 ### Getting Started
 
@@ -108,5 +107,3 @@ pnpm cz
 <a href="https://blog.isme.top/about/">
   <img src="https://static.isme.top/images/about.png" style="max-width: 400px" />
 </a>
-
-

@@ -50,10 +50,10 @@ const props = defineProps({
   },
   /**
    * 约定接口入参出参
-   * * 分页模式需约定分页接口入参
+   * 分页模式需约定分页接口入参
    *    @pageSize  分页参数：一页展示多少条，默认10
    *    @pageIndex 分页参数：页码，默认1
-   * * 需约定接口出参
+   * 需约定接口出参
    *    @records  分页模式必须,非分页模式如果没有pageData则取上一层data
    *    @total    分页模式必须，非分页模式如果没有total则取上一层data.length
    */

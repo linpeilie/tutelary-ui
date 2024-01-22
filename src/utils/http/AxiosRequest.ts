@@ -95,11 +95,7 @@ export class AxiosRequest {
   /**
    * post 请求
    */
-  public postNoTransRes<D, R>(
-    url: string,
-    data?: D,
-    config: ExpandAxiosRequestConfig<D> = {},
-  ): Promise<ApiResponse<R>> {
+  public postNoTransRes<D, R>(url: string, data?: D, config: ExpandAxiosRequestConfig<D> = {}): Promise<ApiResponse<R>> {
     config.transform = false
     return this.axiosInstance.post(url, data, config)
   }

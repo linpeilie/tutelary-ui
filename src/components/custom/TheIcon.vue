@@ -18,8 +18,7 @@ interface Props {
 const iconCom = computed(() =>
   props.type === 'iconify'
     ? renderIcon(props.icon, { size: props.size, color: props.color })
-    : renderCustomIcon(props.icon, { size: props.size, color: props.color }),
-)
+    : renderCustomIcon(props.icon, { size: props.size, color: props.color }))
 </script>
 
 <template>

@@ -13,20 +13,15 @@ export function setupVitePlugins(viteEnv: ViteEnv, isBuild: boolean): PluginOpti
   if (viteEnv.VITE_USE_MOCK)
     plugins.push(setupMockPlugin(isBuild))
 
-  if (viteEnv.VITE_USE_COMPRESS) {
-    plugins.push(
-      viteCompression({ algorithm: viteEnv.VITE_COMPRESS_TYPE || 'gzip' }),
-    )
-  }
+  if (viteEnv.VITE_USE_COMPRESS)
+    plugins.push(viteCompression({ algorithm: viteEnv.VITE_COMPRESS_TYPE || 'gzip' }))
 
   if (isBuild) {
-    plugins.push(
-      visualizer({
-        open: true,
-        gzipSize: true,
-        brotliSize: true,
-      }),
-    )
+    plugins.push(visualizer({
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
+    }))
   }
 
   return plugins

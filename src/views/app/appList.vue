@@ -20,17 +20,13 @@ const columns: TableColumns<any> = [
     title: '操作',
     key: 'action',
     render(row: AppInfo) {
-      return h(
-        NButton,
-        {
-          size: 'small',
-          type: 'primary',
-          onClick: () => toInstanceList(row),
-        },
-        {
-          default: () => '实例列表',
-        },
-      )
+      return h(NButton, {
+        size: 'small',
+        type: 'primary',
+        onClick: () => toInstanceList(row),
+      }, {
+        default: () => '实例列表',
+      })
     },
   },
 ]

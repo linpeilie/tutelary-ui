@@ -1,36 +1,24 @@
 {
+  "type": "module",
   "private": true,
-  "repository": {
-    "url": "https://github.com/linpeilie/tutelary-ui"
-  },
-  "license": "MIT",
   "author": {
     "name": "linpeilie",
     "email": "linpeilie@qq.com",
     "url": "https://github.com/linpeilie"
   },
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/linpeilie/tutelary-ui"
+  },
   "scripts": {
     "build": "vite build",
     "build:github": "vite build --mode github",
     "dev": "vite",
-    "lint": "eslint --ext .js,.ts,.vue .",
-    "lint:fix": "eslint --fix --ext .js,.ts,.vue .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "lint:staged": "lint-staged",
     "prepare": "husky install",
     "preview": "vite preview"
-  },
-  "lint-staged": {
-    "*.{js,ts,vue}": [
-      "eslint --ext .js,.ts,.vue ."
-    ]
-  },
-  "config": {
-    "commitizen": {
-      "path": "node_modules/cz-customizable"
-    }
-  },
-  "eslintConfig": {
-    "extends": "@antfu"
   },
   "dependencies": {
     "@vueuse/core": "^10.1.2",
@@ -44,20 +32,19 @@
     "vue-router": "^4.2.2"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.39.5",
-    "@commitlint/cli": "^17.0.3",
-    "@commitlint/config-conventional": "^17.0.3",
+    "@antfu/eslint-config": "^2.6.3",
     "@iconify/json": "^2.1.78",
     "@iconify/vue": "^3.2.1",
     "@types/crypto-js": "^4.1.1",
     "@types/lodash-es": "^4.17.6",
     "@types/node": "^18.0.4",
+    "@unocss/eslint-plugin": "^0.58.3",
     "@vitejs/plugin-vue": "^4.2.3",
     "colord": "^2.9.2",
-    "commitizen": "^4.2.5",
     "cz-conventional-changelog": "^3.3.0",
     "cz-customizable": "^6.9.1",
-    "eslint": "^8.19.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-format": "^0.1.0",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.3",
     "naive-ui": "^2.34.4",
@@ -74,5 +61,8 @@
     "vite-plugin-mock": "^2.9.6",
     "vite-plugin-svg-icons": "^2.0.1",
     "vue-tsc": "^0.38.9"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
   }
 }

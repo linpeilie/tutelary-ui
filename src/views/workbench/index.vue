@@ -6,7 +6,7 @@ const userStore = useUserStore()
 
 <template>
   <AppPage :show-footer="true" min-w-375>
-    <div flex-1 min-w-375>
+    <div min-w-375 flex-1>
       <n-watermark
         :content="userStore.name"
         cross
@@ -33,18 +33,18 @@ const userStore = useUserStore()
                 他日若遂凌云志，敢笑黄巢不丈夫~
               </n-gradient-text>
             </div>
-            <div ml-auto items-center hidden md:flex>
+            <div ml-auto hidden items-center md:flex>
               <n-statistic label="待办" :value="4" w-80>
                 <template #suffix>
                   / 10
                 </template>
               </n-statistic>
-              <n-statistic label="Stars" w-80 ml-20>
+              <n-statistic label="Stars" ml-20 w-80>
                 <a href="https://github.com/zclzone/qs-admin">
                   <img allt="stars" src="https://badgen.net/github/stars/zclzone/qs-admin">
                 </a>
               </n-statistic>
-              <n-statistic label="Forks" w-80 ml-20>
+              <n-statistic label="Forks" ml-20 w-80>
                 <a href="https://github.com/zclzone/qs-admin">
                   <img allt="forks" src="https://badgen.net/github/forks/zclzone/qs-admin">
                 </a>
@@ -64,8 +64,8 @@ const userStore = useUserStore()
           <n-card
             v-for="i in 20"
             :key="i"
-            w-300 flex-shrink-0 mt-10 mb-10 cursor-pointer
-            hover:card-shadow
+
+            mb-10 mt-10 w-300 flex-shrink-0 cursor-pointer hover:card-shadow
             title="Tutelary"
             size="small"
           >
@@ -73,10 +73,10 @@ const userStore = useUserStore()
               一个基于 Vue3、Vite3、TypeScript、Pinia、Unocss、Naive UI 的轻量级后台管理模板
             </p>
           </n-card>
-          <div w-300 h-0 />
-          <div w-300 h-0 />
-          <div w-300 h-0 />
-          <div w-300 h-0 />
+          <div h-0 w-300 />
+          <div h-0 w-300 />
+          <div h-0 w-300 />
+          <div h-0 w-300 />
         </div>
       </n-card>
     </div>

@@ -26,16 +26,12 @@ const columns: TableColumns<any> = [
     title: '状态',
     key: 'state',
     render(row: UserInfo) {
-      return h(
-        NTag,
-        {
-          bordered: false,
-          type: getTagByValue(userStateEnum, row.state)?.type,
-        },
-        {
-          default: () => getLabelByValue(userStateEnum, row.state),
-        },
-      )
+      return h(NTag, {
+        bordered: false,
+        type: getTagByValue(userStateEnum, row.state)?.type,
+      }, {
+        default: () => getLabelByValue(userStateEnum, row.state),
+      })
     },
   },
   { title: '备注', key: 'remark' },
@@ -43,15 +39,11 @@ const columns: TableColumns<any> = [
     title: '操作',
     key: 'action',
     render(row: UserInfo) {
-      return h(
-        NButton,
-        {
-          size: 'small',
-          type: 'primary',
-          onClick: () => handleEdit(row),
-        },
-        { default: () => '编辑' },
-      )
+      return h(NButton, {
+        size: 'small',
+        type: 'primary',
+        onClick: () => handleEdit(row),
+      }, { default: () => '编辑' })
     },
   },
 ]

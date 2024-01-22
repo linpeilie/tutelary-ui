@@ -8,7 +8,9 @@ import type { RouteType, RoutesType } from '~/types/router'
 
 const isHash = import.meta.env.VITE_USE_HASH === 'true'
 export const router = createRouter({
-  history: isHash ? createWebHashHistory('/') : createWebHistory('/'),
+  history: isHash
+    ? createWebHashHistory('/')
+    : createWebHistory('/'),
   routes: basicRoutes,
   scrollBehavior: () => ({ left: 0, top: 0 }),
 })

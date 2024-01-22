@@ -5,7 +5,7 @@ const emit = defineEmits(['search', 'reset'])
 </script>
 
 <template>
-  <div min-h-60 p-15 flex items-start justify-between b-1 bc-ccc rounded-8 bg="#fafafc" dark:bg-black>
+  <div bg="#fafafc" min-h-60 flex items-start justify-between b-1 rounded-8 p-15 bc-ccc dark:bg-black>
     <NSpace wrap :size="[35, 15]">
       <slot />
     </NSpace>

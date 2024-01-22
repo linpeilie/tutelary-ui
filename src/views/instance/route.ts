@@ -1,6 +1,8 @@
 import type { RouteType } from '~/types/router'
 
-const Layout = () => import('@/layout/index.vue')
+function Layout() {
+  return import('@/layout/index.vue')
+}
 
 export default {
   name: 'Instance',
@@ -20,7 +22,6 @@ export default {
       meta: {
         title: '实例列表',
         requireAuth: true,
-        icon: 'fluent:app-folder-48-filled',
       },
       isHidden: true,
     },

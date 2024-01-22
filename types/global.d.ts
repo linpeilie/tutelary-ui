@@ -6,11 +6,11 @@ interface Window {
 }
 
 interface QueryParam {
-  pageIndex: number;
-  pageSize: number;
+  pageIndex: number
+  pageSize: number
 }
 
 interface PageResult<T> {
-  total: number;
+  total: number
   records: Array<T>
 }

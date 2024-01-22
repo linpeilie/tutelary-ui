@@ -31,15 +31,11 @@ const columns: any = [
     title: '启用状态',
     key: 'enableStatus',
     render(row: RoleInfo) {
-      return h(
-        NTag,
-        {
-          type: getTagByValue(enableStatusEnum, row.enableStatus)?.type,
-        },
-        {
-          default: () => getLabelByValue(enableStatusEnum, row.enableStatus),
-        },
-      )
+      return h(NTag, {
+        type: getTagByValue(enableStatusEnum, row.enableStatus)?.type,
+      }, {
+        default: () => getLabelByValue(enableStatusEnum, row.enableStatus),
+      })
     },
   },
   { title: '备注', key: 'remark' },
@@ -49,18 +45,14 @@ const columns: any = [
     title: '操作',
     key: 'action',
     render(row: RoleInfo) {
-      return h(
-        NButton,
-        {
-          size: 'small',
-          type: 'primary',
-          onClick: () => handleEdit(row),
-        },
-        {
-          default: () => '编辑',
-          icon: renderIcon('material-symbols:edit-outline', { size: 14 }),
-        },
-      )
+      return h(NButton, {
+        size: 'small',
+        type: 'primary',
+        onClick: () => handleEdit(row),
+      }, {
+        default: () => '编辑',
+        icon: renderIcon('material-symbols:edit-outline', { size: 14 }),
+      })
     },
   },
 ]

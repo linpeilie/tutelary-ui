@@ -9,30 +9,23 @@ type ThemeVarsKeys = keyof ThemeVars
 
 const themeStore = useThemeStore()
 
-watch(
-  () => themeStore.naiveThemeOverrides.common,
-  (common) => {
-    for (const key in common) {
-      useCssVar(`--${kebabCase(key)}`, document.documentElement).value = common[key as ThemeVarsKeys] || ''
-      if (key === 'primaryColor')
-        window.localStorage.setItem('__THEME_COLOR__', common[key as ThemeVarsKeys] || '')
-    }
-  },
-  { immediate: true },
-)
+watch(() => themeStore.naiveThemeOverrides.common, (common) => {
+  for (const key in common) {
+    useCssVar(`--${kebabCase(key)}`, document.documentElement).value = common[key as ThemeVarsKeys] || ''
+    if (key === 'primaryColor')
+      window.localStorage.setItem('__THEME_COLOR__', common[key as ThemeVarsKeys] || '')
+  }
+}, { immediate: true })
 
-watch(
-  () => themeStore.darkMode,
-  (newValue) => {
-    if (newValue)
-      document.documentElement.classList.add('dark')
-    else
-      document.documentElement.classList.remove('dark')
-  },
-  {
-    immediate: true,
-  },
-)
+watch(() => themeStore.darkMode, (newValue) => {
+  if (newValue)
+    document.documentElement.classList.add('dark')
+
+  else
+    document.documentElement.classList.remove('dark')
+}, {
+  immediate: true,
+})
 
 function handleWindowResize() {
   themeStore.setIsMobile(document.body.offsetWidth <= 640)

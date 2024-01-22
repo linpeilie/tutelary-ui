@@ -1,7 +1,7 @@
 import path from 'node:path'
 
 /**
- * * 项目根路径
+ * 项目根路径
  * @descrition 结尾不带/
  */
 export function getRootPath() {
@@ -9,7 +9,7 @@ export function getRootPath() {
 }
 
 /**
- * * 项目src路径
+ * 项目src路径
  * @param srcName src目录名称(默认: "src")
  * @descrition 结尾不带斜杠
  */
@@ -18,7 +18,7 @@ export function getSrcPath(srcName = 'src') {
 }
 
 /**
- * * 转换env配置
+ * 转换env配置
  * @param envOptions
  * @descrition boolean和数字类型转换
  */
