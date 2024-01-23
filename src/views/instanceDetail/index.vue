@@ -2,11 +2,59 @@
 import type { Component } from 'vue'
 import { markRaw, onMounted, ref } from 'vue'
 import type { MenuOption } from 'naive-ui'
-
-// components
+import { useRoute } from 'vue-router'
 import dashboard from './components/dashboard.vue'
 import thread from './components/thread.vue'
 import { useThemeStore } from '@/store'
+import { useWebSocket } from '@/composables/useWebSocket'
+import { getToken } from '@/utils'
+import instanceApi from '@/api/instanceApi'
+import type { InstanceDetailInfo } from '@/api/types/instanceTypes'
+
+// components
+
+const route = useRoute()
+
+// 实例信息
+const instance = ref<InstanceDetailInfo>({} as InstanceDetailInfo)
+
+function getWsUrl() {
+  const loc = window.location
+  let wsUrl
+  if (loc.protocol === 'https:')
+    wsUrl = 'wss:'
+  else
+    wsUrl = 'ws:'
+
+  return wsUrl += `//${loc.host}/api/ws?_tt=${getToken()}`
+}
+
+async function getInstanceDetail() {
+  const instanceId = route.params.instanceId as string
+  instance.value = await instanceApi.detail(instanceId)
+}
+
+const { start, dispose } = useWebSocket({
+  url: getWsUrl(),
+  needReconnect: true,
+  onOpen: () => {
+    return Promise.resolve()
+  },
+  onMessage: () => {
+  },
+  onError: () => {
+  },
+})
+
+onMounted(async () => {
+  // 获取实例信息
+  await getInstanceDetail()
+  start()
+})
+
+onUnmounted(() => {
+  dispose()
+})
 
 const themeStore = useThemeStore()
 
@@ -55,7 +103,12 @@ onMounted(() => {
 
     <article flex-col flex-1 overflow-hidden>
       <section flex-1 overflow-hidden bg="#f5f6fb" dark:bg-hex-101014>
-        <component :is="activeMenuOption.component" :key="activeMenuOption.key" />
+        <app-page>
+          <n-card rounded-10 />
+          <n-card mt-15 flex-1 rounded-10>
+            <component :is="activeMenuOption.component" :key="activeMenuOption.key" />
+          </n-card>
+        </app-page>
       </section>
     </article>
   </n-layout>

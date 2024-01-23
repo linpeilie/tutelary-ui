@@ -17,7 +17,7 @@ export default {
   children: [
     {
       name: 'InstanceDetailIndex',
-      path: '/:instanceId',
+      path: ':instanceId',
       component: () => import('@/views/instanceDetail/index.vue'),
       meta: {
         title: '应用实例详情',
