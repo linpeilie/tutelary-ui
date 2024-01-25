@@ -39,16 +39,5 @@ export default {
         requireAuth: true,
       },
     },
-    {
-      name: 'Table',
-      path: 'table',
-      component: () => import('@/views/demo/table/index.vue'),
-      meta: {
-        title: '表格',
-        icon: 'mdi:table',
-        role: ['admin'],
-        requireAuth: true,
-      },
-    },
   ],
 } as RouteType

@@ -5,6 +5,7 @@ import type { MenuOption } from 'naive-ui'
 import { useRoute } from 'vue-router'
 import dashboard from './components/dashboard.vue'
 import thread from './components/thread.vue'
+import InstanceSider from './instanceSider.vue'
 import { useThemeStore } from '@/store'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { getToken } from '@/utils'
@@ -56,8 +57,6 @@ onUnmounted(() => {
   dispose()
 })
 
-const themeStore = useThemeStore()
-
 const menu = ref<any>(null)
 
 type MenuItem = Omit<MenuOption, 'children'> & {
@@ -89,29 +88,22 @@ onMounted(() => {
 </script>
 
 <template>
-  <n-layout has-sider wh-full>
-    <n-layout-sider
-      bordered collapse-mode="width" :collapse-width="themeStore.sider.collapsedWidth"
-      :native-scrollbar="false" :width="themeStore.sider.width"
-    >
-      <n-menu
-        ref="menu" class="side-menu" accordion :indent="18" :collapsed-icon-size="22" :collapsed-width="64"
-        :options="menuOptions" :value="activeMenuOption.key" :default-value="defaultActiveMenu"
-        @update:value="handleMenuSelect"
-      />
-    </n-layout-sider>
+  <app-page>
+    <n-flex :wrap="false" wh-full>
+      <InstanceSider :instance-info="instance" />
 
-    <article flex-col flex-1 overflow-hidden>
-      <section flex-1 overflow-hidden bg="#f5f6fb" dark:bg-hex-101014>
-        <app-page>
-          <n-card rounded-10 />
-          <n-card mt-15 flex-1 rounded-10>
-            <component :is="activeMenuOption.component" :key="activeMenuOption.key" />
-          </n-card>
-        </app-page>
-      </section>
-    </article>
-  </n-layout>
+      <n-flex :vertical="true" flex-1>
+        <n-menu
+          ref="menu" mode="horizontal" class="side-menu" accordion :indent="18" :collapsed-icon-size="22"
+          :collapsed-width="64" :options="menuOptions" :value="activeMenuOption.key" :default-value="defaultActiveMenu"
+          @update:value="handleMenuSelect"
+        />
+        <n-card flex-1 rounded-10>
+          <component :is="activeMenuOption.component" :key="activeMenuOption.key" :instance-id="instance.instanceId" />
+        </n-card>
+      </n-flex>
+    </n-flex>
+  </app-page>
 </template>
 
 <style scoped>

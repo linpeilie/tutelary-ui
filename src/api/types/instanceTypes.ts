@@ -9,7 +9,7 @@ export interface InstanceInfo {
 
 export interface InstanceDetailInfo extends InstanceInfo {
   inputArguments: Array<string>
-  systemPropertis: Map<string, string>
+  systemProperties: Map<string, string>
   classPath: string
   libraryPath: string
   vmVendor: string
