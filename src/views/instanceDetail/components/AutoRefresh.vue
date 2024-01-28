@@ -26,7 +26,7 @@ function handleSwitchChange(value: boolean) {
 <template>
   <n-space justify="space-between" bg="#fafafc" dard:bg-black min-h-60 flex items-start justify-between b-1 rounded-8 p-15 bc-fff>
     <n-space align="center">
-      <n-time :time="props.refreshTimestamp" format="yyyy-MM-dd HH:mm:ss.SSS" font-semibold />
+      <n-time v-if="refreshTimestamp && refreshTimestamp > 0" :time="props.refreshTimestamp" format="yyyy-MM-dd HH:mm:ss.SSS" font-semibold />
       <n-button type="primary" @click="$emit('refresh')">
         <template #icon>
           <n-icon><Icon icon="mdi:refresh" /></n-icon>
