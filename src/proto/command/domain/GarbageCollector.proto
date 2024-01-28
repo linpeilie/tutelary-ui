@@ -1,0 +1,8 @@
+syntax="proto3";
+//
+message GarbageCollector {  
+ string name=1;
+ int64 collectionCount=2;
+ int64 collectionTime=3;
+repeated string memoryPoolNames=4;
+}

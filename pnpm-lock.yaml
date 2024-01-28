@@ -14,12 +14,18 @@ dependencies:
   crypto-js:
     specifier: ^4.1.1
     version: 4.1.1
+  date-fns:
+    specifier: ^3.3.1
+    version: 3.3.1
   dayjs:
     specifier: ^1.11.8
     version: 1.11.8
   lodash-es:
     specifier: ^4.17.21
     version: 4.17.21
+  long:
+    specifier: ^5.2.3
+    version: 5.2.3
   mockjs:
     specifier: ^1.1.0
     version: 1.1.0
@@ -29,6 +35,9 @@ dependencies:
   protobufjs:
     specifier: ^7.2.6
     version: 7.2.6
+  ts-proto:
+    specifier: ^1.167.1
+    version: 1.167.1
   vue:
     specifier: ^3.3.4
     version: 3.3.4
@@ -2004,6 +2013,11 @@ packages:
     resolution: {integrity: sha512-u5AUVkixruKHJjw/pj9wISlcMpgFWzSrczLZbrqBSxukQixmg0SJ5sZTpvaFvxU0HoQKd4yoyAogyrAz9pzJnA==}
     dev: true
 
+  /case-anything@2.1.13:
+    resolution: {integrity: sha512-zlOQ80VrQ2Ue+ymH5OuM/DlDq64mEm+B9UTdHULv5osUMD6HalNTblf2b1u/m6QecjsnOkBpqVZ+XPwIVsy7Ng==}
+    engines: {node: '>=12.13'}
+    dev: false
+
   /chalk@1.1.3:
     resolution: {integrity: sha512-U3lRVLMSlsCfjqYPbLyVv11M9CPW4I728d6TCKMAOJueEeB9/8o+eSsMnxPJD+Q+K909sdESg7C+tIkoH6on1A==}
     engines: {node: '>=0.10.0'}
@@ -2457,6 +2471,10 @@ packages:
       '@babel/runtime': 7.23.8
     dev: true
 
+  /date-fns@3.3.1:
+    resolution: {integrity: sha512-y8e109LYGgoQDveiEBD3DYXKba1jWf5BA8YU1FL5Tvm0BTdEfy54WLCwnuYWZNnzzvALy/QQ4Hov+Q9RVRv+Zw==}
+    dev: false
+
   /dayjs@1.11.8:
     resolution: {integrity: sha512-LcgxzFoWMEPO7ggRv1Y2N31hUf2R0Vj7fuy/m+Bg1K8rr+KAs1AEy4y9jd5DXe8pbHgX+srkHNS7TH6Q6ZhYeQ==}
     dev: false
@@ -2573,6 +2591,12 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
+  /detect-libc@1.0.3:
+    resolution: {integrity: sha512-pGjwhsmsp4kL2RTz08wcOlGN83otlqHeD/Z5T8GXZB+/YcpQ/dgo+lbU8ZsGxV0HIvqqxo9l7mqYwyYMD9bKDg==}
+    engines: {node: '>=0.10'}
+    hasBin: true
+    dev: false
+
   /diff@4.0.2:
     resolution: {integrity: sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==}
     engines: {node: '>=0.3.1'}
@@ -2661,6 +2685,12 @@ packages:
     resolution: {integrity: sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==}
     engines: {node: '>=12'}
     dev: true
+
+  /dprint-node@1.0.8:
+    resolution: {integrity: sha512-iVKnUtYfGrYcW1ZAlfR/F59cUVL8QIhWoBJoSjkkdua/dkWIgjZfiLMeTjiB06X0ZLkQ0M2C1VbUj/CxkIf1zg==}
+    dependencies:
+      detect-libc: 1.0.3
+    dev: false
 
   /duplexer@0.1.2:
     resolution: {integrity: sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==}
@@ -6167,6 +6197,29 @@ packages:
       yn: 3.1.1
     dev: true
     optional: true
+
+  /ts-poet@6.6.0:
+    resolution: {integrity: sha512-4vEH/wkhcjRPFOdBwIh9ItO6jOoumVLRF4aABDX5JSNEubSqwOulihxQPqai+OkuygJm3WYMInxXQX4QwVNMuw==}
+    dependencies:
+      dprint-node: 1.0.8
+    dev: false
+
+  /ts-proto-descriptors@1.15.0:
+    resolution: {integrity: sha512-TYyJ7+H+7Jsqawdv+mfsEpZPTIj9siDHS6EMCzG/z3b/PZiphsX+mWtqFfFVe5/N0Th6V3elK9lQqjnrgTOfrg==}
+    dependencies:
+      long: 5.2.3
+      protobufjs: 7.2.6
+    dev: false
+
+  /ts-proto@1.167.1:
+    resolution: {integrity: sha512-xsEPKtT0kswVOLbLDwMavf4OZKP8fBasVeX8AozAJ8IxrGC/QgZOMITtEGnryQg0celCbNNzx8qtwpXjvV7AIA==}
+    hasBin: true
+    dependencies:
+      case-anything: 2.1.13
+      protobufjs: 7.2.6
+      ts-poet: 6.6.0
+      ts-proto-descriptors: 1.15.0
+    dev: false
 
   /tslib@1.14.1:
     resolution: {integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==}

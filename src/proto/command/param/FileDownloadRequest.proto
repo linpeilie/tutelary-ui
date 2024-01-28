@@ -1,0 +1,6 @@
+syntax="proto3";
+//
+message FileDownloadRequest {  
+ string filePath=1;
+ string identifier=2;
+}

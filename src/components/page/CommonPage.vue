@@ -25,7 +25,7 @@ const route = useRoute()
       </template>
     </header>
 
-    <n-card flex-1 rounded-10>
+    <n-card flex-1>
       <slot />
     </n-card>
   </AppPage>

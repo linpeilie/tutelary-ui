@@ -1,0 +1,8 @@
+syntax="proto3";
+//
+message StackTraceNode {  
+ string declaringClass=1;
+ string methodName=2;
+ int32 lineNumber=3;
+ bool isNative=4;
+}

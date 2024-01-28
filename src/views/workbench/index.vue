@@ -19,7 +19,7 @@ const userStore = useUserStore()
         :y-offset="28"
         :rotate="-15"
       >
-        <n-card rounded-10>
+        <n-card>
           <div flex items-center>
             <img rounded-full width="60" :src="userStore.avatar">
             <div ml-20>
@@ -54,7 +54,7 @@ const userStore = useUserStore()
         </n-card>
       </n-watermark>
 
-      <n-card title="项目" size="small" :segmented="true" mt-15 rounded-10>
+      <n-card title="项目" size="small" :segmented="true" mt-15>
         <template #header-extra>
           <n-button text type="primary">
             更多

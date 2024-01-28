@@ -1,0 +1,17 @@
+syntax="proto3";
+//
+message HostInfo {  
+ string hostName=1;
+ string hostAddress=2;
+ string osName=3;
+ string arch=4;
+ int32 availableProcessors=5;
+ int64 committedVirtualMemory=6;
+ int64 totalPhysicalMemorySize=7;
+ int64 freePhysicalMemorySize=8;
+ int64 totalSwapSpaceSize=9;
+ int64 freeSwapSpaceSize=10;
+ int64 diskFreeSpace=11;
+ int64 diskUsableSpace=12;
+ int64 diskTotalSpace=13;
+}

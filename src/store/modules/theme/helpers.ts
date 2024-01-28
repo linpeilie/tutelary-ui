@@ -50,6 +50,13 @@ export function getNaiveThemeOverrides(colors: Record<ColorType, string>): Globa
     LoadingBar: {
       colorLoading,
     },
+    Card: {
+      borderRadius: '2.5rem',
+    },
+    Button: {
+      borderRadiusMedium: '2rem',
+      borderRadiusSmall: '1rem',
+    },
   }
 }
 

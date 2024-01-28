@@ -1,0 +1,8 @@
+syntax="proto3";
+//
+message TraceRequest {  
+ string qualifiedClassName=1;
+repeated string methodNames=2;
+ int32 times=3;
+ int32 cost=4;
+}

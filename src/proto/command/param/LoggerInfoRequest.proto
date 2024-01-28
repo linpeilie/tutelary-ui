@@ -1,0 +1,7 @@
+syntax="proto3";
+//
+message LoggerInfoRequest {  
+ string name=1;
+ bool includeNoAppender=2;
+ string classLoaderHashCode=3;
+}

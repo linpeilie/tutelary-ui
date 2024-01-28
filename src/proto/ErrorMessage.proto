@@ -1,0 +1,8 @@
+syntax="proto3";
+import "src/proto/Metadata.proto";
+//
+message ErrorMessage {  
+ bool status=1;
+ string message=2;
+ Metadata metadata=3;
+}

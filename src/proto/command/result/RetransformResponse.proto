@@ -1,0 +1,7 @@
+syntax="proto3";
+//
+message RetransformResponse {  
+ int32 jobId=1;
+ int32 state=2;
+ string message=3;
+}

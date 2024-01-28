@@ -53,7 +53,7 @@ const systemPropertiesShowMore = computed(() => {
 </script>
 
 <template>
-  <n-card style="width: 300px;" class="cus-scroll-y" rounded-10>
+  <n-card style="width: 300px;" class="cus-scroll-y">
     <n-descriptions label-placement="top" :column="1">
       <n-descriptions-item v-for="item of descriptions" :key="item.value">
         <template #label>
@@ -71,7 +71,7 @@ const systemPropertiesShowMore = computed(() => {
             ClassPath
           </div>
         </template>
-        <n-ellipsis :line-clamp="3" style="max-width: 250px;" :tooltip="false">
+        <n-ellipsis :line-clamp="3" style="max-width: 250px;" :tooltip="false" font-bold>
           {{ props.instanceInfo.classPath }}
         </n-ellipsis>
       </n-descriptions-item>

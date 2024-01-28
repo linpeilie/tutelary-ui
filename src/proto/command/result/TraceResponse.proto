@@ -1,0 +1,10 @@
+syntax="proto3";
+
+import "src/proto/command/domain/TraceNode.proto";
+//
+message TraceResponse {  
+ TraceNode node=1;
+ int32 jobId=2;
+ int32 state=3;
+ string message=4;
+}

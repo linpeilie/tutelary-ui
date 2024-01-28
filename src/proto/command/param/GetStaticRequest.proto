@@ -1,0 +1,7 @@
+syntax="proto3";
+//
+message GetStaticRequest {  
+ string qualifiedClassName=1;
+ string field=2;
+ string classLoader=3;
+}

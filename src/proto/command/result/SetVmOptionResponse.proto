@@ -1,0 +1,12 @@
+syntax="proto3";
+
+import "src/proto/command/domain/VmOption.proto";
+
+//
+message SetVmOptionResponse {  
+ VmOption previousVmOption=1;
+ VmOption latestVmOption=2;
+ int32 jobId=3;
+ int32 state=4;
+ string message=5;
+}

@@ -6,13 +6,15 @@ import { useRoute } from 'vue-router'
 import dashboard from './components/dashboard.vue'
 import thread from './components/thread.vue'
 import InstanceSider from './instanceSider.vue'
-import { useThemeStore } from '@/store'
+import commandCodec from './codec/commandCodec'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { getToken } from '@/utils'
 import instanceApi from '@/api/instanceApi'
 import type { InstanceDetailInfo } from '@/api/types/instanceTypes'
-
-// components
+import { messageTypeEnum } from '@/enums/messageTypeEnums'
+import { CommandExecuteResponse } from '@/proto/CommandExecuteResponse'
+import { ErrorMessage } from '@/proto/ErrorMessage'
+import eventbus from '@/utils/eventbus'
 
 const route = useRoute()
 
@@ -41,7 +43,41 @@ const { start, dispose } = useWebSocket({
   onOpen: () => {
     return Promise.resolve()
   },
-  onMessage: () => {
+  onMessage: (ev) => {
+    const blob = ev.data
+    const fileReader = new FileReader()
+    fileReader.onload = (progressEvent) => {
+      const currentTarget = progressEvent.currentTarget as FileReader
+
+      const arrayBuffer = currentTarget.result as ArrayBuffer
+
+      const uint8Array = new Uint8Array(arrayBuffer)
+      // cmd
+      const cmd = uint8Array.at(0)
+
+      if (cmd === messageTypeEnum.CLIENT_COMMAND_RESPONSE.value) {
+        const commandExecuteResponse = CommandExecuteResponse.decode(uint8Array.slice(5))
+        // status
+        if (!commandExecuteResponse.status) {
+          window.$message.error(`task ${commandExecuteResponse.taskId} failed to execute, error message : ${commandExecuteResponse.message}`)
+          return
+        }
+        commandExecuteResponse.data = commandCodec.decode(commandExecuteResponse.code, commandExecuteResponse.data?.byteArray)
+        if (!commandExecuteResponse.data) {
+          window.$message.error(`unknown command code : ${commandExecuteResponse.code}`)
+          return
+        }
+        eventbus.emit('command', commandExecuteResponse)
+      }
+      else if (cmd === messageTypeEnum.ERROR.value) {
+        const errorMessage = ErrorMessage.decode(uint8Array.slice(5))
+        window.$message.error(errorMessage.message)
+      }
+      else {
+        window.$message.error(`unknown message type : ${cmd}`)
+      }
+    }
+    fileReader.readAsArrayBuffer(blob)
   },
   onError: () => {
   },
@@ -92,19 +128,20 @@ onMounted(() => {
     <n-flex :wrap="false" wh-full>
       <InstanceSider :instance-info="instance" />
 
-      <n-flex :vertical="true" flex-1>
+      <article flex-col flex-1 overflow-hidden>
         <n-menu
           ref="menu" mode="horizontal" class="side-menu" accordion :indent="18" :collapsed-icon-size="22"
           :collapsed-width="64" :options="menuOptions" :value="activeMenuOption.key" :default-value="defaultActiveMenu"
           @update:value="handleMenuSelect"
         />
-        <n-card flex-1 rounded-10>
+        <n-card flex-1 overflow-hidden content-class="cus-scroll-y">
           <component :is="activeMenuOption.component" :key="activeMenuOption.key" :instance-id="instance.instanceId" />
         </n-card>
-      </n-flex>
+      </article>
     </n-flex>
   </app-page>
 </template>
 
 <style scoped>
 </style>
+./codec/messageCodec

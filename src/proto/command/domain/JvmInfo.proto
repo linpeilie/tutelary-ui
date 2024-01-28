@@ -1,0 +1,13 @@
+syntax="proto3";
+//
+message JvmInfo {  
+repeated string inputArguments=1;
+ map<string, string> systemProperties=2;
+ string classPath=3;
+ string libraryPath=4;
+ string vmVendor=5;
+ string vmName=6;
+ string vmVersion=7;
+ string jdkVersion=8;
+ int64 startTime=9;
+}

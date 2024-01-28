@@ -1,0 +1,18 @@
+syntax="proto3";
+
+import "src/proto/command/domain/GarbageCollector.proto";
+import "src/proto/command/domain/ThreadStatistic.proto";
+import "src/proto/command/domain/JvmMemory.proto";
+import "src/proto/command/domain/HostInfo.proto";
+
+//
+message Overview {  
+ HostInfo hostInfo=1;
+ ThreadStatistic threadStatistic=2;
+repeated JvmMemory heapMemory=3;
+repeated JvmMemory nonHeapMemory=4;
+repeated GarbageCollector garbageCollectors=5;
+ int32 jobId=6;
+ int32 state=7;
+ string message=8;
+}

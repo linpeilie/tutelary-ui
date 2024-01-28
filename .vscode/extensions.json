@@ -33,6 +33,7 @@
     "WakaTime.vscode-wakatime",
     "znck.grammarly",
 
-    "ChakrounAnas.turbo-console-log"
+    "ChakrounAnas.turbo-console-log",
+    "kangping.protobuf"
   ]
 }
