@@ -4,7 +4,8 @@ import { h, onMounted } from 'vue'
 import { NButton } from 'naive-ui'
 import AutoRefresh from './AutoRefresh.vue'
 import commandCreateApi from '@/api/commandCreateApi'
-import type { CommandCreateRequest, ThreadListRequest } from '@/api/types/commandCreateTypes'
+import type { CommandCreateRequest } from '@/api/types/commandCreateTypes'
+import type { ThreadListRequest } from '@/proto/command/param/ThreadListRequest'
 import type { ThreadList } from '@/proto/command/result/ThreadList'
 import eventbus from '@/utils/eventbus'
 import { commandEnum } from '@/enums/commandEnums'
@@ -83,12 +84,12 @@ function createThreadDetailCommand(id: number): void {
   }
 
   currentThreadId.value = id
-  const params = {
+  const params: CommandCreateRequest<ThreadDetailRequest> = {
     instanceId: props.instanceId,
     param: {
       id,
     },
-  } as CommandCreateRequest<ThreadDetailRequest>
+  }
   commandCreateApi.createThreadDetail(params)
   showThreadDetail.value = true
 }
@@ -133,10 +134,10 @@ onBeforeUnmount(() => {
   <n-data-table :columns="threadListTableColumns" :data="threadList" mt-20 :bordered="false" />
 
   <!-- thread detail -->
-  <n-modal v-model:show="showThreadDetail" title="Thread Detail">
-    <n-card title="线程详情" style="width: 800px" :bordered="false" size="huge" role="dialog" aria-modal="true">
-      <template #header>
-        <AutoRefresh :refresh-timestamp="threadDetailRefreshTimestamp" @refresh="refreshThreadDetail" />
+  <n-modal v-model:show="showThreadDetail">
+    <n-card title="Thread Detail" style="width: 800px" :bordered="false" size="huge" role="dialog" aria-modal="true">
+      <template #footer>
+        <AutoRefresh :refresh-timestamp="threadDetailRefreshTimestamp" :auto-refresh="false" @refresh="refreshThreadDetail" />
       </template>
       <n-descriptions label-placement="left" :columns="1" label-align="center" size="large">
         <n-descriptions-item>

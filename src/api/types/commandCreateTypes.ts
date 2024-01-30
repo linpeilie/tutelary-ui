@@ -10,7 +10,3 @@ export interface CommandTaskResponse {
   param: string
   completeTime: string
 }
-
-export interface ThreadListRequest {
-  samplerInterval: number
-}

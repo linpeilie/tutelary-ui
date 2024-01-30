@@ -1,6 +1,6 @@
 import { commandEnum } from '@/enums/commandEnums'
 import { LoggerInfo } from '@/proto/command/domain/LoggerInfo'
-import { DecompileRequest } from '@/proto/command/param/DecompileRequest'
+import { DecompileResponse } from '@/proto/command/result/DecompileResponse'
 import { FileListResponse } from '@/proto/command/result/FileListResponse'
 import { GetStaticResponse } from '@/proto/command/result/GetStaticResponse'
 import { HeapDumpResponse } from '@/proto/command/result/HeapDumpResponse'
@@ -38,7 +38,7 @@ export default {
 
     // decompile
     if (command === commandEnum.DECOMPILE.value)
-      return DecompileRequest.decode(unit8Array)
+      return DecompileResponse.decode(unit8Array)
 
     // loggerInfo
     if (command === commandEnum.LOGGER_INFO.value)

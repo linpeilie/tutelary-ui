@@ -10,12 +10,12 @@ const props = defineProps<{
 const descriptions = computed(() => {
   if (props.instanceInfo) {
     return [
-      { label: '应用名称', value: props.instanceInfo.appName },
-      { label: '实例ID', value: props.instanceInfo.instanceId },
+      { label: 'App Name', value: props.instanceInfo.appName },
+      { label: 'Instance ID', value: props.instanceInfo.instanceId },
       { label: 'IP', value: props.instanceInfo.ip },
-      { label: '注册时间', value: props.instanceInfo.registerDate },
-      { label: '启动时间', value: props.instanceInfo.startTime },
-      { label: 'JDK版本', value: props.instanceInfo.jdkVersion },
+      { label: 'Register Time', value: props.instanceInfo.registerDate },
+      { label: 'Startup Time', value: props.instanceInfo.startTime },
+      { label: 'JDK Version', value: props.instanceInfo.jdkVersion },
       { label: 'VmName', value: props.instanceInfo.vmName },
       { label: 'VmVendor', value: props.instanceInfo.vmVendor },
       { label: 'VmVersion', value: props.instanceInfo.vmVersion },

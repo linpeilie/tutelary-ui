@@ -5,6 +5,7 @@ import type { MenuOption } from 'naive-ui'
 import { useRoute } from 'vue-router'
 import dashboard from './components/dashboard.vue'
 import thread from './components/thread.vue'
+import decompile from './components/decompile.vue'
 import InstanceSider from './instanceSider.vue'
 import commandCodec from './codec/commandCodec'
 import { useWebSocket } from '@/composables/useWebSocket'
@@ -104,6 +105,7 @@ type MenuItem = Omit<MenuOption, 'children'> & {
 const menuOptions: MenuItem[] = [
   { key: 'instance-detail-dashboard', label: '面板', component: markRaw(dashboard) },
   { key: 'instance-thread', label: '线程', component: markRaw(thread) },
+  { key: 'decompile', label: '反编译', component: markRaw(decompile) },
 ]
 
 /**

@@ -7,6 +7,10 @@ const props = defineProps({
   refreshTimestamp: {
     type: Number,
   },
+  autoRefresh: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const emit = defineEmits(['refresh'])
@@ -21,6 +25,11 @@ function handleSwitchChange(value: boolean) {
   else
     pause()
 }
+
+onMounted(() => {
+  automiaticRefresh.value = props.autoRefresh
+  handleSwitchChange(automiaticRefresh.value)
+})
 </script>
 
 <template>

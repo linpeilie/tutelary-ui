@@ -1,6 +1,10 @@
 <script setup>
 import { NButton, NSpace } from 'naive-ui'
 
+const props = defineProps({
+  showReset: { type: Boolean, default: true },
+})
+
 const emit = defineEmits(['search', 'reset'])
 </script>
 
@@ -11,7 +15,7 @@ const emit = defineEmits(['search', 'reset'])
     </NSpace>
 
     <div flex-shrink-0>
-      <NButton secondary type="primary" @click="emit('reset')">
+      <NButton v-if="props.showReset" secondary type="primary" @click="emit('reset')">
         重置
       </NButton>
       <NButton ml-20 type="primary" @click="emit('search')">
