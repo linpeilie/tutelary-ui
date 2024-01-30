@@ -23,6 +23,11 @@ onMounted(() => {
   eventbus.on('command', (commandExecuteResponse) => {
     if (commandExecuteResponse.code === commandEnum.DECOMPILE.value) {
       const decompileResponse = commandExecuteResponse.data as DecompileResponse
+      if (decompileResponse.state !== 1) {
+        window.$notification.error({
+          content: decompileResponse.message,
+        })
+      }
       source.value = decompileResponse.source
     }
   })
@@ -46,23 +51,30 @@ function createDecompileCommand() {
     source.value = ''
   }
 }
-
-function reset() {
-  source.value = ''
-  methodName.value = ''
-  qualifiedClassName.value = ''
-}
 </script>
 
 <template>
-  <query-bar :show-reset="false" @search="createDecompileCommand" @reset="reset">
-    <query-bar-item label="类全限定名" :content-width="400">
-      <n-input v-model:value="qualifiedClassName" clearable placeholder="Qualified Class Name" />
-    </query-bar-item>
-    <query-bar-item label="方法名">
-      <n-input v-model:value="methodName" clearable placeholder="Method Name" />
-    </query-bar-item>
-  </query-bar>
+  <n-space bg="#fafafc" vertical min-h-60 rounded-8 p-15 bc-ccc dark:bg-black>
+    <div w-full flex items-center>
+      <div style="width: 120px">
+        类全限定名
+      </div>
+      <n-input
+        v-model:value="qualifiedClassName" clearable placeholder="Qualified Class Name"
+        @keydown.enter="createDecompileCommand"
+      />
+    </div>
+    <div flex items-center>
+      <div style="width: 120px">
+        方法名称
+      </div>
+      <n-input v-model:value="methodName" clearable placeholder="Method Name" @keydown.enter="createDecompileCommand" />
+    </div>
+
+    <n-space wrap justify="end">
+      <n-button>Decompile</n-button>
+    </n-space>
+  </n-space>
   <n-card v-if="source" embedded :bordered="false" mt-15 overflow-hidden content-class="cus-scroll-x cus-scroll-y">
     <n-config-provider :hljs="hljs">
       <n-code :code="source" language="java" show-line-numbers />
