@@ -6,6 +6,7 @@ import { useRoute } from 'vue-router'
 import dashboard from './components/dashboard.vue'
 import thread from './components/thread.vue'
 import decompile from './components/decompile.vue'
+import vmOption from './components/vmOption.vue'
 import InstanceSider from './instanceSider.vue'
 import commandCodec from './codec/commandCodec'
 import { useWebSocket } from '@/composables/useWebSocket'
@@ -19,6 +20,7 @@ import eventbus from '@/utils/eventbus'
 
 const route = useRoute()
 
+const instanceId = ref<string>()
 // 实例信息
 const instance = ref<InstanceDetailInfo>({} as InstanceDetailInfo)
 
@@ -34,8 +36,7 @@ function getWsUrl() {
 }
 
 async function getInstanceDetail() {
-  const instanceId = route.params.instanceId as string
-  instance.value = await instanceApi.detail(instanceId)
+  instance.value = await instanceApi.detail(instanceId.value)
 }
 
 const { start, dispose } = useWebSocket({
@@ -85,6 +86,7 @@ const { start, dispose } = useWebSocket({
 })
 
 onMounted(async () => {
+  instanceId.value = route.params.instanceId as string
   // 获取实例信息
   await getInstanceDetail()
   start()
@@ -106,6 +108,7 @@ const menuOptions: MenuItem[] = [
   { key: 'instance-detail-dashboard', label: '面板', component: markRaw(dashboard) },
   { key: 'instance-thread', label: '线程', component: markRaw(thread) },
   { key: 'decompile', label: '反编译', component: markRaw(decompile) },
+  { key: 'vm-option', label: 'VmOption', component: markRaw(vmOption) },
 ]
 
 /**
@@ -120,7 +123,7 @@ function handleMenuSelect(key: string, item: MenuItem) {
 }
 
 onMounted(() => {
-  activeMenuOption.value = menuOptions[0]
+  activeMenuOption.value = menuOptions[menuOptions.length - 1]
   defaultActiveMenu.value = activeMenuOption.value.key as string
 })
 </script>
@@ -137,7 +140,7 @@ onMounted(() => {
           @update:value="handleMenuSelect"
         />
         <n-card flex-1 overflow-hidden content-class="cus-scroll-y">
-          <component :is="activeMenuOption.component" :key="activeMenuOption.key" :instance-id="instance.instanceId" />
+          <component :is="activeMenuOption.component" :key="activeMenuOption.key" :instance-id="instanceId" />
         </n-card>
       </article>
     </n-flex>
