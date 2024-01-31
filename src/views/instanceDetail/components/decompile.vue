@@ -72,7 +72,9 @@ function createDecompileCommand() {
     </div>
 
     <n-space wrap justify="end">
-      <n-button>Decompile</n-button>
+      <n-button @click="createDecompileCommand">
+        Decompile
+      </n-button>
     </n-space>
   </n-space>
   <n-card v-if="source" embedded :bordered="false" mt-15 overflow-hidden content-class="cus-scroll-x cus-scroll-y">
