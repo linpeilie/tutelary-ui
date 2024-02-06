@@ -1,9 +1,9 @@
 import { commandEnum } from '@/enums/commandEnums'
-import { LoggerInfo } from '@/proto/command/domain/LoggerInfo'
 import { DecompileResponse } from '@/proto/command/result/DecompileResponse'
 import { FileListResponse } from '@/proto/command/result/FileListResponse'
 import { GetStaticResponse } from '@/proto/command/result/GetStaticResponse'
 import { HeapDumpResponse } from '@/proto/command/result/HeapDumpResponse'
+import { LoggerInfoResponse } from '@/proto/command/result/LoggerInfoResponse'
 import { Overview } from '@/proto/command/result/Overview'
 import { RetransformResponse } from '@/proto/command/result/RetransformResponse'
 import { SetVmOptionResponse } from '@/proto/command/result/SetVmOptionResponse'
@@ -42,7 +42,7 @@ export default {
 
     // loggerInfo
     if (command === commandEnum.LOGGER_INFO.value)
-      return LoggerInfo.decode(unit8Array)
+      return LoggerInfoResponse.decode(unit8Array)
 
     // updateLoggerLevel
     if (command === commandEnum.UPDATE_LOGGER_LEVEL.value)
