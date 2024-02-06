@@ -14,6 +14,8 @@ export const commandEnum = Object.freeze({
   GET_VM_OPTION: EnumItem.of(20020, 'GetVmOption'),
   SET_VM_OPTION: EnumItem.of(20021, 'SetVmOption'),
 
+  ENHANCE_AFFECT: EnumItem.of(21001, 'EnhanceAffect'),
+  ENHANCE_COMPLETE: EnumItem.of(21002, 'EnhanceComplete'),
   TRACE_METHOD: EnumItem.of(21011, 'TraceMethod'),
   STACK_METHOD: EnumItem.of(21012, 'StackMethod'),
   RETRANSFORM: EnumItem.of(21013, 'Retransform'),

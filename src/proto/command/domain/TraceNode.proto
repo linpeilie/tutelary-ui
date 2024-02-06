@@ -8,5 +8,6 @@ message TraceNode {
  string mark=5;
  int64 beginTimestamp=6;
  int64 endTimestamp=7;
-repeated TraceNode children=8;
+ int32 count=8;
+repeated TraceNode children=9;
 }

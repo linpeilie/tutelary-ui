@@ -1,5 +1,7 @@
 import { commandEnum } from '@/enums/commandEnums'
 import { DecompileResponse } from '@/proto/command/result/DecompileResponse'
+import { EnhanceAffect } from '@/proto/command/result/EnhanceAffect'
+import { EnhanceCommandComplete } from '@/proto/command/result/EnhanceCommandComplete'
 import { FileListResponse } from '@/proto/command/result/FileListResponse'
 import { GetStaticResponse } from '@/proto/command/result/GetStaticResponse'
 import { HeapDumpResponse } from '@/proto/command/result/HeapDumpResponse'
@@ -59,6 +61,12 @@ export default {
     // setVmOption
     if (command === commandEnum.SET_VM_OPTION.value)
       return SetVmOptionResponse.decode(unit8Array)
+
+    if (command === commandEnum.ENHANCE_AFFECT.value)
+      return EnhanceAffect.decode(unit8Array)
+
+    if (command === commandEnum.ENHANCE_COMPLETE.value)
+      return EnhanceCommandComplete.decode(unit8Array)
 
     // traceMethod
     if (command === commandEnum.TRACE_METHOD.value)

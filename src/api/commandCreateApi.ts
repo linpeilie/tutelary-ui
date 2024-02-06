@@ -5,6 +5,7 @@ import type { ThreadDetailRequest } from '@/proto/command/param/ThreadDetailRequ
 import type { ThreadListRequest } from '@/proto/command/param/ThreadListRequest'
 import type { VmOptionRequest } from '@/proto/command/param/VmOptionRequest'
 import { request } from '@/utils'
+import type { TraceRequest } from '@/proto/command/param/TraceRequest'
 
 export default {
   createThreadListCommand: (data: CommandCreateRequest<ThreadListRequest>) =>
@@ -17,4 +18,6 @@ export default {
     request.post<CommandCreateRequest<VmOptionRequest>, CommandTaskResponse>('command/creation/getVmOption', data, { showLoading: false }),
   createLoggerInfo: (data: CommandCreateRequest<LoggerInfoRequest>) =>
     request.post<CommandCreateRequest<LoggerInfoRequest>, CommandTaskResponse>('command/creation/loggerInfo', data, { showLoading: false }),
+  createTraceCommand: (data: CommandCreateRequest<TraceRequest>) =>
+    request.post<CommandCreateRequest<TraceRequest>, CommandTaskResponse>('command/creation/traceMethod', data, { showLoading: false }),
 }

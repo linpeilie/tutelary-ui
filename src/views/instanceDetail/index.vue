@@ -8,6 +8,7 @@ import thread from './components/thread.vue'
 import decompile from './components/decompile.vue'
 import vmOption from './components/vmOption.vue'
 import logger from './components/logger.vue'
+import trace from './components/trace.vue'
 import InstanceSider from './instanceSider.vue'
 import commandCodec from './codec/commandCodec'
 import { useWebSocket } from '@/composables/useWebSocket'
@@ -111,6 +112,7 @@ const menuOptions: MenuItem[] = [
   { key: 'decompile', label: '反编译', component: markRaw(decompile) },
   { key: 'vm-option', label: 'VmOption', component: markRaw(vmOption) },
   { key: 'logger', label: 'Logger', component: markRaw(logger) },
+  { key: 'trace', label: 'Trace', component: markRaw(trace) },
 ]
 
 /**
