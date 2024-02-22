@@ -14,6 +14,9 @@ export interface TraceNode {
   beginTimestamp: number;
   endTimestamp: number;
   count: number;
+  minCost: number;
+  maxCost: number;
+  totalCost: number;
   children: TraceNode[];
 }
 
@@ -27,6 +30,9 @@ function createBaseTraceNode(): TraceNode {
     beginTimestamp: 0,
     endTimestamp: 0,
     count: 0,
+    minCost: 0,
+    maxCost: 0,
+    totalCost: 0,
     children: [],
   };
 }
@@ -57,8 +63,17 @@ export const TraceNode = {
     if (message.count !== 0) {
       writer.uint32(64).int32(message.count);
     }
+    if (message.minCost !== 0) {
+      writer.uint32(72).int64(message.minCost);
+    }
+    if (message.maxCost !== 0) {
+      writer.uint32(80).int64(message.maxCost);
+    }
+    if (message.totalCost !== 0) {
+      writer.uint32(88).int64(message.totalCost);
+    }
     for (const v of message.children) {
-      TraceNode.encode(v!, writer.uint32(74).fork()).ldelim();
+      TraceNode.encode(v!, writer.uint32(98).fork()).ldelim();
     }
     return writer;
   },
@@ -127,7 +142,28 @@ export const TraceNode = {
           message.count = reader.int32();
           continue;
         case 9:
-          if (tag !== 74) {
+          if (tag !== 72) {
+            break;
+          }
+
+          message.minCost = longToNumber(reader.int64() as Long);
+          continue;
+        case 10:
+          if (tag !== 80) {
+            break;
+          }
+
+          message.maxCost = longToNumber(reader.int64() as Long);
+          continue;
+        case 11:
+          if (tag !== 88) {
+            break;
+          }
+
+          message.totalCost = longToNumber(reader.int64() as Long);
+          continue;
+        case 12:
+          if (tag !== 98) {
             break;
           }
 

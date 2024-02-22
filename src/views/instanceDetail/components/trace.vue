@@ -4,6 +4,9 @@ import eventbus from '@/utils/eventbus'
 import commandCreateApi from '@/api/commandCreateApi'
 import type { TraceRequest } from '@/proto/command/param/TraceRequest'
 import type { CommandCreateRequest } from '@/api/types/commandCreateTypes'
+import { commandEnum } from '@/enums/commandEnums'
+import type { TraceResponse } from '@/proto/command/result/TraceResponse'
+import type { EnhanceAffect } from '@/proto/command/result/EnhanceAffect'
 
 const props = defineProps({
   instanceId: { type: String, required: true },
@@ -17,6 +20,8 @@ const traceRequest = ref<TraceRequest>({
 })
 
 const currentTaskId = ref<string>('')
+const currentEnhanceAffect = ref<EnhanceAffect>({} as EnhanceAffect)
+const currentTraceList = ref<TraceResponse[]>([])
 
 const formRef = ref<FormInst | null>(null)
 
@@ -41,25 +46,23 @@ const formRules: FormRules = {
   cost: [{ type: 'number', required: true, trigger: 'blur' }],
 }
 
-// onMounted(() => {
-// eventbus.on('command', (commandExecuteResponse) => {
-// if (commandExecuteResponse.taskId !== currentTaskId.value)
-// return
+onMounted(() => {
+  eventbus.on('command', (commandExecuteResponse) => {
+    if (commandExecuteResponse.taskId !== currentTaskId.value)
+      return
 
-// if (commandExecuteResponse.code === commandEnum.TRACE_METHOD.value) {
-// const traceResponse: TraceResponse = commandExecuteResponse.data
-// console.log('🚀 ~ eventbus.on ~ traceResponse:', traceResponse)
-// }
-// else if (commandExecuteResponse.code === commandEnum.ENHANCE_AFFECT.value) {
-// const enhanceAffect: EnhanceAffect = commandExecuteResponse.data
-// console.log('🚀 ~ eventbus.on ~ enhanceAffect:', enhanceAffect)
-// }
-// else if (commandExecuteResponse.code === commandEnum.ENHANCE_COMPLETE.value) {
-// const enhanceComplete: EnhanceCommandComplete = commandExecuteResponse.data
-// console.log('🚀 ~ eventbus.on ~ enhanceComplete:', enhanceComplete)
-// }
-// })
-// })
+    if (commandExecuteResponse.code === commandEnum.TRACE_METHOD.value) {
+      const traceResponse: TraceResponse = commandExecuteResponse.data
+      currentTraceList.value.push(traceResponse)
+    }
+    else if (commandExecuteResponse.code === commandEnum.ENHANCE_AFFECT.value) {
+      const enhanceAffect: EnhanceAffect = commandExecuteResponse.data
+      currentEnhanceAffect.value = enhanceAffect
+    }
+    // else if (commandExecuteResponse.code === commandEnum.ENHANCE_COMPLETE.value) {
+    // }
+  })
+})
 
 onBeforeUnmount(() => eventbus.off('command'))
 
@@ -70,6 +73,11 @@ function traceMethod() {
         instanceId: props.instanceId,
         param: traceRequest.value,
       }
+
+      currentTaskId.value = ''
+      currentEnhanceAffect.value = {} as EnhanceAffect
+      currentTraceList.value = []
+
       commandCreateApi.createTraceCommand(params)
         .then((res) => {
           currentTaskId.value = res.taskId
@@ -99,13 +107,149 @@ function traceMethod() {
       <n-button type="primary" @click="traceMethod">
         确定
       </n-button>
+      <n-button secondary>
+        历史
+      </n-button>
     </n-space>
   </common-container>
 
-  <common-container mt-20>
-    <h1>增加成功</h1>
-  </common-container>
+  <div v-if="currentTaskId">
+    <n-divider />
+    <div v-for="(traceItem, index) of currentTraceList" :key="index" my-20>
+      <common-container>
+        <n-grid :cols="2" x-gap="10">
+          <n-gi>
+            <n-card :bordered="false" h-full>
+              <n-h4 prefix="bar">
+                <n-text>Target Method</n-text>
+              </n-h4>
+              <n-descriptions :columns="1" label-placement="left" mb-20>
+                <n-descriptions-item>
+                  <template #label>
+                    <n-text :depth="3">
+                      Class
+                    </n-text>
+                  </template>
+                  <n-text strong>
+                    {{ traceItem.node?.className }}
+                  </n-text>
+                </n-descriptions-item>
+                <n-descriptions-item>
+                  <template #label>
+                    <n-text :depth="3">
+                      Method
+                    </n-text>
+                  </template>
+                  <n-text strong>
+                    {{ traceItem.node?.methodName }}
+                  </n-text>
+                </n-descriptions-item>
+                <n-descriptions-item>
+                  <template #label>
+                    <n-text :depth="3">
+                      Elapsed Time
+                    </n-text>
+                  </template>
+                  <n-text strong>
+                    {{ traceItem.node.totalCost / 1000000 }} ms
+                  </n-text>
+                  <n-text v-if="traceItem.node.isThrow" ml-10 type="error">
+                    Throws Exception
+                  </n-text>
+                </n-descriptions-item>
+                <n-descriptions-item v-if="traceItem.node.mark">
+                  <template #label>
+                    <n-text :depth="3">
+                      Mark
+                    </n-text>
+                  </template>
+                  <n-text strong>
+                    {{ traceItem.node.mark }}
+                  </n-text>
+                </n-descriptions-item>
+              </n-descriptions>
+            </n-card>
+          </n-gi>
+          <n-gi>
+            <n-card :bordered="false" h-full>
+              <n-h4 prefix="bar">
+                <n-text>Thread</n-text>
+              </n-h4>
+              <n-descriptions :columns="1" label-placement="left" mb-20>
+                <n-descriptions-item>
+                  <template #label>
+                    <n-text :depth="3">
+                      ID
+                    </n-text>
+                  </template>
+                  <n-text strong>
+                    {{ traceItem.thread?.id }}
+                  </n-text>
+                </n-descriptions-item>
+                <n-descriptions-item>
+                  <template #label>
+                    <n-text :depth="3">
+                      Name
+                    </n-text>
+                  </template>
+                  <n-text strong>
+                    {{ traceItem.thread?.name }}
+                  </n-text>
+                </n-descriptions-item>
+                <n-descriptions-item>
+                  <template #label>
+                    <n-text :depth="3">
+                      TCCL
+                    </n-text>
+                  </template>
+                  <n-text strong>
+                    {{ traceItem.tccl }}
+                  </n-text>
+                </n-descriptions-item>
+              </n-descriptions>
+            </n-card>
+          </n-gi>
+        </n-grid>
+        <n-card :bordered="false">
+          <n-h4 prefix="bar">
+            <n-text>Trace</n-text>
+          </n-h4>
+          <n-list>
+            <n-list-item v-for="node of traceItem.node.children" :key="node.className + node.methodName + node.line">
+              <n-space justify="space-between" :wrap="false">
+                <div>
+                  <n-text>{{ node.className }}</n-text>
+                  <n-text>{{ `:${node.methodName}` }}</n-text>
+                  <n-text ml-8 :depth="3">
+                    {{ `#${node.line}` }}
+                  </n-text>
+                </div>
+                <n-text v-if="node.count === 1">
+                  {{ `${node.totalCost / 1000000} ms ` }}
+                </n-text>
+                <n-text v-else>
+                  {{ `total=${node.totalCost / 1000000}ms, min=${node.minCost / 1000000}ms, max=${
+                    node.maxCost / 1000000}ms, count=${node.count}` }}
+                </n-text>
+              </n-space>
+              <n-text v-if="node.mark" :type="node.isThrow ? 'error' : 'info'">
+                {{ node.mark }}
+              </n-text>
+            </n-list-item>
+          </n-list>
+        </n-card>
+      </common-container>
+      <n-divider v-if="index !== currentTraceList.length - 1" dashed />
+    </div>
+  </div>
 </template>
 
 <style scoped>
+.n-list {
+  background-color: inherit;
+}
+
+.n-list .n-list-item {
+  padding: 5px 0;
+}
 </style>

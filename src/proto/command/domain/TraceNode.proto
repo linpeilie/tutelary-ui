@@ -9,5 +9,8 @@ message TraceNode {
  int64 beginTimestamp=6;
  int64 endTimestamp=7;
  int32 count=8;
-repeated TraceNode children=9;
+ int64 minCost=9;
+ int64 maxCost=10;
+ int64 totalCost=11;
+repeated TraceNode children=12;
 }
