@@ -1,38 +1,46 @@
 /* eslint-disable */
 import _m0 from "protobufjs/minimal";
-import { BaseThreadInfo } from "../domain/BaseThreadInfo";
-import { TraceNode } from "../domain/TraceNode";
+import { GarbageCollector } from "../domain/GarbageCollector";
+import { JvmMemory } from "../domain/JvmMemory";
 
 export const protobufPackage = "";
 
 /**  */
-export interface TraceResponse {
-  finishTime: string;
-  node: TraceNode;
-  thread: BaseThreadInfo;
-  tccl: string;
+export interface JvmMemoryResponse {
+  heapMemory: JvmMemory[];
+  nonHeapMemory: JvmMemory[];
+  bufferPoolMemory: JvmMemory[];
+  garbageCollectors: GarbageCollector[];
   jobId: number;
   state: number;
   message: string;
 }
 
-function createBaseTraceResponse(): TraceResponse {
-  return { finishTime: "", node: undefined, thread: undefined, tccl: "", jobId: 0, state: 0, message: "" };
+function createBaseJvmMemoryResponse(): JvmMemoryResponse {
+  return {
+    heapMemory: [],
+    nonHeapMemory: [],
+    bufferPoolMemory: [],
+    garbageCollectors: [],
+    jobId: 0,
+    state: 0,
+    message: "",
+  };
 }
 
-export const TraceResponse = {
-  encode(message: TraceResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.finishTime !== "") {
-      writer.uint32(10).string(message.finishTime);
+export const JvmMemoryResponse = {
+  encode(message: JvmMemoryResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.heapMemory) {
+      JvmMemory.encode(v!, writer.uint32(10).fork()).ldelim();
     }
-    if (message.node !== undefined) {
-      TraceNode.encode(message.node, writer.uint32(18).fork()).ldelim();
+    for (const v of message.nonHeapMemory) {
+      JvmMemory.encode(v!, writer.uint32(18).fork()).ldelim();
     }
-    if (message.thread !== undefined) {
-      BaseThreadInfo.encode(message.thread, writer.uint32(26).fork()).ldelim();
+    for (const v of message.bufferPoolMemory) {
+      JvmMemory.encode(v!, writer.uint32(26).fork()).ldelim();
     }
-    if (message.tccl !== "") {
-      writer.uint32(34).string(message.tccl);
+    for (const v of message.garbageCollectors) {
+      GarbageCollector.encode(v!, writer.uint32(34).fork()).ldelim();
     }
     if (message.jobId !== 0) {
       writer.uint32(40).int32(message.jobId);
@@ -46,10 +54,10 @@ export const TraceResponse = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): TraceResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): JvmMemoryResponse {
     const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseTraceResponse();
+    const message = createBaseJvmMemoryResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -58,28 +66,28 @@ export const TraceResponse = {
             break;
           }
 
-          message.finishTime = reader.string();
+          message.heapMemory.push(JvmMemory.decode(reader, reader.uint32()));
           continue;
         case 2:
           if (tag !== 18) {
             break;
           }
 
-          message.node = TraceNode.decode(reader, reader.uint32());
+          message.nonHeapMemory.push(JvmMemory.decode(reader, reader.uint32()));
           continue;
         case 3:
           if (tag !== 26) {
             break;
           }
 
-          message.thread = BaseThreadInfo.decode(reader, reader.uint32());
+          message.bufferPoolMemory.push(JvmMemory.decode(reader, reader.uint32()));
           continue;
         case 4:
           if (tag !== 34) {
             break;
           }
 
-          message.tccl = reader.string();
+          message.garbageCollectors.push(GarbageCollector.decode(reader, reader.uint32()));
           continue;
         case 5:
           if (tag !== 40) {

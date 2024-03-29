@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules } from 'naive-ui'
+import { NSpace, NText } from 'naive-ui'
+import type { VNodeChild } from 'vue'
 import eventbus from '@/utils/eventbus'
 import commandCreateApi from '@/api/commandCreateApi'
 import type { TraceRequest } from '@/proto/command/param/TraceRequest'
@@ -7,6 +9,7 @@ import type { CommandCreateRequest } from '@/api/types/commandCreateTypes'
 import { commandEnum } from '@/enums/commandEnums'
 import type { TraceResponse } from '@/proto/command/result/TraceResponse'
 import type { EnhanceAffect } from '@/proto/command/result/EnhanceAffect'
+import type { TDescriptionItemProps } from '@/components/descriptions/TDescriptions.vue'
 
 const props = defineProps({
   instanceId: { type: String, required: true },
@@ -45,6 +48,55 @@ const formRules: FormRules = {
   times: [{ type: 'number', required: true, trigger: 'blur' }],
   cost: [{ type: 'number', required: true, trigger: 'blur' }],
 }
+
+const targetMethodDescriptions: Array<TDescriptionItemProps<TraceResponse>> = [
+  {
+    label: 'Class',
+    value: val => val.node.className,
+  },
+  {
+    label: 'Method',
+    value: val => val.node.methodName,
+  },
+  {
+    label: 'Elapsed Time',
+    render: (val) => {
+      return h(
+        NSpace,
+        null,
+        {
+          default: () => {
+            const nodes: VNodeChild[] = []
+            const valueNode
+              = h(NText, { strong: true }, () => `${val.node.totalCost / 1000000} ms`)
+            nodes.push(valueNode)
+            if (val.node.isThrow) {
+              const showExceptionNode
+                = h(NText, { type: 'error' }, () => 'Throws Exception')
+              nodes.push(showExceptionNode)
+            }
+            return nodes
+          },
+        },
+      )
+    },
+  },
+  {
+    label: 'Finish Time',
+    value: val => val.finishTime,
+  },
+  {
+    label: 'Mark',
+    value: val => val.node.mark,
+    hidden: val => !val.node.mark,
+  },
+]
+
+const threadDescriptions: Array<TDescriptionItemProps<TraceResponse>> = [
+  { label: 'ID', value: val => val.thread.id },
+  { label: 'Name', value: val => val.thread.name },
+  { label: 'TCCL', value: val => val.tccl },
+]
 
 onMounted(() => {
   eventbus.on('command', (commandExecuteResponse) => {
@@ -103,14 +155,14 @@ function traceMethod() {
         <n-input-number v-model:value="traceRequest.cost" :min="0" />
       </n-form-item>
     </n-form>
-    <n-space justify="end">
+    <NSpace justify="end">
       <n-button type="primary" @click="traceMethod">
         确定
       </n-button>
       <n-button secondary>
         历史
       </n-button>
-    </n-space>
+    </NSpace>
   </common-container>
 
   <div v-if="currentTaskId">
@@ -121,120 +173,45 @@ function traceMethod() {
           <n-gi>
             <n-card :bordered="false" h-full>
               <n-h4 prefix="bar">
-                <n-text>Target Method</n-text>
+                <NText>Target Method</NText>
               </n-h4>
-              <n-descriptions :columns="1" label-placement="left" mb-20>
-                <n-descriptions-item>
-                  <template #label>
-                    <n-text :depth="3">
-                      Class
-                    </n-text>
-                  </template>
-                  <n-text strong>
-                    {{ traceItem.node?.className }}
-                  </n-text>
-                </n-descriptions-item>
-                <n-descriptions-item>
-                  <template #label>
-                    <n-text :depth="3">
-                      Method
-                    </n-text>
-                  </template>
-                  <n-text strong>
-                    {{ traceItem.node?.methodName }}
-                  </n-text>
-                </n-descriptions-item>
-                <n-descriptions-item>
-                  <template #label>
-                    <n-text :depth="3">
-                      Elapsed Time
-                    </n-text>
-                  </template>
-                  <n-text strong>
-                    {{ traceItem.node.totalCost / 1000000 }} ms
-                  </n-text>
-                  <n-text v-if="traceItem.node.isThrow" ml-10 type="error">
-                    Throws Exception
-                  </n-text>
-                </n-descriptions-item>
-                <n-descriptions-item v-if="traceItem.node.mark">
-                  <template #label>
-                    <n-text :depth="3">
-                      Mark
-                    </n-text>
-                  </template>
-                  <n-text strong>
-                    {{ traceItem.node.mark }}
-                  </n-text>
-                </n-descriptions-item>
-              </n-descriptions>
+              <t-descriptions :columns="1" label-placement="left" :items="targetMethodDescriptions" :val="traceItem" />
             </n-card>
           </n-gi>
           <n-gi>
             <n-card :bordered="false" h-full>
               <n-h4 prefix="bar">
-                <n-text>Thread</n-text>
+                <NText>Thread</NText>
               </n-h4>
-              <n-descriptions :columns="1" label-placement="left" mb-20>
-                <n-descriptions-item>
-                  <template #label>
-                    <n-text :depth="3">
-                      ID
-                    </n-text>
-                  </template>
-                  <n-text strong>
-                    {{ traceItem.thread?.id }}
-                  </n-text>
-                </n-descriptions-item>
-                <n-descriptions-item>
-                  <template #label>
-                    <n-text :depth="3">
-                      Name
-                    </n-text>
-                  </template>
-                  <n-text strong>
-                    {{ traceItem.thread?.name }}
-                  </n-text>
-                </n-descriptions-item>
-                <n-descriptions-item>
-                  <template #label>
-                    <n-text :depth="3">
-                      TCCL
-                    </n-text>
-                  </template>
-                  <n-text strong>
-                    {{ traceItem.tccl }}
-                  </n-text>
-                </n-descriptions-item>
-              </n-descriptions>
+              <t-descriptions :columns="1" label-placement="left" :items="threadDescriptions" :val="traceItem" />
             </n-card>
           </n-gi>
         </n-grid>
         <n-card :bordered="false">
           <n-h4 prefix="bar">
-            <n-text>Trace</n-text>
+            <NText>Trace</NText>
           </n-h4>
           <n-list>
             <n-list-item v-for="node of traceItem.node.children" :key="node.className + node.methodName + node.line">
-              <n-space justify="space-between" :wrap="false">
+              <NSpace justify="space-between" :wrap="false">
                 <div>
-                  <n-text>{{ node.className }}</n-text>
-                  <n-text>{{ `:${node.methodName}` }}</n-text>
-                  <n-text ml-8 :depth="3">
+                  <NText>{{ node.className }}</NText>
+                  <NText>{{ `:${node.methodName}` }}</NText>
+                  <NText ml-8 :depth="3">
                     {{ `#${node.line}` }}
-                  </n-text>
+                  </NText>
                 </div>
-                <n-text v-if="node.count === 1">
+                <NText v-if="node.count === 1">
                   {{ `${node.totalCost / 1000000} ms ` }}
-                </n-text>
-                <n-text v-else>
-                  {{ `total=${node.totalCost / 1000000}ms, min=${node.minCost / 1000000}ms, max=${
-                    node.maxCost / 1000000}ms, count=${node.count}` }}
-                </n-text>
-              </n-space>
-              <n-text v-if="node.mark" :type="node.isThrow ? 'error' : 'info'">
+                </NText>
+                <NText v-else>
+                  {{ `total=${node.totalCost / 1000000}ms, min=${node.minCost / 1000000}ms, max=${node.maxCost
+                    / 1000000}ms, count=${node.count}` }}
+                </NText>
+              </NSpace>
+              <NText v-if="node.mark" :type="node.isThrow ? 'error' : 'info'">
                 {{ node.mark }}
-              </n-text>
+              </NText>
             </n-list-item>
           </n-list>
         </n-card>

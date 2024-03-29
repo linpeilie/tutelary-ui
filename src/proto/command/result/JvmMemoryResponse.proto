@@ -1,0 +1,15 @@
+syntax="proto3";
+
+import "src/proto/command/domain/GarbageCollector.proto";
+import "src/proto/command/domain/JvmMemory.proto";
+//
+message JvmMemoryResponse {  
+repeated JvmMemory heapMemory=1;
+repeated JvmMemory nonHeapMemory=2;
+repeated JvmMemory bufferPoolMemory=3;
+repeated GarbageCollector garbageCollectors=4;
+ int32 jobId=5;
+ int32 state=6;
+ string message=7;
+}
+

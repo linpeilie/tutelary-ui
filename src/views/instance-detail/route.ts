@@ -18,7 +18,7 @@ export default {
     {
       name: 'InstanceDetailIndex',
       path: ':instanceId',
-      component: () => import('@/views/instanceDetail/index.vue'),
+      component: () => import('@/views/instance-detail/index.vue'),
       meta: {
         title: '应用实例详情',
         requireAuth: true,

@@ -3,6 +3,7 @@ import type { TableColumns } from 'naive-ui/es/data-table/src/interface'
 import { h, onMounted } from 'vue'
 import { NButton } from 'naive-ui'
 import AutoRefresh from './AutoRefresh.vue'
+import StackTrace from './StackTrace.vue'
 import commandCreateApi from '@/api/commandCreateApi'
 import type { CommandCreateRequest } from '@/api/types/commandCreateTypes'
 import type { ThreadListRequest } from '@/proto/command/param/ThreadListRequest'
@@ -178,19 +179,7 @@ onBeforeUnmount(() => {
           <template #label>
             StackTrace
           </template>
-          <n-list :bordered="false" clickable :show-divider="false">
-            <n-list-item
-              v-for="(node, index) of threadDetail?.stackTrace" :key="index"
-              style="padding-left: 0; padding-right: 0; padding-bottom: 5;padding-top: 0"
-            >
-              <n-space inline font-semibold :wrap="false" align="start">
-                <span>{{ node.declaringClass }}.{{ node.methodName }}#{{ node.lineNumber }}</span>
-                <n-tag v-if="node.isNative" :bordered="false" size="small">
-                  Native
-                </n-tag>
-              </n-space>
-            </n-list-item>
-          </n-list>
+          <StackTrace :stack-trace="threadDetail?.stackTrace" />
         </n-descriptions-item>
       </n-descriptions>
     </n-card>

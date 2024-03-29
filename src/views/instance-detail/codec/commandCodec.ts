@@ -15,6 +15,7 @@ import { ThreadList } from '@/proto/command/result/ThreadList'
 import { TraceResponse } from '@/proto/command/result/TraceResponse'
 import { UpdateLoggerLevelResponse } from '@/proto/command/result/UpdateLoggerLevelResponse'
 import { VmOptionResponse } from '@/proto/command/result/VmOptionResponse'
+import { JvmMemoryResponse } from '@/proto/command/result/JvmMemoryResponse'
 
 export default {
   decode: (command: number, unit8Array: Uint8Array) => {
@@ -79,6 +80,9 @@ export default {
     // retransform
     if (command === commandEnum.RETRANSFORM.value)
       return RetransformResponse.decode(unit8Array)
+
+    if (command === commandEnum.JVM_MEMORY.value)
+      return JvmMemoryResponse.decode(unit8Array)
 
     return undefined
   },

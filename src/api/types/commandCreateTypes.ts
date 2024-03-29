@@ -1,6 +1,6 @@
 export interface CommandCreateRequest<T> {
   instanceId: string
-  param: T
+  param?: T
 }
 
 export interface CommandTaskResponse {

@@ -9,6 +9,8 @@ import decompile from './components/decompile.vue'
 import vmOption from './components/vmOption.vue'
 import logger from './components/logger.vue'
 import trace from './components/trace.vue'
+import stack from './components/stack.vue'
+import jvmMemory from './components/jvmMemory.vue'
 import InstanceSider from './instanceSider.vue'
 import commandCodec from './codec/commandCodec'
 import { useWebSocket } from '@/composables/useWebSocket'
@@ -113,6 +115,8 @@ const menuOptions: MenuItem[] = [
   { key: 'vm-option', label: 'VmOption', component: markRaw(vmOption) },
   { key: 'logger', label: 'Logger', component: markRaw(logger) },
   { key: 'trace', label: 'Trace', component: markRaw(trace) },
+  { key: 'stack', label: 'Stack', component: markRaw(stack) },
+  { key: 'jvmMemory', label: 'JvmMemory', component: markRaw(jvmMemory) },
 ]
 
 /**

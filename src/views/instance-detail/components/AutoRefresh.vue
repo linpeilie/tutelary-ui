@@ -11,13 +11,17 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  interval: {
+    type: Number,
+    default: 5000,
+  },
 })
 
 const emit = defineEmits(['refresh'])
 
 const automiaticRefresh = ref<boolean>(true)
 
-const { pause, resume } = useIntervalFn(() => emit('refresh'), 5000)
+const { pause, resume } = useIntervalFn(() => emit('refresh'), props.interval)
 
 function handleSwitchChange(value: boolean) {
   if (value)
