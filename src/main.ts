@@ -1,4 +1,4 @@
-import '@/styles/reset.css'
+import '@/styles/reset.scss'
 import '@/styles/index.scss'
 import 'uno.css'
 import 'virtual:svg-icons-register'

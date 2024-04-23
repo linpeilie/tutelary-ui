@@ -142,12 +142,14 @@ onMounted(() => {
       <InstanceSider :instance-info="instance" />
 
       <article flex-col flex-1 overflow-hidden>
-        <n-menu
-          ref="menu" mode="horizontal" class="side-menu" accordion :indent="18" :collapsed-icon-size="22"
-          :collapsed-width="64" :options="menuOptions" :value="activeMenuOption.key" :default-value="defaultActiveMenu"
-          @update:value="handleMenuSelect"
-        />
-        <n-card flex-1 overflow-hidden content-class="cus-scroll-y">
+        <div class="menu-container">
+          <n-menu
+            ref="menu" mode="horizontal" accordion :indent="18" :collapsed-icon-size="22" :collapsed-width="64"
+            :options="menuOptions" :value="activeMenuOption.key" :default-value="defaultActiveMenu"
+            @update:value="handleMenuSelect"
+          />
+        </div>
+        <n-card content-class="cus-scroll-y" mt-10 flex-1 overflow-hidden>
           <component :is="activeMenuOption.component" :key="activeMenuOption.key" :instance-id="instanceId" />
         </n-card>
       </article>
@@ -155,6 +157,17 @@ onMounted(() => {
   </app-page>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+.menu-container {
+  ::v-deep(.n-menu) {
+    --n-item-height: 36px !important;
+    padding: 5px 5px;
+    border-radius: 10px;
+    background-color: white;
+  }
+  ::v-deep(.n-menu-item-content--selected) {
+    background-color: var(--n-item-color-active);
+    border-radius: 8px;
+  }
+}
 </style>
-./codec/messageCodec

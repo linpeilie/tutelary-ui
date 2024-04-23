@@ -64,7 +64,7 @@ function goBack() {
 
 <template>
   <div flex flex-col>
-    <n-button style="width: 300px" secondary @click="goBack">
+    <n-button style="width: 300px; height: 46px;" secondary @click="goBack">
       返回
     </n-button>
     <n-card style="width: 300px;" class="cus-scroll-y" mt-10>
