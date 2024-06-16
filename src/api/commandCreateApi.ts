@@ -25,4 +25,6 @@ export default {
     request.post<CommandCreateRequest<StackRequest>, CommandTaskResponse>('command/creation/stackMethod', data, { showLoading: false }),
   createJvmMemoryCommand: (data: CommandCreateRequest<any>) =>
     request.post<CommandCreateRequest<any>, CommandTaskResponse>('command/creation/jvmMemory', data, { showLoading: false }),
+  createOverviewCommand: (data: CommandCreateRequest<any>) =>
+    request.post<CommandCreateRequest<any>, CommandTaskResponse>('command/creation/overview', data, { showLoading: false }),
 }

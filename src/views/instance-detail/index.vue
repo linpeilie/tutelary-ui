@@ -131,7 +131,7 @@ function handleMenuSelect(key: string, item: MenuItem) {
 }
 
 onMounted(() => {
-  activeMenuOption.value = menuOptions[menuOptions.length - 1]
+  activeMenuOption.value = menuOptions[0]
   defaultActiveMenu.value = activeMenuOption.value.key as string
 })
 </script>

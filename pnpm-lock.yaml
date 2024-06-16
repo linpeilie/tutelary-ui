@@ -64,6 +64,9 @@ devDependencies:
   '@iconify/vue':
     specifier: ^3.2.1
     version: 3.2.1(vue@3.3.4)
+  '@types/big.js':
+    specifier: ^6.2.1
+    version: 6.2.2
   '@types/crypto-js':
     specifier: ^4.1.1
     version: 4.1.1
@@ -1032,6 +1035,10 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /@types/big.js@6.2.2:
+    resolution: {integrity: sha512-e2cOW9YlVzFY2iScnGBBkplKsrn2CsObHQ2Hiw4V1sSyiGbgWL8IyqE3zFi1Pt5o1pdAtYkDAIsF3KKUPjdzaA==}
+    dev: true
 
   /@types/crypto-js@4.1.1:
     resolution: {integrity: sha512-BG7fQKZ689HIoc5h+6D2Dgq1fABRa0RbBWKBd9SP/MVRVXROflpm5fhwyATX5duFmbStzyzyycPB8qUYKDH3NA==}

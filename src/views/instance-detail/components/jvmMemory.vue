@@ -82,14 +82,6 @@ function setRefreshTimer(interval: number) {
     clearInterval(timer.value)
     timer.value = null
   }
-  // 上一次垃圾回收次数
-  lastGarbageCollectionCount.value = new Map()
-  // 上一次垃圾回收耗时
-  lastGarbageCollectionTime.value = new Map()
-  // 垃圾回收耗时集合
-  garbageCollectionTimeMap.value = new Map()
-  // 垃圾回收次数集合
-  garbageCollectionCountMap.value = new Map()
   timer.value = setInterval(() => {
     createJvmMemoryCommand()
   }, interval * 1000)

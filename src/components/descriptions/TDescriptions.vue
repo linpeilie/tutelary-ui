@@ -16,8 +16,7 @@ export default defineComponent({
       required: true,
     },
     val: {
-      type: Object,
-      required: true,
+      type: Object
     },
   },
   setup(props, context) {
