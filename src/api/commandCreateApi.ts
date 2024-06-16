@@ -27,4 +27,6 @@ export default {
     request.post<CommandCreateRequest<any>, CommandTaskResponse>('command/creation/jvmMemory', data, { showLoading: false }),
   createOverviewCommand: (data: CommandCreateRequest<any>) =>
     request.post<CommandCreateRequest<any>, CommandTaskResponse>('command/creation/overview', data, { showLoading: false }),
+  createSystemInfoCommand: (data: CommandCreateRequest<any>) =>
+    request.post<CommandCreateRequest<any>, CommandTaskResponse>('command/creation/systemInfo', data, { showLoading: false }),
 }

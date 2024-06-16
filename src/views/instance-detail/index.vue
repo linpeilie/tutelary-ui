@@ -11,6 +11,7 @@ import logger from './components/logger.vue'
 import trace from './components/trace.vue'
 import stack from './components/stack.vue'
 import jvmMemory from './components/jvmMemory.vue'
+import systemInfo from './components/systemInfo.vue'
 import InstanceSider from './instanceSider.vue'
 import commandCodec from './codec/commandCodec'
 import { useWebSocket } from '@/composables/useWebSocket'
@@ -110,6 +111,7 @@ type MenuItem = Omit<MenuOption, 'children'> & {
 
 const menuOptions: MenuItem[] = [
   { key: 'instance-detail-dashboard', label: '面板', component: markRaw(dashboard) },
+  { key: 'system-info', label: '系统', component: markRaw(systemInfo) },
   { key: 'instance-thread', label: '线程', component: markRaw(thread) },
   { key: 'decompile', label: '反编译', component: markRaw(decompile) },
   { key: 'vm-option', label: 'VmOption', component: markRaw(vmOption) },
@@ -165,6 +167,7 @@ onMounted(() => {
     border-radius: 10px;
     background-color: white;
   }
+
   ::v-deep(.n-menu-item-content--selected) {
     background-color: var(--n-item-color-active);
     border-radius: 8px;

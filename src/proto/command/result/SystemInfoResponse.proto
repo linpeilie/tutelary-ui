@@ -1,0 +1,13 @@
+syntax="proto3";
+
+import "src/proto/command/domain/JvmInfo.proto";
+import "src/proto/command/domain/HostInfo.proto";
+
+//
+message SystemInfoResponse {  
+ JvmInfo jvm=1;
+ HostInfo host=2;
+ int32 jobId=3;
+ int32 state=4;
+ string message=5;
+}

@@ -40,9 +40,9 @@ const inputArgumentsShowMore = computed(() => {
   return showInputArguments.value.length !== props.instanceInfo?.inputArguments?.length
 })
 
-const showSystemProperties = computed(() => {
-  if (props.instanceInfo && props.instanceInfo.systemProperties && Object.entries(props.instanceInfo?.systemProperties).length > 0) {
-    const entries = Object.entries(props.instanceInfo?.systemProperties)
+const showenvironmentProperties = computed(() => {
+  if (props.instanceInfo && props.instanceInfo.environmentProperties && Object.entries(props.instanceInfo?.environmentProperties).length > 0) {
+    const entries = Object.entries(props.instanceInfo?.environmentProperties)
     return entries.slice(0, 3)
   }
   else {
@@ -50,8 +50,8 @@ const showSystemProperties = computed(() => {
   }
 })
 
-const systemPropertiesShowMore = computed(() => {
-  return showSystemProperties.value.length !== props.instanceInfo?.systemProperties?.size
+const environmentPropertiesShowMore = computed(() => {
+  return showenvironmentProperties.value.length !== props.instanceInfo?.environmentProperties?.size
 })
 
 function goBack() {
@@ -120,10 +120,10 @@ function goBack() {
             <n-thing>
               <template #header>
                 <div font-semibold text-gray-500>
-                  SystemProperties
+                  environmentProperties
                 </div>
               </template>
-              <template v-if="systemPropertiesShowMore" #header-extra>
+              <template v-if="environmentPropertiesShowMore" #header-extra>
                 <n-button text>
                   <template #icon>
                     <n-icon>
@@ -137,7 +137,7 @@ function goBack() {
           </template>
           <n-card embedded size="small" :bordered="false" rounded-10>
             <n-descriptions label-placement="left" :column="1">
-              <n-descriptions-item v-for="property of showSystemProperties" :key="property[0]">
+              <n-descriptions-item v-for="property of showenvironmentProperties" :key="property[0]">
                 <template #label>
                   {{ property[0] }}
                 </template>

@@ -36,11 +36,11 @@ export default defineComponent({
             if (item.render)
               return item.render(props.val)
 
-            return h(NText, { strong: true }, () => {
+            return h(NText, { strong: true, style: '--n-font-weight-strong: 600' }, () => {
               if (item.value)
                 return item.value(props.val)
               else
-                return ''
+                return '-'
             })
           },
         },

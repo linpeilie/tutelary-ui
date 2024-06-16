@@ -2,7 +2,7 @@ syntax="proto3";
 //
 message JvmInfo {  
 repeated string inputArguments=1;
- map<string, string> systemProperties=2;
+ map<string, string> environmentProperties=2;
  string classPath=3;
  string libraryPath=4;
  string vmVendor=5;

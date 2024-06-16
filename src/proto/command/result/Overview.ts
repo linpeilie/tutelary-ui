@@ -2,7 +2,6 @@
 import _m0 from "protobufjs/minimal";
 import { BaseThreadInfo } from "../domain/BaseThreadInfo";
 import { GarbageCollector } from "../domain/GarbageCollector";
-import { HostInfo } from "../domain/HostInfo";
 import { JvmMemory } from "../domain/JvmMemory";
 import { ThreadStatistic } from "../domain/ThreadStatistic";
 
@@ -10,8 +9,7 @@ export const protobufPackage = "";
 
 /**  */
 export interface Overview {
-  hostInfo: HostInfo | undefined;
-  threadStatistic: ThreadStatistic;
+  threadStatistic: ThreadStatistic | undefined;
   threads: BaseThreadInfo[];
   heapMemory: JvmMemory[];
   nonHeapMemory: JvmMemory[];
@@ -23,8 +21,7 @@ export interface Overview {
 
 function createBaseOverview(): Overview {
   return {
-    hostInfo: undefined,
-    threadStatistic: {} as ThreadStatistic,
+    threadStatistic: undefined,
     threads: [],
     heapMemory: [],
     nonHeapMemory: [],
@@ -37,32 +34,29 @@ function createBaseOverview(): Overview {
 
 export const Overview = {
   encode(message: Overview, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.hostInfo !== undefined) {
-      HostInfo.encode(message.hostInfo, writer.uint32(10).fork()).ldelim();
-    }
     if (message.threadStatistic !== undefined) {
-      ThreadStatistic.encode(message.threadStatistic, writer.uint32(18).fork()).ldelim();
+      ThreadStatistic.encode(message.threadStatistic, writer.uint32(10).fork()).ldelim();
     }
     for (const v of message.threads) {
-      BaseThreadInfo.encode(v!, writer.uint32(26).fork()).ldelim();
+      BaseThreadInfo.encode(v!, writer.uint32(18).fork()).ldelim();
     }
     for (const v of message.heapMemory) {
-      JvmMemory.encode(v!, writer.uint32(34).fork()).ldelim();
+      JvmMemory.encode(v!, writer.uint32(26).fork()).ldelim();
     }
     for (const v of message.nonHeapMemory) {
-      JvmMemory.encode(v!, writer.uint32(42).fork()).ldelim();
+      JvmMemory.encode(v!, writer.uint32(34).fork()).ldelim();
     }
     for (const v of message.garbageCollectors) {
-      GarbageCollector.encode(v!, writer.uint32(50).fork()).ldelim();
+      GarbageCollector.encode(v!, writer.uint32(42).fork()).ldelim();
     }
     if (message.jobId !== 0) {
-      writer.uint32(56).int32(message.jobId);
+      writer.uint32(48).int32(message.jobId);
     }
     if (message.state !== 0) {
-      writer.uint32(64).int32(message.state);
+      writer.uint32(56).int32(message.state);
     }
     if (message.message !== "") {
-      writer.uint32(74).string(message.message);
+      writer.uint32(66).string(message.message);
     }
     return writer;
   },
@@ -79,59 +73,52 @@ export const Overview = {
             break;
           }
 
-          message.hostInfo = HostInfo.decode(reader, reader.uint32());
+          message.threadStatistic = ThreadStatistic.decode(reader, reader.uint32());
           continue;
         case 2:
           if (tag !== 18) {
             break;
           }
 
-          message.threadStatistic = ThreadStatistic.decode(reader, reader.uint32());
+          message.threads.push(BaseThreadInfo.decode(reader, reader.uint32()));
           continue;
         case 3:
           if (tag !== 26) {
             break;
           }
 
-          message.threads.push(BaseThreadInfo.decode(reader, reader.uint32()));
+          message.heapMemory.push(JvmMemory.decode(reader, reader.uint32()));
           continue;
         case 4:
           if (tag !== 34) {
             break;
           }
 
-          message.heapMemory.push(JvmMemory.decode(reader, reader.uint32()));
+          message.nonHeapMemory.push(JvmMemory.decode(reader, reader.uint32()));
           continue;
         case 5:
           if (tag !== 42) {
             break;
           }
 
-          message.nonHeapMemory.push(JvmMemory.decode(reader, reader.uint32()));
+          message.garbageCollectors.push(GarbageCollector.decode(reader, reader.uint32()));
           continue;
         case 6:
-          if (tag !== 50) {
+          if (tag !== 48) {
             break;
           }
 
-          message.garbageCollectors.push(GarbageCollector.decode(reader, reader.uint32()));
+          message.jobId = reader.int32();
           continue;
         case 7:
           if (tag !== 56) {
             break;
           }
 
-          message.jobId = reader.int32();
-          continue;
-        case 8:
-          if (tag !== 64) {
-            break;
-          }
-
           message.state = reader.int32();
           continue;
-        case 9:
-          if (tag !== 74) {
+        case 8:
+          if (tag !== 66) {
             break;
           }
 
