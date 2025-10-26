@@ -33,12 +33,12 @@ const nonHeapMemories = ref<JvmMemory[]>([])
 const garbageCollectors = ref<GarbageCollector[]>([])
 
 const threadsColumns: DataTableColumns<BaseThreadInfo> = [
-  { title: 'ID', key: 'id' },
-  { title: 'Name', key: 'name' },
-  { title: 'Group', key: 'group' },
-  { title: 'CPU', key: 'cpu' },
-  { title: 'State', key: 'state' },
-  { title: 'Priority', key: 'priority' },
+  { title: 'ID', key: 'id', width: 60 },
+  { title: 'Name', key: 'name', ellipsis: { tooltip: true } },
+  { title: 'Group', key: 'group', width: 120 },
+  { title: 'CPU', key: 'cpu', width: 80 },
+  { title: 'State', key: 'state', width: 100 },
+  { title: 'Priority', key: 'priority', width: 80 },
 ]
 
 const memoriesColumns: DataTableColumns<JvmMemory> = [
@@ -98,46 +98,242 @@ function memoryTrans(value: number) {
 </script>
 
 <template>
-  <AutoRefresh :refresh-timestamp="refreshTimestamp" mb-15 @refresh="createOverviewCommand" />
+  <div class="dashboard-container">
+    <AutoRefresh :refresh-timestamp="refreshTimestamp" class="refresh-control" @refresh="createOverviewCommand" />
 
-  <n-grid cols="6" item-responsive :x-gap="12" :y-gap="20">
-    <n-grid-item span="1">
-      <n-card :bordered="false" title="线程统计" embedded w-full wh-full>
-        <n-statistic label="线程总数">
-          {{ threadStatistic?.threadCount }}
-        </n-statistic>
-        <n-statistic label="创建和启动的线程总数">
-          {{ threadStatistic?.totalStartedThreadCount }}
-        </n-statistic>
-        <n-statistic label="峰值线程数量">
-          {{ threadStatistic?.peakThreadCount }}
-        </n-statistic>
-        <n-statistic label="非守护线程数量">
-          {{ threadStatistic?.daemonThreadCount }}
-        </n-statistic>
-      </n-card>
-    </n-grid-item>
-    <n-grid-item span="5">
-      <n-card title="线程 TOP-10" embedded w-full :bordered="false">
-        <n-data-table :columns="threadsColumns" :data="threads" :bordered="false" />
-      </n-card>
-    </n-grid-item>
-    <n-grid-item span="3">
-      <n-card :bordered="false" title="堆内存" embedded w-full wh-full>
-        <n-data-table :columns="memoriesColumns" :data="heapMemories" :bordered="false" :render-cell="memoryTrans" />
-      </n-card>
-    </n-grid-item>
-    <n-grid-item span="3">
-      <n-card :bordered="false" title="垃圾回收" embedded w-full wh-full>
-        <n-data-table :columns="garbageCollectorColumns" :data="garbageCollectors" :bordered="false" />
-      </n-card>
-    </n-grid-item>
-    <n-grid-item span="3">
-      <n-card :bordered="false" title="非堆内存" embedded w-full wh-full>
-        <n-data-table :columns="memoriesColumns" :data="nonHeapMemories" :bordered="false" :render-cell="memoryTrans" />
-      </n-card>
-    </n-grid-item>
-  </n-grid>
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon thread">
+          <Icon icon="ph:list-bullets-duotone" />
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Thread Count</div>
+          <div class="stat-value">{{ threadStatistic?.threadCount || 0 }}</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon daemon">
+          <Icon icon="ph:gear-duotone" />
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Daemon Threads</div>
+          <div class="stat-value">{{ threadStatistic?.daemonThreadCount || 0 }}</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon peak">
+          <Icon icon="ph:trend-up-duotone" />
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Peak Threads</div>
+          <div class="stat-value">{{ threadStatistic?.peakThreadCount || 0 }}</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon total">
+          <Icon icon="ph:chart-line-up-duotone" />
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Total Started</div>
+          <div class="stat-value">{{ threadStatistic?.totalStartedThreadCount || 0 }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据表格区域 -->
+    <div class="data-section">
+      <div class="section-card full-width">
+        <h3 class="section-title">Top 10 Threads</h3>
+        <n-data-table
+          :columns="threadsColumns"
+          :data="threads"
+          :bordered="false"
+          :single-line="false"
+          size="small"
+        />
+      </div>
+
+      <div class="section-card">
+        <h3 class="section-title">Heap Memory</h3>
+        <n-data-table
+          :columns="memoriesColumns"
+          :data="heapMemories"
+          :bordered="false"
+          :render-cell="memoryTrans"
+          size="small"
+        />
+      </div>
+
+      <div class="section-card">
+        <h3 class="section-title">Garbage Collection</h3>
+        <n-data-table
+          :columns="garbageCollectorColumns"
+          :data="garbageCollectors"
+          :bordered="false"
+          size="small"
+        />
+      </div>
+
+      <div class="section-card">
+        <h3 class="section-title">Non-Heap Memory</h3>
+        <n-data-table
+          :columns="memoriesColumns"
+          :data="nonHeapMemories"
+          :bordered="false"
+          :render-cell="memoryTrans"
+          size="small"
+        />
+      </div>
+    </div>
+  </div>
 </template>
 
-<style scoped></style>
+<style scoped lang="scss">
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.refresh-control {
+  align-self: flex-end;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transform: translateY(-1px);
+  }
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  font-size: 24px;
+  flex-shrink: 0;
+
+  &.thread {
+    background: rgba(94, 106, 210, 0.1);
+    color: #5E6AD2;
+  }
+
+  &.daemon {
+    background: rgba(38, 181, 206, 0.1);
+    color: #26B5CE;
+  }
+
+  &.peak {
+    background: rgba(255, 197, 61, 0.1);
+    color: #F5A524;
+  }
+
+  &.total {
+    background: rgba(245, 71, 92, 0.1);
+    color: #F5475C;
+  }
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1;
+}
+
+.data-section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.section-card {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.01em;
+}
+
+:deep(.n-data-table) {
+  .n-data-table-th {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .n-data-table-td {
+    font-size: 13px;
+    color: #374151;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  }
+
+  .n-data-table-tr:last-child .n-data-table-td {
+    border-bottom: none;
+  }
+
+  .n-data-table-tr:hover {
+    background: rgba(0, 0, 0, 0.02);
+  }
+}
+</style>

@@ -25,10 +25,10 @@ function resolvePath(basePath: string, path: string) {
     return path
   return (
     `/${
-    [basePath, path]
-      .filter(path => !!path && path !== '/')
-      .map(path => path.replace(/(^\/)|(\/$)/g, ''))
-      .join('/')}`
+      [basePath, path]
+        .filter(path => !!path && path !== '/')
+        .map(path => path.replace(/(^\/)|(\/$)/g, ''))
+        .join('/')}`
   )
 }
 

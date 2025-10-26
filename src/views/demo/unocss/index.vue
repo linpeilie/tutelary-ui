@@ -60,7 +60,7 @@
           </div>
         </div>
       </div>
-      <h2 mt-10 text-14 font-normal color-gray>
+      <h2 mt-10 text-14 color-gray font-normal>
         Flex 骰子
       </h2>
     </div>

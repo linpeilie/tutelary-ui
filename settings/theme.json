@@ -14,11 +14,11 @@
     "visible": true,
     "height": 60
   },
-  "primaryColor": "#316c72",
+  "primaryColor": "#5E6AD2",
   "otherColor": {
-    "info": "#2080F0",
-    "success": "#18A058",
-    "warning": "#F0A020",
-    "error": "#D03050"
+    "info": "#5E6AD2",
+    "success": "#26B5CE",
+    "warning": "#FFC53D",
+    "error": "#F5475C"
   }
 }

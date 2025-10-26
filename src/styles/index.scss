@@ -7,8 +7,10 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: #f2f2f2;
-  font-family: 'Encode Sans Condensed', sans-serif;
+  background-color: #FAFAFA;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #app {
@@ -19,54 +21,121 @@ body {
 /* router view transition fade-slide */
 .fade-slide-leave-active,
 .fade-slide-enter-active {
-  transition: all 0.3s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .fade-slide-enter-from {
   opacity: 0;
-  transform: translateX(-30px);
+  transform: translateX(-20px);
 }
 
 .fade-slide-leave-to {
   opacity: 0;
-  transform: translateX(30px);
+  transform: translateX(20px);
 }
 
-/* 自定义滚动条样式 */
+/* 自定义滚动条样式 - Linear风格 */
 .cus-scroll {
   overflow: auto;
   &::-webkit-scrollbar {
-    width: 8;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 }
 .cus-scroll-x {
   overflow-x: auto;
   &::-webkit-scrollbar {
     width: 0;
-    height: 8px;
+    height: 6px;
   }
 }
 .cus-scroll-y {
   overflow-y: auto;
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
     height: 0;
   }
 }
 .cus-scroll,
 .cus-scroll-x,
 .cus-scroll-y {
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
   &::-webkit-scrollbar-thumb {
-    background-color: transparent;
-    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+    transition: background-color 0.2s;
   }
   &:hover {
     &::-webkit-scrollbar-thumb {
-      background: #bfbfbf;
+      background-color: rgba(0, 0, 0, 0.15);
     }
     &::-webkit-scrollbar-thumb:hover {
-      background: var(--primary-color);
+      background-color: rgba(0, 0, 0, 0.25);
     }
   }
 }
+
+/* Linear风格的卡片阴影 */
+.linear-card {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  background: #fff;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+}
+
+/* Linear风格的输入框 */
+.linear-input {
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+
+  &:focus {
+    border-color: #5E6AD2;
+    box-shadow: 0 0 0 3px rgba(94, 106, 210, 0.1);
+  }
+}
+
+/* Linear风格的按钮 */
+.linear-button {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  border: none;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/* 页面过渡动画 */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+

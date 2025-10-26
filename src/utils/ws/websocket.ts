@@ -43,7 +43,7 @@ export interface IWebSocketBean {
    * @param data  数据对象
    * @param resend 是否需要在重新连上以后再次发送该数据
    */
-  send(data: any, resend?: boolean): string | boolean
+  send: (data: any, resend?: boolean) => string | boolean
 
   /**
    * 销毁需要重发的数据信息
@@ -264,7 +264,7 @@ export interface IWebSocketSend {
    * @param data 数据对象
    * @param resend 是否在重连之后再次发送该消息
    */
-  send(data: any, resend?: boolean): string | boolean
+  send: (data: any, resend?: boolean) => string | boolean
 
   /**
    * 销毁需要重发的数据信息
