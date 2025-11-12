@@ -11,29 +11,6 @@ const themeStore = useThemeStore()
 
 <template>
   <n-layout has-sider wh-full>
-    <n-layout-sider
-      v-if="!themeStore.isMobile"
-      bordered
-      collapse-mode="width"
-      :collapsed-width="themeStore.sider.collapsedWidth"
-      :width="themeStore.sider.width"
-      :native-scrollbar="false"
-      :collapsed="themeStore.sider.collapsed"
-    >
-      <SideBar />
-    </n-layout-sider>
-    <n-drawer
-      v-else
-      :width="themeStore.sider.width"
-      :auto-focus="false"
-      :show="!themeStore.sider.collapsed"
-      placement="left"
-      display-directive="show"
-      @mask-click="themeStore.setCollapsed(true)"
-    >
-      <SideBar />
-    </n-drawer>
-
     <article flex-col flex-1 overflow-hidden>
       <header
         flex items-center border-b bg-white px-15 bc-eee dark="bg-dark border-0"

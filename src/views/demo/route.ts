@@ -9,6 +9,7 @@ export default {
   path: '/demo',
   component: Layout,
   redirect: '/demo/unocss',
+  isHidden: true,
   meta: {
     title: '示例页面',
     customIcon: 'logo',

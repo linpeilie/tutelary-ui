@@ -9,6 +9,7 @@ export default {
   path: '/error-page',
   component: Layout,
   redirect: '/error-page/404',
+  isHidden: true,
   meta: {
     title: 'ErrorPage',
     order: 99,
