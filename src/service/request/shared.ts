@@ -4,10 +4,7 @@ import { fetchRefreshToken } from '../api';
 import type { RequestInstanceState } from './type';
 
 export function getAuthorization() {
-  const token = localStg.get('token');
-  const Authorization = token ? `Bearer ${token}` : null;
-
-  return Authorization;
+  return localStg.get('token');
 }
 
 /** refresh token */
