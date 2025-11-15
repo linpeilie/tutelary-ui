@@ -1,5 +1,5 @@
 {
-  "name": "soybean-admin",
+  "name": "tutelary-ui",
   "type": "module",
   "version": "2.0.0",
   "description": "A fresh and elegant admin template, based on Vue3、Vite7、TypeScript、NaiveUI and UnoCSS. 一个基于Vue3、Vite7、TypeScript、NaiveUI and UnoCSS的清新优雅的中后台模版。",
@@ -9,12 +9,12 @@
     "url": "https://github.com/soybeanjs"
   },
   "license": "MIT",
-  "homepage": "https://github.com/soybeanjs/soybean-admin",
+  "homepage": "https://github.com/linpeilie/tutelary-ui",
   "repository": {
-    "url": "https://github.com/soybeanjs/soybean-admin.git"
+    "url": "https://github.com/linpeilie/tutelary-ui.git"
   },
   "bugs": {
-    "url": "https://github.com/soybeanjs/soybean-admin/issues"
+    "url": "https://github.com/linpeilie/tutelary-ui/issues"
   },
   "keywords": [
     "Vue3 admin ",
@@ -106,5 +106,5 @@
     "commit-msg": "pnpm sa git-commit-verify",
     "pre-commit": "pnpm typecheck && pnpm lint && git diff --exit-code"
   },
-  "website": "https://admin.soybeanjs.cn"
+  "website": "https://github.com/linpeilie/tutelary-ui"
 }

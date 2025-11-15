@@ -3,7 +3,7 @@ defineOptions({ name: 'SystemLogo' });
 </script>
 
 <template>
-  <icon-local-logo />
+  <NImage src="/logo.png" width="32"/>
 </template>
 
 <style scoped></style>

@@ -20,7 +20,7 @@ export const themeSettings: App.Theme.ThemeSetting = {
   fixedHeaderAndTab: true,
   sider: {
     inverted: false,
-    width: 220,
+    width: 120,
     collapsedWidth: 64,
     mixWidth: 90,
     mixCollapsedWidth: 64,
