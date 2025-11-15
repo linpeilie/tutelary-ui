@@ -5,42 +5,18 @@ export const themeSettings: App.Theme.ThemeSetting = {
   colourWeakness: false,
   recommendColor: false,
   themeColor: '#646cff',
-  themeRadius: 6,
-  otherColor: {
-    info: '#2080f0',
-    success: '#52c41a',
-    warning: '#faad14',
-    error: '#f5222d'
-  },
+  themeRadius: 8,
+  otherColor: { info: '#2080f0', success: '#52c41a', warning: '#faad14', error: '#f5222d' },
   isInfoFollowPrimary: true,
-  layout: {
-    mode: 'vertical',
-    scrollMode: 'content'
-  },
-  page: {
-    animate: true,
-    animateMode: 'fade-slide'
-  },
+  layout: { mode: 'horizontal', scrollMode: 'content' },
+  page: { animate: true, animateMode: 'fade-slide' },
   header: {
     height: 56,
-    breadcrumb: {
-      visible: true,
-      showIcon: true
-    },
-    multilingual: {
-      visible: true
-    },
-    globalSearch: {
-      visible: true
-    }
+    breadcrumb: { visible: false, showIcon: true },
+    multilingual: { visible: true },
+    globalSearch: { visible: false }
   },
-  tab: {
-    visible: true,
-    cache: true,
-    height: 44,
-    mode: 'chrome',
-    closeTabByMiddleClick: false
-  },
+  tab: { visible: false, cache: true, height: 44, mode: 'chrome', closeTabByMiddleClick: false },
   fixedHeaderAndTab: true,
   sider: {
     inverted: false,
@@ -50,12 +26,7 @@ export const themeSettings: App.Theme.ThemeSetting = {
     mixCollapsedWidth: 64,
     mixChildMenuWidth: 200
   },
-  footer: {
-    visible: true,
-    fixed: false,
-    height: 48,
-    right: true
-  },
+  footer: { visible: false, fixed: false, height: 48, right: true },
   watermark: {
     visible: false,
     text: 'SoybeanAdmin',
@@ -76,14 +47,7 @@ export const themeSettings: App.Theme.ThemeSetting = {
         sider: '2px 0 8px 0 rgb(29, 35, 41, 0.05)',
         tab: '0 1px 2px rgb(0, 21, 41, 0.08)'
       }
-    },
-    dark: {
-      colors: {
-        container: 'rgb(28, 28, 28)',
-        layout: 'rgb(18, 18, 18)',
-        'base-text': 'rgb(224, 224, 224)'
-      }
-    }
+    }, dark: { colors: { container: 'rgb(28, 28, 28)', layout: 'rgb(18, 18, 18)', 'base-text': 'rgb(224, 224, 224)' } }
   }
 };
 
