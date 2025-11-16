@@ -304,6 +304,10 @@ const local: App.I18n.Schema = {
         desc5: 'Soybean just wrote some of the workbench pages casually, and it was enough to see!'
       },
       creativity: 'Creativity'
+    },
+    app: {
+      registerTime: 'Register Time',
+      instanceCount: 'Instance Count'
     }
   },
   form: {

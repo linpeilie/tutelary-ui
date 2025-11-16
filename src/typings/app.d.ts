@@ -546,6 +546,10 @@ declare namespace App {
           };
           creativity: string;
         };
+        app: {
+          registerTime: string;
+          instanceCount: string;
+        };
       };
       form: {
         required: string;
