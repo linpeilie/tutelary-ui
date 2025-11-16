@@ -24,7 +24,7 @@ const route = useRoute();
   <section class="bg-layout px-5">
     <header v-if="showHeader" class="min-15 min-h-15 flex items-center justify-between">
       <NSpace align="center">
-        <NButton v-if="showBackButton" secondary strong>
+        <NButton v-if="showBackButton" strong>
           <template #icon>
             <NIcon>
               <svg-icon icon="eva:arrow-back-outline"/>

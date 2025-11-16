@@ -60,7 +60,7 @@ onMounted(() => {
 <template>
   <AppPage :title="appDetail?.appName">
     <template #action>
-      <NButton secondary @click="fetchData">
+      <NButton @click="fetchData">
         <template #icon>
           <NIcon>
             <SvgIcon icon="tabler:refresh" />
