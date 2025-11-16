@@ -5,11 +5,22 @@ import { useRoute } from 'vue-router';
 import { fetchInstanceDetail } from '@/service/api/instance';
 import { $t } from '@/locales';
 import InstanceInfoCard from '@/views/app/instance_detail/modules/instance-info-card.vue';
+import DashboardTab from '@/views/app/instance_detail/modules/dashboard-tab.vue';
+import SystemTab from '@/views/app/instance_detail/modules/system-tab.vue';
+import ThreadTab from '@/views/app/instance_detail/modules/thread-tab.vue';
+import JvmMemoryTab from '@/views/app/instance_detail/modules/jvm-memory-tab.vue';
+import JadTab from '@/views/app/instance_detail/modules/jad-tab.vue';
+import VmOptionTab from '@/views/app/instance_detail/modules/vm-option-tab.vue';
+import LoggerTab from '@/views/app/instance_detail/modules/logger-tab.vue';
+import TraceTab from '@/views/app/instance_detail/modules/trace-tab.vue';
+import StackTab from '@/views/app/instance_detail/modules/stack-tab.vue';
+import WatchTab from '@/views/app/instance_detail/modules/watch-tab.vue';
 import type { OptionsType } from '@/components/custom/types/t-segmented';
 import TSegmented from '@/components/custom/t-segmented.vue';
 
 const route = useRoute();
 const instanceDetail: Ref<Api.Instance.InstanceInfo | undefined> = ref();
+const activeTab = ref('dashboard');
 
 const tabs: OptionsType[] = [
   { label: '面板', value: 'dashboard' },
@@ -60,9 +71,28 @@ onMounted(() => {
     </NCard>
     <NCard size="small" class="mt-3">
       <NScrollbar x-scrollable>
-        <TSegmented style="width: 100%" :options="tabs" />
+        <TSegmented v-model="activeTab" :options="tabs" />
       </NScrollbar>
     </NCard>
+    <div class="mt-3">
+      <DashboardTab v-if="activeTab === 'dashboard' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <SystemTab v-else-if="activeTab === 'system' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <ThreadTab v-else-if="activeTab === 'thread' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <JvmMemoryTab v-else-if="activeTab === 'jvmMemory' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <JadTab v-else-if="activeTab === 'jad' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <VmOptionTab v-else-if="activeTab === 'vmOption' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <LoggerTab v-else-if="activeTab === 'logger' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <TraceTab v-else-if="activeTab === 'trace' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <StackTab v-else-if="activeTab === 'stack' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <WatchTab v-else-if="activeTab === 'watch' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <NCard v-else size="small">
+        <NEmpty description="功能开发中...">
+          <template #icon>
+            <SvgIcon icon="mdi:tools" class="text-4xl" />
+          </template>
+        </NEmpty>
+      </NCard>
+    </div>
   </AppPage>
 </template>
 
