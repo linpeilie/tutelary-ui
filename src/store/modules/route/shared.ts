@@ -68,6 +68,15 @@ export function sortRoutesByOrder(routes: ElegantConstRoute[]) {
   return routes;
 }
 
+const isSingleChildren = (route: ElegantConstRoute): boolean => {
+  if (route.children?.length === 1) {
+    if (route.children[0].name === route.meta?.activeMenu) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * Get global menus by auth routes
  *
@@ -78,10 +87,16 @@ export function getGlobalMenusByAuthRoutes(routes: ElegantConstRoute[]) {
 
   routes.forEach(route => {
     if (!route.meta?.hideInMenu) {
-      const menu = getGlobalMenuByBaseRoute(route);
+      // 如果route只有一个子元素，并且，activeMenu = 第一个子元素，则直接展示子元素
+      let targetRoute = route;
+      if (route.children && isSingleChildren(route)) {
+        targetRoute = route.children[0];
+      }
 
-      if (route.children?.some(child => !child.meta?.hideInMenu)) {
-        menu.children = getGlobalMenusByAuthRoutes(route.children);
+      const menu = getGlobalMenuByBaseRoute(targetRoute);
+
+      if (targetRoute.children?.some(child => !child.meta?.hideInMenu)) {
+        menu.children = getGlobalMenusByAuthRoutes(targetRoute.children);
       }
 
       menus.push(menu);
