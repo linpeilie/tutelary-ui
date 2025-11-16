@@ -1,0 +1,12 @@
+declare namespace Api {
+  namespace Instance {
+    interface InstanceInfo {
+      instanceId: string;
+      appName: string;
+      ip: string;
+      registerDate: string;
+      state: number;
+      startTime: string;
+    }
+  }
+}

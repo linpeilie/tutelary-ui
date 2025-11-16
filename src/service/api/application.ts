@@ -7,3 +7,13 @@ export function fetchAppList() {
     data: {}
   });
 }
+
+export function fetchAppDetail(appName: string) {
+  return request<Api.Application.AppDetail>({
+    url: '/app/detail',
+    method: 'post',
+    params: {
+      appName
+    }
+  });
+}

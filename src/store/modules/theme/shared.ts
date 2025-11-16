@@ -253,6 +253,9 @@ export function getNaiveTheme(colors: App.Theme.ThemeColor, settings: App.Theme.
     },
     Tag: {
       borderRadius: `${settings.themeRadius}px`
+    },
+    DataTable: {
+      borderRadius: `${settings.themeRadius}px`
     }
   };
 

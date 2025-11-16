@@ -47,7 +47,8 @@ const local: App.I18n.Schema = {
     yesOrNo: {
       yes: 'Yes',
       no: 'No'
-    }
+    },
+    viewDetail: 'View Detail',
   },
   request: {
     logout: 'Logout user after request failed',
@@ -227,7 +228,8 @@ const local: App.I18n.Schema = {
     'iframe-page': 'Iframe',
     home: 'Home',
     app: 'App List',
-    app_list: 'App List'
+    app_list: 'App List',
+    app_detail: 'App Detail'
   },
   page: {
     login: {
@@ -308,6 +310,11 @@ const local: App.I18n.Schema = {
     app: {
       registerTime: 'Register Time',
       instanceCount: 'Instance Count'
+    },
+    instance: {
+      instanceId: 'Instance Id',
+      registerDate: 'Register Time',
+      startTime: 'Start Time'
     }
   },
   form: {

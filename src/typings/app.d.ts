@@ -354,6 +354,7 @@ declare namespace App {
           yes: string;
           no: string;
         };
+        viewDetail: string;
       };
       request: {
         logout: string;
@@ -550,6 +551,11 @@ declare namespace App {
           registerTime: string;
           instanceCount: string;
         };
+        instance: {
+          instanceId: string;
+          registerDate: string;
+          startTime: string;
+        }
       };
       form: {
         required: string;

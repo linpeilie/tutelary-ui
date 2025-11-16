@@ -21,6 +21,7 @@ declare module "@elegant-router/types" {
     "404": "/404";
     "500": "/500";
     "app": "/app";
+    "app_detail": "/app/detail/:appName";
     "app_list": "/app/list";
     "home": "/home";
     "iframe-page": "/iframe-page/:url";
@@ -84,6 +85,7 @@ declare module "@elegant-router/types" {
     | "500"
     | "iframe-page"
     | "login"
+    | "app_detail"
     | "app_list"
     | "home"
   >;

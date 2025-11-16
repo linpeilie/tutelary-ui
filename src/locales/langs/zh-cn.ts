@@ -47,7 +47,8 @@ const local: App.I18n.Schema = {
     yesOrNo: {
       yes: '是',
       no: '否'
-    }
+    },
+    viewDetail: '查看详情'
   },
   request: {
     logout: '请求失败后登出用户',
@@ -224,7 +225,8 @@ const local: App.I18n.Schema = {
     'iframe-page': '外链页面',
     home: '首页',
     app: '应用列表',
-    app_list: '应用列表'
+    app_list: '应用列表',
+    app_detail: '应用详情',
   },
   page: {
     login: {
@@ -305,6 +307,11 @@ const local: App.I18n.Schema = {
     app: {
       registerTime: '注册时间',
       instanceCount: '实例数量'
+    },
+    instance: {
+      instanceId: '实例ID',
+      registerDate: '注册时间',
+      startTime: '启动时间'
     }
   },
   form: {

@@ -69,8 +69,12 @@ export function sortRoutesByOrder(routes: ElegantConstRoute[]) {
 }
 
 const isSingleChildren = (route: ElegantConstRoute): boolean => {
-  if (route.children?.length === 1) {
-    if (route.children[0].name === route.meta?.activeMenu) {
+  if (!route.children) {
+    return false;
+  }
+  const visibleChildren = route.children.filter((item) => !item.meta?.hideInMenu);
+  if (visibleChildren.length === 1) {
+    if (visibleChildren[0].name === route.meta?.activeMenu) {
       return true;
     }
   }

@@ -50,6 +50,17 @@ export const generatedRoutes: GeneratedRoute[] = [
     },
     children: [
       {
+        name: 'app_detail',
+        path: '/app/detail/:appName',
+        component: 'view.app_detail',
+        meta: {
+          title: 'app_detail',
+          i18nKey: 'route.app_detail',
+          hideInMenu: true,
+          activeMenu: 'app_list'
+        }
+      },
+      {
         name: 'app_list',
         path: '/app/list',
         component: 'view.app_list',

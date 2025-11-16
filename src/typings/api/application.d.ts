@@ -5,5 +5,8 @@ declare namespace Api {
       registerDate: string;
       instanceNum: number;
     }
+    interface AppDetail extends AppInfo {
+      instances: Api.Instance.InstanceInfo[];
+    }
   }
 }

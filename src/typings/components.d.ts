@@ -12,6 +12,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AppPage: typeof import('./../components/page/app-page.vue')['default']
     AppProvider: typeof import('./../components/common/app-provider.vue')['default']
     BetterScroll: typeof import('./../components/custom/better-scroll.vue')['default']
     ButtonIcon: typeof import('./../components/custom/button-icon.vue')['default']
@@ -42,6 +43,7 @@ declare module 'vue' {
     NCard: typeof import('naive-ui')['NCard']
     NCheckbox: typeof import('naive-ui')['NCheckbox']
     NColorPicker: typeof import('naive-ui')['NColorPicker']
+    NDataTable: typeof import('naive-ui')['NDataTable']
     NDialogProvider: typeof import('naive-ui')['NDialogProvider']
     NDivider: typeof import('naive-ui')['NDivider']
     NDrawer: typeof import('naive-ui')['NDrawer']
@@ -99,6 +101,7 @@ declare module 'vue' {
 
 // For TSX support
 declare global {
+  const AppPage: typeof import('./../components/page/app-page.vue')['default']
   const AppProvider: typeof import('./../components/common/app-provider.vue')['default']
   const BetterScroll: typeof import('./../components/custom/better-scroll.vue')['default']
   const ButtonIcon: typeof import('./../components/custom/button-icon.vue')['default']
@@ -129,6 +132,7 @@ declare global {
   const NCard: typeof import('naive-ui')['NCard']
   const NCheckbox: typeof import('naive-ui')['NCheckbox']
   const NColorPicker: typeof import('naive-ui')['NColorPicker']
+  const NDataTable: typeof import('naive-ui')['NDataTable']
   const NDialogProvider: typeof import('naive-ui')['NDialogProvider']
   const NDivider: typeof import('naive-ui')['NDivider']
   const NDrawer: typeof import('naive-ui')['NDrawer']

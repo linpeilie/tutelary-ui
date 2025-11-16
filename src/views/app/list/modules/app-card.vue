@@ -15,7 +15,7 @@ interface Props {
 const props = defineProps<Props>();
 
 function handleClick() {
-  router.push({name: 'appDetail', params: { appName: props.app.appName }})
+  router.push({name: 'app_detail', params: { appName: props.app.appName }})
 }
 </script>
 
