@@ -18,16 +18,14 @@ onMounted(() => {
     })
     .finally(() => stopLoading());
 });
-
-
 </script>
 
 <template>
   <div>
     <NSpin :show="loading">
       <div v-if="appList.length === 0" class="empty-state">
-        <div class="i-lucide-inbox text-6xl text-gray-400 mb-4"></div>
-        <p class="text-gray-400 text-lg">暂无应用数据</p>
+        <div class="i-lucide-inbox mb-4 text-6xl text-gray-400"></div>
+        <p class="text-lg text-gray-400">暂无应用数据</p>
       </div>
       <NGrid v-else cols="2 800:3 1200:4">
         <NGridItem>

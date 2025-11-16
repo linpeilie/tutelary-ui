@@ -227,6 +227,8 @@ const local: App.I18n.Schema = {
     app: '应用列表',
     app_list: '应用列表',
     app_detail: '应用详情',
+    app_instance: '应用实例',
+    app_instance_detail: '应用实例详情'
   },
   page: {
     login: {
@@ -311,7 +313,19 @@ const local: App.I18n.Schema = {
     instance: {
       instanceId: '实例ID',
       registerDate: '注册时间',
-      startTime: '启动时间'
+      startTime: '启动时间',
+      instanceInfo: '实例信息',
+      ip: 'IP 地址',
+      jdkVersion: 'JDK 版本',
+      vmName: 'Java 虚拟机名称',
+      vmVendor: 'Java 虚拟机实现供应商',
+      vmVersion: 'Java 虚拟机实现版本',
+      os: '操作系统',
+      hostName: '主机名称',
+      osName: '系统名称',
+      arch: 'Arch',
+      availableProcessors: '可用核心数',
+      memorySize: '内存大小'
     }
   },
   form: {

@@ -1,3 +1,3 @@
 export * from './auth';
 export * from './route';
-export * from './application'
+export * from './application';

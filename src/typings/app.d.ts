@@ -555,7 +555,19 @@ declare namespace App {
           instanceId: string;
           registerDate: string;
           startTime: string;
-        }
+          instanceInfo: string;
+          ip: string;
+          jdkVersion: string;
+          vmName: string;
+          vmVendor: string;
+          vmVersion: string;
+          os: string;
+          hostName: string;
+          osName: string;
+          arch: string;
+          availableProcessors: string;
+          memorySize: string;
+        };
       };
       form: {
         required: string;

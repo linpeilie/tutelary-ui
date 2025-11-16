@@ -14,7 +14,7 @@ interface Props {
 withDefaults(defineProps<Props>(), {
   showHeader: true,
   title: undefined,
-  showBackButton: true,
+  showBackButton: true
 });
 
 const route = useRoute();
@@ -27,7 +27,7 @@ const route = useRoute();
         <NButton v-if="showBackButton" strong>
           <template #icon>
             <NIcon>
-              <svg-icon icon="eva:arrow-back-outline"/>
+              <SvgIcon icon="eva:arrow-back-outline" />
             </NIcon>
           </template>
         </NButton>
@@ -44,6 +44,4 @@ const route = useRoute();
   </section>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

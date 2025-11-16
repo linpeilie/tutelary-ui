@@ -61,12 +61,35 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       },
       {
+        name: 'app_instance',
+        path: '/app/instance',
+        meta: {
+          title: 'app_instance',
+          i18nKey: 'route.app_instance',
+          hideInMenu: true
+        },
+        children: [
+          {
+            name: 'app_instance_detail',
+            path: '/app/instance/detail/:instanceId',
+            component: 'view.app_instance_detail',
+            meta: {
+              title: 'app_instance_detail',
+              i18nKey: 'route.app_instance_detail',
+              hideInMenu: true,
+              activeMenu: 'app_list'
+            }
+          }
+        ]
+      },
+      {
         name: 'app_list',
         path: '/app/list',
         component: 'view.app_list',
         meta: {
           title: 'app_list',
-          i18nKey: 'route.app_list'
+          i18nKey: 'route.app_list',
+          icon: 'icon-park-solid:more-app'
         }
       }
     ]

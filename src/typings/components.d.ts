@@ -94,6 +94,7 @@ declare module 'vue' {
     SystemLogo: typeof import('./../components/common/system-logo.vue')['default']
     TableColumnSetting: typeof import('./../components/advanced/table-column-setting.vue')['default']
     TableHeaderOperation: typeof import('./../components/advanced/table-header-operation.vue')['default']
+    TDescriptions: typeof import('./../components/advanced/t-descriptions.vue')['default']
     ThemeSchemaSwitch: typeof import('./../components/common/theme-schema-switch.vue')['default']
     WaveBg: typeof import('./../components/custom/wave-bg.vue')['default']
   }
@@ -183,6 +184,7 @@ declare global {
   const SystemLogo: typeof import('./../components/common/system-logo.vue')['default']
   const TableColumnSetting: typeof import('./../components/advanced/table-column-setting.vue')['default']
   const TableHeaderOperation: typeof import('./../components/advanced/table-header-operation.vue')['default']
+  const TDescriptions: typeof import('./../components/advanced/t-descriptions.vue')['default']
   const ThemeSchemaSwitch: typeof import('./../components/common/theme-schema-switch.vue')['default']
   const WaveBg: typeof import('./../components/custom/wave-bg.vue')['default']
 }

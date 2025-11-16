@@ -1,3 +1,4 @@
+import { div4Round, mul } from '@/utils/math';
 import { $t } from '@/locales';
 
 /**
@@ -55,4 +56,29 @@ export function toggleHtmlClass(className: string) {
     add,
     remove
   };
+}
+
+const KB = 1024;
+const MB = mul(KB, 1024);
+const GB = mul(MB, 1024);
+const TB = mul(GB, 1024);
+const MEMORY_PRECISION = 0;
+
+export function formatMemory(memorySize: number) {
+  if (!memorySize) {
+    return 0;
+  }
+  if (memorySize < KB) {
+    return `${memorySize}KB`;
+  }
+  if (memorySize < MB) {
+    return `${div4Round(memorySize, KB, MEMORY_PRECISION)}MB`;
+  }
+  if (memorySize < GB) {
+    return `${div4Round(memorySize, MB, MEMORY_PRECISION)}GB`;
+  }
+  if (memorySize < TB) {
+    return `${div4Round(memorySize, GB, MEMORY_PRECISION)}TB`;
+  }
+  return `${div4Round(memorySize, TB, MEMORY_PRECISION)}PB`;
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Ref } from 'vue';
 import { h, onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import type { DataTableColumns } from 'naive-ui';
 import { NButton } from 'naive-ui';
 import { fetchAppDetail } from '@/service/api';
@@ -9,6 +9,7 @@ import { $t } from '@/locales';
 import { useBoolean } from '~/packages/hooks';
 
 const route = useRoute();
+const router = useRouter();
 
 const { bool: loading, setTrue: startLoading, setFalse: stopLoading } = useBoolean();
 
@@ -49,7 +50,7 @@ function fetchData() {
 }
 
 function toInstanceDetail(instance: Api.Instance.InstanceInfo) {
-  console.log(instance);
+  router.push({ name: 'app_instance_detail', params: { instanceId: instance.instanceId } });
 }
 
 onMounted(() => {

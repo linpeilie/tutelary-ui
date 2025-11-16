@@ -48,7 +48,7 @@ const local: App.I18n.Schema = {
       yes: 'Yes',
       no: 'No'
     },
-    viewDetail: 'View Detail',
+    viewDetail: 'View Detail'
   },
   request: {
     logout: 'Logout user after request failed',
@@ -229,7 +229,9 @@ const local: App.I18n.Schema = {
     home: 'Home',
     app: 'App List',
     app_list: 'App List',
-    app_detail: 'App Detail'
+    app_detail: 'App Detail',
+    app_instance: 'App Instance',
+    app_instance_detail: 'App Instance Detail'
   },
   page: {
     login: {
@@ -314,7 +316,19 @@ const local: App.I18n.Schema = {
     instance: {
       instanceId: 'Instance Id',
       registerDate: 'Register Time',
-      startTime: 'Start Time'
+      startTime: 'Start Time',
+      instanceInfo: 'Instance Info',
+      ip: 'IP Address',
+      jdkVersion: 'JDK Version',
+      vmName: 'VmName',
+      vmVendor: 'VmVendor',
+      vmVersion: 'VmVersion',
+      os: 'OS',
+      hostName: 'Host Name',
+      osName: 'OS Name',
+      arch: 'Arch',
+      availableProcessors: 'Available Processors',
+      memorySize: 'Memory Size'
     }
   },
   form: {
