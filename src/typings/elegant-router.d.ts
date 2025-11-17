@@ -27,6 +27,8 @@ declare module "@elegant-router/types" {
     "app_list": "/app/list";
     "home": "/home";
     "iframe-page": "/iframe-page/:url";
+    "log": "/log";
+    "log_operation": "/log/operation";
     "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?";
   };
 
@@ -65,6 +67,7 @@ declare module "@elegant-router/types" {
     | "app"
     | "home"
     | "iframe-page"
+    | "log"
     | "login"
   >;
 
@@ -91,6 +94,7 @@ declare module "@elegant-router/types" {
     | "app_instance_detail"
     | "app_list"
     | "home"
+    | "log_operation"
   >;
 
   /**

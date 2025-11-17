@@ -228,7 +228,9 @@ const local: App.I18n.Schema = {
     app_list: '应用列表',
     app_detail: '应用详情',
     app_instance: '应用实例',
-    app_instance_detail: '应用实例详情'
+    app_instance_detail: '应用实例详情',
+    log: '日志中心',
+    log_operation: '操作日志'
   },
   page: {
     login: {

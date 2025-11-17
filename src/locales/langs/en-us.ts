@@ -231,7 +231,9 @@ const local: App.I18n.Schema = {
     app_list: 'App List',
     app_detail: 'App Detail',
     app_instance: 'App Instance',
-    app_instance_detail: 'App Instance Detail'
+    app_instance_detail: 'App Instance Detail',
+    log: 'Log Center',
+    log_operation: 'Operation Log'
   },
   page: {
     login: {

@@ -24,4 +24,5 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   app_instance_detail: () => import("@/views/app/instance_detail/[instanceId].vue"),
   app_list: () => import("@/views/app/list/index.vue"),
   home: () => import("@/views/home/index.vue"),
+  log_operation: () => import("@/views/log/operation/index.vue"),
 };
