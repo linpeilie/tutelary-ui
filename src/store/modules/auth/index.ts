@@ -9,6 +9,7 @@ import { SetupStoreId } from '@/enum';
 import { $t } from '@/locales';
 import { useRouteStore } from '../route';
 import { useTabStore } from '../tab';
+import { useWebSocketStore } from '../websocket';
 import { clearAuthStorage, getToken } from './shared';
 
 export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
@@ -16,6 +17,7 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
   const authStore = useAuthStore();
   const routeStore = useRouteStore();
   const tabStore = useTabStore();
+  const webSocketStore = useWebSocketStore();
   const { toLogin, redirectFromLogin } = useRouterPush(false);
   const { loading: loginLoading, startLoading, endLoading } = useLoading();
 
@@ -46,6 +48,9 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
     clearAuthStorage();
 
     authStore.$reset();
+
+    // 关闭 WebSocket 连接
+    webSocketStore.dispose();
 
     if (!route.meta.constant) {
       await toLogin();
@@ -115,6 +120,9 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
           needRedirect = false;
         }
         await redirectFromLogin(needRedirect);
+
+        // 初始化 WebSocket 连接
+        webSocketStore.initWebSocket();
 
         window.$notification?.success({
           title: $t('page.login.common.loginSuccess'),

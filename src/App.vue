@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 import { NConfigProvider, darkTheme } from 'naive-ui';
 import type { WatermarkProps } from 'naive-ui';
 import { useAppStore } from './store/modules/app';
 import { useThemeStore } from './store/modules/theme';
+import { useAuthStore } from './store/modules/auth';
+import { useWebSocketStore } from './store/modules/websocket';
 import { naiveDateLocales, naiveLocales } from './locales/naive';
 
 defineOptions({
@@ -12,6 +14,8 @@ defineOptions({
 
 const appStore = useAppStore();
 const themeStore = useThemeStore();
+const authStore = useAuthStore();
+const webSocketStore = useWebSocketStore();
 
 const naiveDarkTheme = computed(() => (themeStore.darkMode ? darkTheme : undefined));
 
@@ -37,6 +41,19 @@ const watermarkProps = computed<WatermarkProps>(() => {
     rotate: -15,
     zIndex: 9999
   };
+});
+
+// 初始化 WebSocket 连接
+onMounted(() => {
+  // 只有在已登录状态下才初始化 WebSocket
+  if (authStore.isLogin) {
+    webSocketStore.initWebSocket();
+  }
+});
+
+// 组件卸载时销毁 WebSocket 连接
+onUnmounted(() => {
+  webSocketStore.dispose();
 });
 </script>
 

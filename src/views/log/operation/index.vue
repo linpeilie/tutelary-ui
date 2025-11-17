@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, h, onMounted, ref } from 'vue';
 import type { DataTableColumns } from 'naive-ui';
-import { NButton, NDataTable, NInput, NModal, NSelect, NSpace, NStatistic, NTag } from 'naive-ui';
+import { NButton, NDataTable, NModal, NSelect, NStatistic, NTag } from 'naive-ui';
 
 interface OperationLog {
   id: number;
@@ -19,10 +19,7 @@ interface OperationLog {
 }
 
 // 操作类型配置
-const operationTypes: Record<
-  string,
-  { label: string; color: string; icon: string }
-> = {
+const operationTypes: Record<string, { label: string; color: string; icon: string }> = {
   UPDATE_VMOPTION: { label: '修改VmOption', color: 'warning', icon: 'settings' },
   UPDATE_LOGGER: { label: '修改Logger级别', color: 'info', icon: 'bug' },
   TRACE_METHOD: { label: 'Trace方法', color: 'primary', icon: 'search' },
@@ -73,13 +70,6 @@ const operationLogs = ref<OperationLog[]>([]);
 // 生成模拟数据
 function generateMockLogs(): OperationLog[] {
   const now = Date.now();
-  const users = [
-    { id: 1, username: 'admin', role: 'admin' },
-    { id: 2, username: 'operator1', role: 'operator' },
-    { id: 3, username: 'dev1', role: 'developer' }
-  ];
-  const instances = ['prod-app-01', 'prod-app-02', 'test-app-01', 'dev-app-01'];
-  const operations = Object.keys(operationTypes);
 
   const logs: OperationLog[] = [
     {
@@ -512,9 +502,7 @@ const columns: DataTableColumns<OperationLog> = [
     render(row) {
       return h('div', { class: 'flex flex-col gap-1' }, [
         h('div', { class: 'truncate' }, row.details),
-        row.error
-          ? h('div', { class: 'text-xs text-red-500' }, `错误: ${row.error}`)
-          : null,
+        row.error ? h('div', { class: 'text-xs text-red-500' }, `错误: ${row.error}`) : null,
         h('div', { class: 'text-xs text-gray-400' }, `耗时: ${row.duration}ms | IP: ${row.ip}`)
       ]);
     }
@@ -557,35 +545,35 @@ onMounted(() => {
 <template>
   <div class="h-full flex flex-col gap-4 p-6">
     <!-- 统计卡片 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="card-wrapper rounded-xl p-4 bg-gradient-to-br from-blue-500/10 to-blue-600/5">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-4 md:grid-cols-2">
+      <div class="card-wrapper rounded-xl from-blue-500/10 to-blue-600/5 bg-gradient-to-br p-4">
         <NStatistic label="今日操作" :value="statistics.todayOperations">
           <template #prefix>
-            <div class="i-carbon-activity text-blue-500 text-xl" />
+            <div class="i-carbon-activity text-xl text-blue-500" />
           </template>
         </NStatistic>
       </div>
 
-      <div class="card-wrapper rounded-xl p-4 bg-gradient-to-br from-yellow-500/10 to-yellow-600/5">
+      <div class="card-wrapper rounded-xl from-yellow-500/10 to-yellow-600/5 bg-gradient-to-br p-4">
         <NStatistic label="敏感操作" :value="statistics.sensitiveOperations">
           <template #prefix>
-            <div class="i-carbon-warning text-yellow-500 text-xl" />
+            <div class="i-carbon-warning text-xl text-yellow-500" />
           </template>
         </NStatistic>
       </div>
 
-      <div class="card-wrapper rounded-xl p-4 bg-gradient-to-br from-red-500/10 to-red-600/5">
+      <div class="card-wrapper rounded-xl from-red-500/10 to-red-600/5 bg-gradient-to-br p-4">
         <NStatistic label="失败操作" :value="statistics.failedOperations">
           <template #prefix>
-            <div class="i-carbon-close-filled text-red-500 text-xl" />
+            <div class="i-carbon-close-filled text-xl text-red-500" />
           </template>
         </NStatistic>
       </div>
 
-      <div class="card-wrapper rounded-xl p-4 bg-gradient-to-br from-green-500/10 to-green-600/5">
+      <div class="card-wrapper rounded-xl from-green-500/10 to-green-600/5 bg-gradient-to-br p-4">
         <NStatistic label="活跃用户" :value="statistics.activeUsers">
           <template #prefix>
-            <div class="i-carbon-user-multiple text-green-500 text-xl" />
+            <div class="i-carbon-user-multiple text-xl text-green-500" />
           </template>
         </NStatistic>
       </div>
@@ -593,24 +581,24 @@ onMounted(() => {
 
     <!-- 筛选条件 -->
     <div class="card-wrapper rounded-xl p-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-5 md:grid-cols-2">
         <div>
-          <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">操作类型</div>
+          <div class="mb-2 text-xs text-gray-500 dark:text-gray-400">操作类型</div>
           <NSelect v-model:value="filters.operation" :options="operationOptions" @update:value="applyFilters" />
         </div>
 
         <div>
-          <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">操作用户</div>
+          <div class="mb-2 text-xs text-gray-500 dark:text-gray-400">操作用户</div>
           <NSelect v-model:value="filters.userId" :options="userOptions" @update:value="applyFilters" />
         </div>
 
         <div>
-          <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">操作状态</div>
+          <div class="mb-2 text-xs text-gray-500 dark:text-gray-400">操作状态</div>
           <NSelect v-model:value="filters.status" :options="statusOptions" @update:value="applyFilters" />
         </div>
 
         <div>
-          <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">时间范围</div>
+          <div class="mb-2 text-xs text-gray-500 dark:text-gray-400">时间范围</div>
           <NSelect v-model:value="filters.timeRange" :options="timeRangeOptions" @update:value="applyFilters" />
         </div>
 
@@ -642,7 +630,7 @@ onMounted(() => {
     </div>
 
     <!-- 操作记录表格 -->
-    <div class="card-wrapper rounded-xl flex-1 overflow-hidden">
+    <div class="flex-1 overflow-hidden card-wrapper rounded-xl">
       <NDataTable
         :columns="columns"
         :data="paginatedLogs"
@@ -676,58 +664,58 @@ onMounted(() => {
       <div v-if="selectedLog" class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">操作时间</div>
+            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">操作时间</div>
             <div class="font-medium">{{ new Date(selectedLog.timestamp).toLocaleString('zh-CN') }}</div>
           </div>
 
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">操作类型</div>
+            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">操作类型</div>
             <NTag :type="operationTypes[selectedLog.operation]?.color as any" size="small">
               {{ operationTypes[selectedLog.operation]?.label || selectedLog.operation }}
             </NTag>
           </div>
 
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">操作用户</div>
+            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">操作用户</div>
             <div class="font-medium">{{ selectedLog.username }}</div>
           </div>
 
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">用户角色</div>
+            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">用户角色</div>
             <div class="font-medium">{{ selectedLog.userRole }}</div>
           </div>
 
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">目标实例</div>
-            <code class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs">{{ selectedLog.target }}</code>
+            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">目标实例</div>
+            <code class="rounded bg-gray-100 px-2 py-1 text-xs dark:bg-gray-800">{{ selectedLog.target }}</code>
           </div>
 
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">状态</div>
+            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">状态</div>
             <NTag :type="selectedLog.status === 'success' ? 'success' : 'error'" size="small">
               {{ selectedLog.status === 'success' ? '成功' : '失败' }}
             </NTag>
           </div>
 
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">IP地址</div>
+            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">IP地址</div>
             <div class="font-medium">{{ selectedLog.ip }}</div>
           </div>
 
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">耗时</div>
+            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">耗时</div>
             <div class="font-medium">{{ selectedLog.duration }}ms</div>
           </div>
         </div>
 
         <div>
-          <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">操作详情</div>
-          <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded text-sm">{{ selectedLog.details }}</div>
+          <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">操作详情</div>
+          <div class="rounded bg-gray-50 p-3 text-sm dark:bg-gray-800">{{ selectedLog.details }}</div>
         </div>
 
         <div v-if="selectedLog.error">
-          <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">错误信息</div>
-          <div class="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded text-sm">
+          <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">错误信息</div>
+          <div class="rounded bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
             {{ selectedLog.error }}
           </div>
         </div>

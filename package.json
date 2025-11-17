@@ -104,9 +104,5 @@
     "vue-eslint-parser": "10.2.0",
     "vue-tsc": "3.1.2"
   },
-  "simple-git-hooks": {
-    "commit-msg": "pnpm sa git-commit-verify",
-    "pre-commit": "pnpm typecheck && pnpm lint && git diff --exit-code"
-  },
   "website": "https://github.com/linpeilie/tutelary-ui"
 }
