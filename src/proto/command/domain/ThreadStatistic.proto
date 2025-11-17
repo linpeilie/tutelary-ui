@@ -1,0 +1,8 @@
+syntax="proto3";
+//
+message ThreadStatistic {  
+ int32 threadCount=1;
+ int32 peakThreadCount=2;
+ int32 daemonThreadCount=3;
+ int64 totalStartedThreadCount=4;
+}

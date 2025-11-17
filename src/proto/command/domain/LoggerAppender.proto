@@ -1,0 +1,9 @@
+syntax="proto3";
+//
+message LoggerAppender {  
+ string name=1;
+ string file=2;
+ string blocking=3;
+repeated string appenderRef=4;
+ string target=5;
+}

@@ -1,0 +1,18 @@
+syntax="proto3";
+
+import "src/proto/command/domain/LockInfo.proto";
+import "src/proto/command/domain/StackTraceNode.proto";
+//
+message ThreadDetail {  
+ int64 id=1;
+ string name=2;
+ string threadState=3;
+ LockInfo lock=4;
+ string lockName=5;
+ int64 lockOwnerId=6;
+ string lockOwnerName=7;
+repeated StackTraceNode stackTrace=8;
+ int32 jobId=9;
+ int32 state=10;
+ string message=11;
+}

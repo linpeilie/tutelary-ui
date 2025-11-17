@@ -1,0 +1,14 @@
+syntax="proto3";
+
+import "src/proto/command/domain/TraceNode.proto";
+import "src/proto/command/domain/BaseThreadInfo.proto";
+//
+message TraceResponse {  
+ string finishTime=1;
+ TraceNode node=2;
+ BaseThreadInfo thread=3;
+ string tccl=4;
+ int32 jobId=5;
+ int32 state=6;
+ string message=7;
+}

@@ -1,0 +1,6 @@
+syntax="proto3";
+//
+message LockInfo {  
+ string className=1;
+ int32 identityHashCode=2;
+}

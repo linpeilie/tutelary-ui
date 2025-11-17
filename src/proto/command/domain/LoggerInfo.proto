@@ -1,0 +1,17 @@
+syntax="proto3";
+
+import "src/proto/command/domain/LoggerAppender.proto";
+
+//
+message LoggerInfo {  
+ string name=1;
+ string clazz=2;
+ string classLoader=3;
+ string classLoaderHash=4;
+ string level=5;
+ string effectiveLevel=6;
+ bool additivity=7;
+ string codeSource=8;
+ string config=9;
+repeated LoggerAppender appenders=10;
+}

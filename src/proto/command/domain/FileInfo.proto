@@ -1,0 +1,8 @@
+syntax="proto3";
+//
+message FileInfo {  
+ string fileName=1;
+ string filePath=2;
+ string fileSize=3;
+ int64 lastModifiedTime=4;
+}

@@ -27,5 +27,9 @@ export default defineConfig(
       'no-underscore-dangle': 'off',
       '@typescript-eslint/no-use-before-define': 'off'
     }
+  },
+  {
+    // 忽略 protobuf 自动生成的代码
+    ignores: ['src/proto/**/*.ts']
   }
 );

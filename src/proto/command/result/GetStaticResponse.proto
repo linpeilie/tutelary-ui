@@ -1,0 +1,8 @@
+syntax="proto3";
+//
+message GetStaticResponse {  
+ string value=1;
+ int32 jobId=2;
+ int32 state=3;
+ string message=4;
+}

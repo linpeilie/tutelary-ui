@@ -1,0 +1,7 @@
+syntax="proto3";
+//
+message HostBaseInfo {  
+ string osName=1;
+ string osVersion=2;
+ int32 availableProcessors=3;
+}

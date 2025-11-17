@@ -1,0 +1,7 @@
+syntax="proto3";
+//
+message StackRequest {  
+ string qualifiedClassName=1;
+repeated string methodNames=2;
+ int32 times=3;
+}

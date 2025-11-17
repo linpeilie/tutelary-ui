@@ -1,0 +1,6 @@
+syntax="proto3";
+
+message Any {  
+ string codecClass=1;
+ bytes byteArray=2;
+}

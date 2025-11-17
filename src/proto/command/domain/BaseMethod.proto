@@ -1,0 +1,8 @@
+syntax="proto3";
+//
+message BaseMethod {  
+ string classLoader=1;
+ string className=2;
+ string methodName=3;
+ string methodDesc=4;
+}

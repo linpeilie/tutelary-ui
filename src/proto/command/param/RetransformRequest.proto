@@ -1,0 +1,6 @@
+syntax="proto3";
+//
+message RetransformRequest {  
+ string qualifiedClassName=1;
+ string javaSource=2;
+}

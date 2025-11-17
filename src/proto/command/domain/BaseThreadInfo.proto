@@ -1,0 +1,11 @@
+syntax="proto3";
+//
+message BaseThreadInfo {  
+ int64 id=1;
+ string name=2;
+ string group=3;
+ int32 priority=4;
+ string state=5;
+ double cpu=6;
+ bool daemon=7;
+}

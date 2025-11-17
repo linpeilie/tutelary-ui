@@ -1,0 +1,13 @@
+syntax="proto3";
+
+import "src/proto/command/domain/BaseThreadInfo.proto";
+import "src/proto/command/domain/ThreadStatistic.proto";
+
+//
+message ThreadList {  
+ ThreadStatistic threadStatistic=1;
+repeated BaseThreadInfo threads=2;
+ int32 jobId=3;
+ int32 state=4;
+ string message=5;
+}

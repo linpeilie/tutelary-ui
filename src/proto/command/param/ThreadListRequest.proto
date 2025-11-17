@@ -1,0 +1,5 @@
+syntax="proto3";
+//
+message ThreadListRequest {  
+ int32 samplerInterval=1;
+}

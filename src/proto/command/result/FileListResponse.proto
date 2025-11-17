@@ -1,0 +1,11 @@
+syntax="proto3";
+
+import "src/proto/command/domain/FileInfo.proto";
+//
+message FileListResponse {  
+ int32 total=1;
+repeated FileInfo fileList=2;
+ int32 jobId=3;
+ int32 state=4;
+ string message=5;
+}

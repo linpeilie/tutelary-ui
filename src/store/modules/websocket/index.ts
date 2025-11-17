@@ -3,7 +3,9 @@ import { defineStore } from 'pinia';
 import { useWebSocket } from '@/composables/useWebSocket';
 import type { IWebSocketBeanParam } from '@/utils/ws/websocket';
 import type { WebSocketStatusEnum } from '@/utils/ws/WebSocketStatusEnum';
+import type { Any } from '@/proto/Any';
 import { SetupStoreId } from '@/enum';
+import { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import { getToken } from '../auth/shared';
 
 /**
@@ -63,8 +65,8 @@ export const useWebSocketStore = defineStore(SetupStoreId.WebSocket, () => {
       },
 
       onMessage: (ev: MessageEvent) => {
-        console.log('[WebSocket] 收到消息:', ev.data);
-        // 在这里处理接收到的消息
+        console.log('[WebSocket] 收到原始消息:', ev.data);
+        // 处理二进制消息 (protobuf)
         handleMessage(ev.data);
       },
 
@@ -93,34 +95,62 @@ export const useWebSocketStore = defineStore(SetupStoreId.WebSocket, () => {
   }
 
   /**
-   * 处理接收到的消息
+   * 处理接收到的消息 (protobuf 格式)
    */
-  function handleMessage(data: string) {
+  function handleMessage(data: ArrayBuffer | string) {
     try {
-      const message = JSON.parse(data);
-      console.log('[WebSocket] 解析消息:', message);
-
-      // 根据消息类型进行不同处理
-      // 可以在这里实现消息路由逻辑
-      switch (message.type) {
-        case 'notification':
-          // 处理通知消息
-          window.$notification?.info({
-            title: message.title || '通知',
-            content: message.content,
-            duration: 3000
-          });
-          break;
-        case 'update':
-          // 处理更新消息
-          console.log('[WebSocket] 收到更新:', message.data);
-          break;
-        default:
-          console.log('[WebSocket] 未知消息类型:', message.type);
+      // 兼容处理：如果是字符串类型，尝试 JSON 解析（心跳等场景）
+      if (typeof data === 'string') {
+        console.log('[WebSocket] 收到文本消息:', data);
+        return;
       }
-    } catch {
-      // 如果不是 JSON 格式，直接处理原始数据
-      console.log('[WebSocket] 收到非 JSON 消息:', data);
+
+      // 解析 protobuf 二进制数据
+      const uint8Array = new Uint8Array(data as ArrayBuffer);
+      const response = CommandExecuteResponse.decode(uint8Array);
+
+      console.log('[WebSocket] 解析 protobuf 消息:', {
+        taskId: response.taskId,
+        code: response.code,
+        status: response.status,
+        message: response.message,
+        timestamp: response.timestamp,
+        metadata: response.metadata
+      });
+
+      // 处理响应码
+      if (!response.status) {
+        window.$message?.error(response.message || '操作失败');
+        return;
+      }
+
+      // 根据业务需要解码 data 字段
+      // response.data 是 Any 类型，需要根据实际类型进行二次解码
+      if (response.data) {
+        handleResponseData(response);
+      }
+    } catch (error) {
+      console.error('[WebSocket] 解析消息失败:', error);
+      window.$message?.error('消息解析失败');
+    }
+  }
+
+  /**
+   * 处理响应数据 (根据类型解码 Any)
+   */
+  function handleResponseData(response: CommandExecuteResponse<Any>) {
+    try {
+      // 这里需要根据实际的消息类型进行解码
+      // 例如：如果是 JvmMemoryResponse
+      // import { JvmMemoryResponse } from '@/proto/command/result/JvmMemoryResponse';
+      // const jvmMemory = JvmMemoryResponse.decode(response.data.value);
+
+      console.log('[WebSocket] 收到数据响应:', response.data);
+
+      // 可以根据 taskId 或其他字段判断具体类型
+      // 然后触发对应的处理逻辑或事件
+    } catch (error) {
+      console.error('[WebSocket] 解码数据失败:', error);
     }
   }
 
@@ -142,9 +172,31 @@ export const useWebSocketStore = defineStore(SetupStoreId.WebSocket, () => {
   }
 
   /**
-   * 发送消息
+   * 发送消息 (protobuf 编码)
+   * @param data 要发送的 protobuf 消息对象
+   * @param encoder protobuf 编码器 (例如 CommandExecuteResponse.encode)
+   * @param resend 是否重发
    */
-  function sendMessage(data: any, resend = false) {
+  function sendMessage<T>(data: T, encoder: { encode: (message: T) => { finish: () => Uint8Array } }, resend = false) {
+    if (!wsInstance.value) {
+      console.warn('[WebSocket] 连接未初始化');
+      return false;
+    }
+
+    try {
+      // 编码为 protobuf 二进制
+      const uint8Array = encoder.encode(data).finish();
+      return wsInstance.value.send(uint8Array, resend);
+    } catch (error) {
+      console.error('[WebSocket] 编码消息失败:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 发送原始数据 (兼容心跳等场景)
+   */
+  function sendRaw(data: string | ArrayBufferLike | Blob | ArrayBufferView, resend = false) {
     if (!wsInstance.value) {
       console.warn('[WebSocket] 连接未初始化');
       return false;
@@ -196,6 +248,7 @@ export const useWebSocketStore = defineStore(SetupStoreId.WebSocket, () => {
     isInitialized,
     initWebSocket,
     sendMessage,
+    sendRaw,
     closeConnection,
     dispose,
     reconnect

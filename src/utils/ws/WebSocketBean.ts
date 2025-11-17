@@ -61,18 +61,16 @@ export default class WebSocketBean implements IWebSocketBean {
     this.sendObj?.onOpen();
   };
 
-    onMessage = (ev: MessageEvent<any>) => {
+  onMessage = (ev: MessageEvent<any>) => {
     // 调用生命周期
-    if (this.param.onMessage)
-      this.param.onMessage(ev);
+    if (this.param.onMessage) this.param.onMessage(ev);
 
     this.heart?.onMessage(ev.data);
   };
 
   onError = () => {
     // 调用生命周期
-    if (this.param.onError)
-      this.param.onError();
+    if (this.param.onError) this.param.onError();
     // 销毁对象
     this.close();
     // 开始重连
@@ -96,6 +94,9 @@ export default class WebSocketBean implements IWebSocketBean {
 
     // 创建连接
     this.websocket = new WebSocket(currentParam.url);
+
+    // 设置二进制数据类型为 ArrayBuffer (用于 protobuf)
+    this.websocket.binaryType = 'arraybuffer';
 
     // 修改状态为加载中
     this.status = WebSocketStatusEnum.open;
