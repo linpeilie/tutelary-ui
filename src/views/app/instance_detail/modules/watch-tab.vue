@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
-import { useMessage } from 'naive-ui';
+import {
+  NButton,
+  NCard,
+  NForm,
+  NFormItem,
+  NGrid,
+  NGridItem,
+  NInput,
+  NInputNumber,
+  NProgress,
+  NTag,
+  useMessage
+} from 'naive-ui';
 
 interface WatchConfig {
   methods: string;
@@ -64,7 +76,7 @@ const resultInfo = computed(() => {
   if (watchResults.value.length === 0) return '';
   const classes = new Set(watchResults.value.map(r => r.className));
   const methods = new Set(watchResults.value.map(r => r.fullName));
-  return `(共 ${watchResults.value.length} 条记录，来自 ${classes.size} 个类的 ${methods.size} 个方法)`;
+  return `共 ${watchResults.value.length} 条记录,来自 ${classes.size} 个类的 ${methods.size} 个方法`;
 });
 
 // 开始观察
@@ -144,7 +156,7 @@ function stopWatch() {
     timeInterval = null;
   }
   isWatching.value = false;
-  message.success(`观察完成，共捕获 ${watchProgress.captured} 条记录`);
+  message.success(`观察完成,共捕获 ${watchProgress.captured} 条记录`);
 }
 
 // 生成观察结果
@@ -281,6 +293,13 @@ function formatJson(obj: any): string {
   return JSON.stringify(obj, null, 2);
 }
 
+// 获取耗时标签类型
+function getDurationTagType(duration: number): 'success' | 'warning' | 'error' {
+  if (duration > 500) return 'error';
+  if (duration > 200) return 'warning';
+  return 'success';
+}
+
 // 加载示例
 function loadSample() {
   watchConfig.methods = `com.example.service.UserService.getUserById
@@ -317,18 +336,23 @@ function exportResults() {
 // 清空结果
 function clearResults() {
   watchResults.value = [];
+  watchProgress.captured = 0;
+  watchProgress.total = 0;
+  watchProgress.percent = 0;
   message.success('已清空结果');
 }
 </script>
 
 <template>
-  <div class="space-y-16px">
+  <div class="flex flex-col gap-16px">
     <!-- Watch 配置表单 -->
-    <NCard :bordered="false" class="card-wrapper rounded-12px">
-      <div class="mb-16px flex-y-center gap-8px">
-        <div class="i-lucide:eye text-18px text-purple-500"></div>
-        <h4 class="text-14px text-white font-semibold">方法观察配置</h4>
-      </div>
+    <NCard size="small">
+      <template #header>
+        <div class="flex-y-center gap-8px">
+          <SvgIcon icon="lucide:eye" class="text-18px" />
+          <span class="font-semibold">方法观察配置</span>
+        </div>
+      </template>
 
       <NForm ref="watchFormRef" :model="watchConfig" label-placement="top">
         <NGrid :cols="24" :x-gap="16" :y-gap="16">
@@ -337,11 +361,9 @@ function clearResults() {
             <NFormItem path="methods">
               <template #label>
                 <div class="flex-y-center gap-8px">
+                  <SvgIcon icon="lucide:package" class="text-14px" />
                   <span>方法列表</span>
-                  <span class="text-red-500">*</span>
-                  <span class="text-12px text-gray-500 font-normal">
-                    (格式: 类名.method，多个方法用英文逗号或换行分隔)
-                  </span>
+                  <span class="text-12px text-gray-400">(支持多行,每行一个完整方法名)</span>
                 </div>
               </template>
               <NInput
@@ -351,11 +373,6 @@ function clearResults() {
                 placeholder="例如:&#10;com.example.service.UserService.getUserById&#10;com.example.service.UserService.createUser&#10;com.example.service.OrderService.createOrder&#10;com.example.controller.ApiController.handleRequest"
                 class="font-mono"
               />
-              <template #feedback>
-                <span class="text-12px text-gray-500">
-                  每行一个方法，格式为"完整类名.method名"，避免不同类的同名method混淆
-                </span>
-              </template>
             </NFormItem>
           </NGridItem>
 
@@ -368,10 +385,11 @@ function clearResults() {
                 :max="10000"
                 placeholder="例如: 50"
                 class="w-full"
-              />
-              <template #feedback>
-                <span class="text-12px text-gray-500">捕获方法调用的次数（1-10000）</span>
-              </template>
+              >
+                <template #suffix>
+                  <span class="text-12px text-gray-400">次</span>
+                </template>
+              </NInputNumber>
             </NFormItem>
           </NGridItem>
 
@@ -380,14 +398,15 @@ function clearResults() {
             <NFormItem path="minTime">
               <template #label>
                 <div class="flex-y-center gap-8px">
+                  <SvgIcon icon="lucide:timer" class="text-14px" />
                   <span>最低耗时 (ms)</span>
-                  <span class="text-12px text-gray-500">(可选)</span>
                 </div>
               </template>
-              <NInputNumber v-model:value="watchConfig.minTime" :min="0" placeholder="例如: 50" class="w-full" />
-              <template #feedback>
-                <span class="text-12px text-gray-500">只记录耗时超过此值的调用</span>
-              </template>
+              <NInputNumber v-model:value="watchConfig.minTime" :min="0" placeholder="例如: 50" class="w-full">
+                <template #suffix>
+                  <span class="text-12px text-gray-400">ms</span>
+                </template>
+              </NInputNumber>
             </NFormItem>
           </NGridItem>
 
@@ -396,43 +415,44 @@ function clearResults() {
             <NFormItem path="maxTime">
               <template #label>
                 <div class="flex-y-center gap-8px">
+                  <SvgIcon icon="lucide:timer" class="text-14px" />
                   <span>最高耗时 (ms)</span>
-                  <span class="text-12px text-gray-500">(可选)</span>
                 </div>
               </template>
-              <NInputNumber v-model:value="watchConfig.maxTime" :min="0" placeholder="例如: 1000" class="w-full" />
-              <template #feedback>
-                <span class="text-12px text-gray-500">只记录耗时低于此值的调用</span>
-              </template>
+              <NInputNumber v-model:value="watchConfig.maxTime" :min="0" placeholder="例如: 1000" class="w-full">
+                <template #suffix>
+                  <span class="text-12px text-gray-400">ms</span>
+                </template>
+              </NInputNumber>
             </NFormItem>
           </NGridItem>
 
           <!-- 操作按钮 -->
           <NGridItem :span="24">
-            <div class="flex-y-center gap-12px pt-8px">
-              <NButton type="primary" @click="startWatch">
+            <div class="flex-y-center gap-12px">
+              <NButton v-if="!isWatching" type="primary" @click="startWatch">
                 <template #icon>
-                  <div class="i-lucide:play"></div>
+                  <SvgIcon icon="lucide:play" />
                 </template>
                 开始观察
               </NButton>
-              <NButton @click="loadSample">
-                <template #icon>
-                  <div class="i-lucide:file-code"></div>
-                </template>
-                加载示例
-              </NButton>
               <NButton v-if="isWatching" type="error" @click="stopWatch">
                 <template #icon>
-                  <div class="i-lucide:square"></div>
+                  <SvgIcon icon="lucide:square" />
                 </template>
                 停止观察
               </NButton>
+              <NButton @click="loadSample">
+                <template #icon>
+                  <SvgIcon icon="lucide:file-text" />
+                </template>
+                加载示例
+              </NButton>
               <NButton @click="resetForm">
                 <template #icon>
-                  <div class="i-lucide:rotate-ccw"></div>
+                  <SvgIcon icon="lucide:refresh-cw" />
                 </template>
-                重置
+                重置表单
               </NButton>
             </div>
           </NGridItem>
@@ -441,22 +461,22 @@ function clearResults() {
     </NCard>
 
     <!-- 观察状态 -->
-    <NCard v-show="isWatching" :bordered="false" class="card-wrapper rounded-12px">
-      <div class="mb-16px flex-y-center justify-between">
+    <NCard v-show="isWatching" size="small">
+      <div class="mb-12px flex-y-center justify-between">
         <div class="flex-y-center gap-16px">
           <div class="flex-y-center gap-8px">
-            <div class="h-12px w-12px animate-pulse rounded-full bg-purple-500"></div>
-            <span class="text-14px text-gray-300">观察中...</span>
+            <div class="h-8px w-8px animate-pulse rounded-full bg-primary"></div>
+            <span class="text-14px">观察中...</span>
           </div>
-          <div class="text-14px text-gray-400">
+          <div class="text-14px text-gray">
             已捕获:
-            <span class="text-purple-400 font-semibold">{{ watchProgress.captured }}</span>
+            <span class="text-primary font-semibold">{{ watchProgress.captured }}</span>
             /
             <span>{{ watchProgress.total }}</span>
           </div>
         </div>
-        <div class="flex-y-center gap-8px text-12px text-gray-500">
-          <div class="i-lucide:clock text-12px"></div>
+        <div class="flex-y-center gap-8px text-12px text-gray">
+          <SvgIcon icon="lucide:clock" class="text-12px" />
           <span>{{ elapsedTime }}</span>
         </div>
       </div>
@@ -464,24 +484,24 @@ function clearResults() {
     </NCard>
 
     <!-- 观察结果 -->
-    <NCard :bordered="false" class="card-wrapper rounded-12px">
+    <NCard size="small">
       <template #header>
         <div class="flex-y-center justify-between">
           <div class="flex-y-center gap-8px">
-            <div class="i-lucide:list text-16px text-purple-500"></div>
-            <h4 class="text-14px text-white font-semibold">观察结果</h4>
-            <span v-if="resultInfo" class="text-12px text-gray-500">{{ resultInfo }}</span>
+            <SvgIcon icon="lucide:list" class="text-16px" />
+            <span class="font-semibold">观察结果</span>
+            <span v-if="resultInfo" class="text-12px text-gray">{{ resultInfo }}</span>
           </div>
           <div class="flex-y-center gap-8px">
             <NButton size="small" @click="exportResults">
               <template #icon>
-                <div class="i-lucide:download"></div>
+                <SvgIcon icon="lucide:download" />
               </template>
               导出
             </NButton>
             <NButton size="small" @click="clearResults">
               <template #icon>
-                <div class="i-lucide:trash-2"></div>
+                <SvgIcon icon="lucide:trash-2" />
               </template>
               清空
             </NButton>
@@ -489,106 +509,88 @@ function clearResults() {
         </div>
       </template>
 
-      <div v-if="watchResults.length === 0" class="py-48px text-center text-gray-400">
+      <div v-if="watchResults.length === 0" class="py-48px text-center text-gray">
         <div class="mb-12px flex justify-center">
-          <div class="i-lucide:inbox text-48px opacity-50"></div>
+          <SvgIcon icon="lucide:inbox" class="text-48px opacity-50" />
         </div>
         <div class="text-14px">暂无观察结果</div>
-        <div class="mt-4px text-12px text-gray-500">填写配置并点击"开始观察"</div>
+        <div class="mt-4px text-12px text-gray">填写配置并点击"开始观察"</div>
       </div>
 
-      <div v-else class="space-y-12px">
+      <div v-else class="flex flex-col gap-12px">
         <div
           v-for="result in watchResults"
           :key="result.id"
-          class="overflow-hidden border border-gray-700 rounded-8px bg-gray-800/50"
+          class="overflow-hidden border border-container rounded-8px bg-container"
         >
           <!-- 标题栏 -->
-          <div class="flex-y-center justify-between border-b border-gray-700 bg-gray-800/80 p-16px">
+          <div class="flex-y-center justify-between border-b border-container p-16px">
             <div class="flex-y-center gap-12px">
-              <span class="rounded bg-purple-500/10 px-8px py-4px text-12px text-purple-400 font-mono">
-                #{{ result.id }}
-              </span>
+              <NTag size="small" :bordered="false">
+                <span class="font-mono">#{{ result.id }}</span>
+              </NTag>
               <div class="text-14px font-mono">
-                <span class="text-blue-400">{{ result.className }}</span>
-                <span class="text-gray-500">.</span>
-                <span class="text-green-400">{{ result.methodName }}</span>
-                <span class="text-gray-500">()</span>
+                <span class="text-primary">{{ result.className }}</span>
+                <span class="text-gray">.</span>
+                <span class="text-success">{{ result.methodName }}</span>
+                <span class="text-gray">()</span>
               </div>
             </div>
             <div class="flex-y-center gap-16px text-12px">
               <div class="flex-y-center gap-6px">
-                <div class="i-lucide:clock text-12px text-gray-400"></div>
-                <span class="text-gray-400">{{ formatTime(result.timestamp) }}</span>
+                <SvgIcon icon="lucide:clock" class="text-12px text-gray" />
+                <span class="text-gray">{{ formatTime(result.timestamp) }}</span>
               </div>
               <div class="flex-y-center gap-6px">
-                <div
-                  class="i-lucide:zap text-12px"
-                  :class="[
-                    result.duration > 500
-                      ? 'text-red-400'
-                      : result.duration > 200
-                        ? 'text-yellow-400'
-                        : 'text-green-400'
-                  ]"
-                ></div>
-                <span
-                  class="font-semibold"
-                  :class="[
-                    result.duration > 500
-                      ? 'text-red-400'
-                      : result.duration > 200
-                        ? 'text-yellow-400'
-                        : 'text-green-400'
-                  ]"
-                >
+                <SvgIcon icon="lucide:zap" class="text-12px" />
+                <NTag :type="getDurationTagType(result.duration)" size="small" :bordered="false">
                   {{ result.duration }}ms
-                </span>
+                </NTag>
               </div>
               <div
-                class="cursor-pointer text-gray-400 transition hover:text-white"
+                class="flex-y-center cursor-pointer text-gray transition hover:text-primary"
                 @click="result.expanded = !result.expanded"
               >
-                <div :class="result.expanded ? 'i-lucide:chevron-up' : 'i-lucide:chevron-down'" class="text-16px"></div>
+                <SvgIcon :icon="result.expanded ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="text-16px" />
               </div>
             </div>
           </div>
 
           <!-- 详细内容 -->
-          <div v-show="result.expanded" class="p-16px space-y-16px">
+          <div v-show="result.expanded" class="flex flex-col gap-16px p-16px">
             <!-- 入参 -->
             <div>
-              <div class="mb-8px flex-y-center gap-6px text-12px text-gray-400 font-semibold">
-                <div class="i-lucide:arrow-right text-12px"></div>
+              <div class="mb-8px flex-y-center gap-6px text-12px text-gray font-semibold">
+                <SvgIcon icon="lucide:arrow-right" class="text-12px" />
                 入参 (Parameters)
               </div>
-              <div class="border border-gray-700 rounded-8px bg-gray-900/50 p-12px">
-                <pre class="overflow-x-auto text-12px text-gray-300 font-mono">{{ formatJson(result.params) }}</pre>
+              <div class="border border-container rounded-8px bg-layout p-12px">
+                <pre class="text-12px font-mono">{{ formatJson(result.params) }}</pre>
               </div>
             </div>
 
             <!-- Target 对象 -->
             <div>
-              <div class="mb-8px flex-y-center gap-6px text-12px text-gray-400 font-semibold">
-                <div class="i-lucide:target text-12px"></div>
+              <div class="mb-8px flex-y-center gap-6px text-12px text-gray font-semibold">
+                <SvgIcon icon="lucide:target" class="text-12px" />
                 Target 对象
               </div>
-              <div class="border border-gray-700 rounded-8px bg-gray-900/50 p-12px">
-                <pre class="overflow-x-auto text-12px text-gray-300 font-mono">{{ formatJson(result.target) }}</pre>
+              <div class="border border-container rounded-8px bg-layout p-12px">
+                <pre class="text-12px font-mono">{{ formatJson(result.target) }}</pre>
               </div>
             </div>
 
             <!-- 异常信息 -->
             <div v-if="result.exception">
-              <div class="mb-8px flex-y-center gap-6px text-12px text-red-400 font-semibold">
-                <div class="i-lucide:alert-circle text-12px"></div>
+              <div class="mb-8px flex-y-center gap-6px text-12px text-error font-semibold">
+                <SvgIcon icon="lucide:alert-circle" class="text-12px" />
                 异常 (Exception)
               </div>
-              <div class="border border-red-700/50 rounded-8px bg-red-900/20 p-12px">
-                <div class="mb-8px text-12px text-red-400 font-semibold">{{ result.exception.type }}</div>
-                <div class="mb-12px text-12px text-red-300">{{ result.exception.message }}</div>
-                <div class="mb-4px text-12px text-gray-400 font-semibold">堆栈信息:</div>
-                <pre class="max-h-192px overflow-x-auto overflow-y-auto text-12px text-gray-400 font-mono">{{
+              <div class="border border-error rounded-8px bg-error/10 p-12px">
+                <div class="mb-8px text-12px text-error font-semibold">{{ result.exception.type }}</div>
+                <div class="mb-12px text-12px text-error/80">{{ result.exception.message }}</div>
+                <div class="mb-4px text-12px text-gray font-semibold">堆栈信息:</div>
+                <pre class="max-h-200px overflow-y-auto text-12px text-gray font-mono">{{
                   result.exception.stackTrace
                 }}</pre>
               </div>
@@ -596,14 +598,12 @@ function clearResults() {
 
             <!-- 返回值 -->
             <div v-else>
-              <div class="mb-8px flex-y-center gap-6px text-12px text-gray-400 font-semibold">
-                <div class="i-lucide:arrow-left text-12px"></div>
+              <div class="mb-8px flex-y-center gap-6px text-12px text-gray font-semibold">
+                <SvgIcon icon="lucide:arrow-left" class="text-12px" />
                 返回值 (Return Value)
               </div>
-              <div class="border border-gray-700 rounded-8px bg-gray-900/50 p-12px">
-                <pre class="overflow-x-auto text-12px text-green-300 font-mono">{{
-                  formatJson(result.returnValue)
-                }}</pre>
+              <div class="border border-container rounded-8px bg-layout p-12px">
+                <pre class="text-12px font-mono">{{ formatJson(result.returnValue) }}</pre>
               </div>
             </div>
           </div>
@@ -614,10 +614,6 @@ function clearResults() {
 </template>
 
 <style scoped>
-.card-wrapper {
-  background: var(--n-color);
-}
-
 pre {
   margin: 0;
   white-space: pre-wrap;

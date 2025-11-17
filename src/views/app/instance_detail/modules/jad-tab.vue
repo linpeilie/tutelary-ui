@@ -81,7 +81,7 @@ function performDecompile() {
 }
 
 // 生成示例代码
-function generateSampleCode(className: string, methodName?: string): string {
+function generateSampleCode(_className: string, _methodName?: string): string {
   return `package com.example.service;
 
 import com.example.model.User;

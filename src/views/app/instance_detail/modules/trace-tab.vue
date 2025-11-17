@@ -75,6 +75,12 @@ const getDurationTagType = (duration: number) => {
   return 'success';
 };
 
+// 查看详情
+const handleViewDetail = (trace: TraceResult) => {
+  selectedTrace.value = trace;
+  showDetailModal.value = true;
+};
+
 // 表格列配置
 const columns: DataTableColumns<TraceResult> = [
   {
@@ -129,12 +135,6 @@ const columns: DataTableColumns<TraceResult> = [
     }
   }
 ];
-
-// 查看详情
-const handleViewDetail = (trace: TraceResult) => {
-  selectedTrace.value = trace;
-  showDetailModal.value = true;
-};
 
 // 生成调用栈树数据
 const generateTraceTreeData = (className: string, methodName: string, totalDuration: number) => {

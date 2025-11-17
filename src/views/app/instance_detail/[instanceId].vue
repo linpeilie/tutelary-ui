@@ -15,6 +15,13 @@ import LoggerTab from '@/views/app/instance_detail/modules/logger-tab.vue';
 import TraceTab from '@/views/app/instance_detail/modules/trace-tab.vue';
 import StackTab from '@/views/app/instance_detail/modules/stack-tab.vue';
 import WatchTab from '@/views/app/instance_detail/modules/watch-tab.vue';
+import MonitorTab from '@/views/app/instance_detail/modules/monitor-tab.vue';
+import ClassExplorerTab from '@/views/app/instance_detail/modules/class-explorer-tab.vue';
+import TimeTunnelTab from '@/views/app/instance_detail/modules/time-tunnel-tab.vue';
+import OgnlTab from '@/views/app/instance_detail/modules/ognl-tab.vue';
+import ProfilerTab from '@/views/app/instance_detail/modules/profiler-tab.vue';
+import JfrTab from '@/views/app/instance_detail/modules/jfr-tab.vue';
+import ChangeRecordsTab from '@/views/app/instance_detail/modules/change-records-tab.vue';
 import type { OptionsType } from '@/components/custom/types/t-segmented';
 import TSegmented from '@/components/custom/t-segmented.vue';
 
@@ -85,6 +92,19 @@ onMounted(() => {
       <TraceTab v-else-if="activeTab === 'trace' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <StackTab v-else-if="activeTab === 'stack' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <WatchTab v-else-if="activeTab === 'watch' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <MonitorTab v-else-if="activeTab === 'monitor' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <ClassExplorerTab
+        v-else-if="activeTab === 'classExplorer' && instanceDetail"
+        :instance-id="instanceDetail.instanceId"
+      />
+      <TimeTunnelTab
+        v-else-if="activeTab === 'timeTunnel' && instanceDetail"
+        :instance-id="instanceDetail.instanceId"
+      />
+      <OgnlTab v-else-if="activeTab === 'ognl' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <ProfilerTab v-else-if="activeTab === 'profiler' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <JfrTab v-else-if="activeTab === 'jfr' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <ChangeRecordsTab v-else-if="activeTab === 'record' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <NCard v-else size="small">
         <NEmpty description="功能开发中...">
           <template #icon>
