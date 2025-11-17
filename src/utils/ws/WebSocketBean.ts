@@ -46,10 +46,10 @@ export default class WebSocketBean implements IWebSocketBean {
 
   onOpen = async () => {
     // 开启心跳
-    this.heart.start();
+    this.heart?.start();
 
     // 通知连接成功或重连成功
-    this.reconnect.stop();
+    this.reconnect?.stop();
 
     // 调用生命周期
     if (this.param.onOpen) await this.param.onOpen();
@@ -58,23 +58,25 @@ export default class WebSocketBean implements IWebSocketBean {
     this.status = WebSocketStatusEnum.connected;
 
     // 通知发送消息
-    this.sendObj.onOpen();
+    this.sendObj?.onOpen();
   };
 
-  onMessage = (ev: MessageEvent<any>) => {
+    onMessage = (ev: MessageEvent<any>) => {
     // 调用生命周期
-    if (this.param.onMessage) this.param.onMessage(ev);
+    if (this.param.onMessage)
+      this.param.onMessage(ev);
 
-    this.heart.onMessage(ev.data);
+    this.heart?.onMessage(ev.data);
   };
 
   onError = () => {
     // 调用生命周期
-    if (this.param.onError) this.param.onError();
+    if (this.param.onError)
+      this.param.onError();
     // 销毁对象
     this.close();
     // 开始重连
-    this.reconnect.start();
+    this.reconnect?.start();
   };
 
   /**

@@ -17,7 +17,7 @@ export default class WebSocketReconnect implements IWebSocketReconnect {
   /**
    * 当前重连次数
    */
-  num: number;
+  num: number = 0;
 
   /**
    * 最大重连次数，默认无限次

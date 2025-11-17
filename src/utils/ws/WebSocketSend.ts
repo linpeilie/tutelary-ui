@@ -82,7 +82,7 @@ export default class WebSocketSend implements IWebSocketSend {
       if (isObject(sendData) || Array.isArray(sendData)) sendData = JSON.stringify(sendData);
 
       // 发送数据
-      this.websocket.websocket.send(this.sendPrefix + sendData + this.sendSuffix);
+      this.websocket.websocket?.send(this.sendPrefix + sendData + this.sendSuffix);
 
       // 如果是需要重发的返回 sendId
       return currentResend ? sendId : true;

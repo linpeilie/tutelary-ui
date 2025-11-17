@@ -4,27 +4,27 @@ export interface IWebSocketBean {
   /**
    * 连接状态
    */
-  status: WebSocketStatusEnum;
+  status: WebSocketStatusEnum | null;
 
   /**
    * WebSocket 对象
    */
-  websocket: WebSocket;
+  websocket: WebSocket | null;
 
   /**
    * 心跳对象
    */
-  heart: IWebSocketHeart;
+  heart: IWebSocketHeart | null;
 
   /**
    * 重连对象
    */
-  reconnect: IWebSocketReconnect;
+  reconnect: IWebSocketReconnect | null;
 
   /**
    * 发送对象
    */
-  sendObj: IWebSocketSend;
+  sendObj: IWebSocketSend | null;
 
   /**
    * 参数信息
@@ -43,7 +43,7 @@ export interface IWebSocketBean {
    * @param data  数据对象
    * @param resend 是否需要在重新连上以后再次发送该数据
    */
-  send: (data: any, resend?: boolean) => string | boolean;
+  send: (data: any, resend?: boolean) => string | boolean | null | undefined;
 
   /**
    * 销毁需要重发的数据信息
@@ -264,7 +264,7 @@ export interface IWebSocketSend {
    * @param data 数据对象
    * @param resend 是否在重连之后再次发送该消息
    */
-  send: (data: any, resend?: boolean) => string | boolean;
+  send: (data: any, resend?: boolean) => string | boolean | null;
 
   /**
    * 销毁需要重发的数据信息
