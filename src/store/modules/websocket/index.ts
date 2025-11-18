@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { useWebSocket } from '@/composables/useWebSocket';
 import type { IWebSocketBeanParam } from '@/utils/ws/websocket';
 import type { WebSocketStatusEnum } from '@/utils/ws/WebSocketStatusEnum';
+import eventBus from '@/utils/eventbus';
 import type { Any } from '@/proto/Any';
 import { SetupStoreId } from '@/enum';
 import { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
@@ -62,6 +63,8 @@ export const useWebSocketStore = defineStore(SetupStoreId.WebSocket, () => {
       onOpen: async () => {
         console.log('[WebSocket] 连接成功');
         window.$message?.success('WebSocket 连接成功');
+        // 触发连接成功事件
+        eventBus.emit('ws:connected', undefined);
       },
 
       onMessage: (ev: MessageEvent) => {
@@ -73,6 +76,8 @@ export const useWebSocketStore = defineStore(SetupStoreId.WebSocket, () => {
       onError: () => {
         console.error('[WebSocket] 连接异常');
         window.$message?.error('WebSocket 连接异常');
+        // 触发错误事件
+        eventBus.emit('ws:error', new Error('WebSocket 连接异常'));
       },
 
       onReconnect: () => {
@@ -118,6 +123,9 @@ export const useWebSocketStore = defineStore(SetupStoreId.WebSocket, () => {
         metadata: response.metadata
       });
 
+      // 触发通用消息事件
+      eventBus.emit('ws:message', response);
+
       // 处理响应码
       if (!response.status) {
         window.$message?.error(response.message || '操作失败');
@@ -140,15 +148,32 @@ export const useWebSocketStore = defineStore(SetupStoreId.WebSocket, () => {
    */
   function handleResponseData(response: CommandExecuteResponse<Any>) {
     try {
-      // 这里需要根据实际的消息类型进行解码
-      // 例如：如果是 JvmMemoryResponse
-      // import { JvmMemoryResponse } from '@/proto/command/result/JvmMemoryResponse';
-      // const jvmMemory = JvmMemoryResponse.decode(response.data.value);
-
       console.log('[WebSocket] 收到数据响应:', response.data);
 
-      // 可以根据 taskId 或其他字段判断具体类型
-      // 然后触发对应的处理逻辑或事件
+      // 根据 taskId 前缀判断命令类型并触发对应事件
+      const taskId = response.taskId || '';
+
+      if (taskId.startsWith('jvm-memory')) {
+        eventBus.emit('command:jvm-memory', response);
+      } else if (taskId.startsWith('thread-list')) {
+        eventBus.emit('command:thread-list', response);
+      } else if (taskId.startsWith('thread-detail')) {
+        eventBus.emit('command:thread-detail', response);
+      } else if (taskId.startsWith('logger-info')) {
+        eventBus.emit('command:logger-info', response);
+      } else if (taskId.startsWith('vm-option')) {
+        eventBus.emit('command:vm-option', response);
+      } else if (taskId.startsWith('heap-dump')) {
+        eventBus.emit('command:heap-dump', response);
+      } else if (taskId.startsWith('trace')) {
+        eventBus.emit('command:trace', response);
+      } else if (taskId.startsWith('decompile')) {
+        eventBus.emit('command:decompile', response);
+      } else if (taskId.startsWith('file-list')) {
+        eventBus.emit('command:file-list', response);
+      } else {
+        eventBus.emit('command:other', response);
+      }
     } catch (error) {
       console.error('[WebSocket] 解码数据失败:', error);
     }
@@ -217,6 +242,9 @@ export const useWebSocketStore = defineStore(SetupStoreId.WebSocket, () => {
     isInitialized.value = false;
     connectionStatus.value = null;
     console.log('[WebSocket] 连接已关闭');
+
+    // 触发断开连接事件
+    eventBus.emit('ws:disconnected', undefined);
   }
 
   /**
