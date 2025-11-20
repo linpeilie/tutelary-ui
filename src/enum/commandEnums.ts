@@ -1,4 +1,4 @@
-import { EnumItem } from '@/utils/common/enum'
+import { EnumItem } from '@/utils/enum';
 
 export const commandEnum = Object.freeze({
   OVERVIEW: EnumItem.of(200010, 'Overview'),
@@ -20,6 +20,5 @@ export const commandEnum = Object.freeze({
   ENHANCE_COMPLETE: EnumItem.of(210002, 'EnhanceComplete'),
   TRACE_METHOD: EnumItem.of(210011, 'TraceMethod'),
   STACK_METHOD: EnumItem.of(210012, 'StackMethod'),
-  RETRANSFORM: EnumItem.of(210013, 'Retransform'),
-
-} as const)
+  RETRANSFORM: EnumItem.of(210013, 'Retransform')
+} as const);

@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
 import type { Ref } from 'vue';
+import { fetchDashboardCommand } from '@/service/api/instance';
+import eventBus from '@/utils/eventbus';
+import { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
+import { Overview } from '@/proto/command/result/Overview';
 
 interface Props {
   instanceId: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 // 线程统计
 const threadStats = ref({
@@ -74,15 +78,30 @@ function getStateTagClass(state: string): string {
 
 let updateInterval: NodeJS.Timeout | null = null;
 
+function createDashboardCommand() {
+  const params = {
+    instanceId: props.instanceId,
+    param: {}
+  };
+  fetchDashboardCommand(params);
+}
+
 onMounted(() => {
   updateInterval = setInterval(() => {
     threadStats.value.total = 115 + Math.floor(Math.random() * 10);
     threadStats.value.active = 80 + Math.floor(Math.random() * 10);
+    createDashboardCommand();
   }, 5000);
+  eventBus.on('command:overview', (data: CommandExecuteResponse<Overview>) => {
+    console.log('Received dashboard update:', data);
+    const overview = data.data as Overview;
+    threadStats.value.total = overview.threadStatistic?.threadCount || 0;
+  });
 });
 
 onUnmounted(() => {
   if (updateInterval) clearInterval(updateInterval);
+  eventBus.off('command:overview');
 });
 </script>
 

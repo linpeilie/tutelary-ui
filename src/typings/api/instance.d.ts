@@ -17,5 +17,18 @@ declare namespace Api {
       availableProcessors: number;
       memorySize: number;
     }
+    namespace Command {
+      interface CommandCreateRequest<T> {
+        instanceId: string;
+        param?: T;
+      }
+      interface CommandTaskResponse {
+        commandCode: number;
+        instanceId: string;
+        taskId: string;
+        param: string;
+        completeTime: string;
+      }
+    }
   }
 }

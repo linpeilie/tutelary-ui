@@ -16,4 +16,11 @@ declare global {
 
   /** Build time of the project */
   export const BUILD_TIME: string;
+
+  export type EnumLabel = string;
+  export type EnumValue = number | string;
+  export interface EnumValueTag {
+    color?: string;
+    type?: 'default' | 'error' | 'primary' | 'info' | 'success' | 'warning';
+  }
 }

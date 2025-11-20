@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
+import { getToken } from '@/store/modules/auth/shared';
 import { useWebSocket } from '@/composables/useWebSocket';
 import type { IWebSocketBeanParam } from '@/utils/ws/websocket';
 import type { WebSocketStatusEnum } from '@/utils/ws/WebSocketStatusEnum';
@@ -7,7 +8,10 @@ import eventBus from '@/utils/eventbus';
 import type { Any } from '@/proto/Any';
 import { SetupStoreId } from '@/enum';
 import { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
-import { getToken } from '../auth/shared';
+import { messageTypeEnum } from '@/enum/messageTypeEnums';
+import commandCodec from '@/proto/codec/commandCodec';
+import { ErrorMessage } from '@/proto/ErrorMessage';
+import { getEventNameByCommandCode } from './command-router';
 
 /**
  * 获取 WebSocket 连接地址
@@ -68,9 +72,9 @@ export const useWebSocketStore = defineStore(SetupStoreId.WebSocket, () => {
       },
 
       onMessage: (ev: MessageEvent) => {
-        console.log('[WebSocket] 收到原始消息:', ev.data);
+        console.debug('[WebSocket] 收到原始消息:', ev.data);
         // 处理二进制消息 (protobuf)
-        handleMessage(ev.data);
+        handleBlobMessage(ev.data);
       },
 
       onError: () => {
@@ -100,82 +104,67 @@ export const useWebSocketStore = defineStore(SetupStoreId.WebSocket, () => {
   }
 
   /**
-   * 处理接收到的消息 (protobuf 格式)
+   * 分发命令响应消息到对应的事件总线
+   * 使用命令路由配置实现解耦，避免大量 if-else 判断
    */
-  function handleMessage(data: ArrayBuffer | string) {
-    try {
-      // 兼容处理：如果是字符串类型，尝试 JSON 解析（心跳等场景）
-      if (typeof data === 'string') {
-        console.log('[WebSocket] 收到文本消息:', data);
-        return;
-      }
+  function dispatchCommandResponseMessage(commandExecuteResponse: CommandExecuteResponse<Any>) {
+    console.debug('[WebSocket] 解析 protobuf 消息:', commandExecuteResponse);
 
-      // 解析 protobuf 二进制数据
-      const uint8Array = new Uint8Array(data as ArrayBuffer);
-      const response = CommandExecuteResponse.decode(uint8Array);
+    const commandCode = commandExecuteResponse.code;
 
-      console.log('[WebSocket] 解析 protobuf 消息:', {
-        taskId: response.taskId,
-        code: response.code,
-        status: response.status,
-        message: response.message,
-        timestamp: response.timestamp,
-        metadata: response.metadata
-      });
+    // 首先触发通用的命令响应事件 (所有命令都会触发)
+    eventBus.emit('command:response', commandExecuteResponse);
 
-      // 触发通用消息事件
-      eventBus.emit('ws:message', response);
+    // 根据命令码查找对应的事件名称
+    const eventName = getEventNameByCommandCode(commandCode);
 
-      // 处理响应码
-      if (!response.status) {
-        window.$message?.error(response.message || '操作失败');
-        return;
-      }
-
-      // 根据业务需要解码 data 字段
-      // response.data 是 Any 类型，需要根据实际类型进行二次解码
-      if (response.data) {
-        handleResponseData(response);
-      }
-    } catch (error) {
-      console.error('[WebSocket] 解析消息失败:', error);
-      window.$message?.error('消息解析失败');
+    if (eventName) {
+      // 找到对应的事件，触发特定命令事件
+      console.debug(`[WebSocket] 分发命令事件: ${eventName}, 命令码: ${commandCode}`);
+      eventBus.emit(eventName, commandExecuteResponse);
+    } else {
+      // 未找到对应的事件配置，记录警告并触发兜底事件
+      console.warn(`[WebSocket] 未找到命令码 ${commandCode} 对应的事件配置`);
+      eventBus.emit('command:unknown', commandExecuteResponse);
     }
   }
 
   /**
-   * 处理响应数据 (根据类型解码 Any)
+   * 处理接收到的消息 (protobuf 格式)
    */
-  function handleResponseData(response: CommandExecuteResponse<Any>) {
+  function handleBlobMessage(_data: ArrayBuffer) {
     try {
-      console.log('[WebSocket] 收到数据响应:', response.data);
+      const uint8Array = new Uint8Array(_data);
+      // cmd
+      const cmd = uint8Array.at(0);
 
-      // 根据 taskId 前缀判断命令类型并触发对应事件
-      const taskId = response.taskId || '';
-
-      if (taskId.startsWith('jvm-memory')) {
-        eventBus.emit('command:jvm-memory', response);
-      } else if (taskId.startsWith('thread-list')) {
-        eventBus.emit('command:thread-list', response);
-      } else if (taskId.startsWith('thread-detail')) {
-        eventBus.emit('command:thread-detail', response);
-      } else if (taskId.startsWith('logger-info')) {
-        eventBus.emit('command:logger-info', response);
-      } else if (taskId.startsWith('vm-option')) {
-        eventBus.emit('command:vm-option', response);
-      } else if (taskId.startsWith('heap-dump')) {
-        eventBus.emit('command:heap-dump', response);
-      } else if (taskId.startsWith('trace')) {
-        eventBus.emit('command:trace', response);
-      } else if (taskId.startsWith('decompile')) {
-        eventBus.emit('command:decompile', response);
-      } else if (taskId.startsWith('file-list')) {
-        eventBus.emit('command:file-list', response);
+      if (cmd === messageTypeEnum.CLIENT_COMMAND_RESPONSE.value) {
+        const commandExecuteResponse = CommandExecuteResponse.decode(uint8Array.slice(5));
+        // status
+        if (!commandExecuteResponse.status) {
+          window.$message?.error(
+            `task ${commandExecuteResponse.taskId} failed to execute, error message : ${commandExecuteResponse.message}`
+          );
+          return;
+        }
+        commandExecuteResponse.data = commandCodec.decode(
+          commandExecuteResponse.code,
+          commandExecuteResponse.data?.byteArray
+        );
+        if (!commandExecuteResponse.data) {
+          window.$message?.error(`unknown command code : ${commandExecuteResponse.code}`);
+          return;
+        }
+        dispatchCommandResponseMessage(commandExecuteResponse);
+      } else if (cmd === messageTypeEnum.ERROR.value) {
+        const errorMessage = ErrorMessage.decode(uint8Array.slice(5));
+        window.$message?.error(errorMessage.message);
       } else {
-        eventBus.emit('command:other', response);
+        window.$message?.error(`unknown message type : ${cmd}`);
       }
     } catch (error) {
-      console.error('[WebSocket] 解码数据失败:', error);
+      console.error('[WebSocket] 解析消息失败:', error);
+      window.$message?.error('消息解析失败');
     }
   }
 

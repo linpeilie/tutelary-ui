@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { NAlert, NButton, NCard, NDescriptions, NDescriptionsItem, NSpace, NTimeline, NTimelineItem } from 'naive-ui';
-import { useEventListener, useWebSocketMessages, useWebSocketStatus } from '@/composables/useEventBus';
+import { useEventListener, useWebSocketMessages } from '@/composables/useEventBus';
 import eventBus from '@/utils/eventbus';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 
