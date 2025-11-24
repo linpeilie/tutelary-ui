@@ -5,6 +5,8 @@ import { fetchDashboardCommand } from '@/service/api/instance';
 import eventBus from '@/utils/eventbus';
 import { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import { Overview } from '@/proto/command/result/Overview';
+import { ThreadStatistic } from '@/proto/command/domain/ThreadStatistic';
+import { BaseThreadInfo } from '@/proto/command/domain/BaseThreadInfo';
 
 interface Props {
   instanceId: string;
@@ -13,23 +15,17 @@ interface Props {
 const props = defineProps<Props>();
 
 // 线程统计
-const threadStats = ref({
-  total: 120,
-  active: 85,
-  waiting: 25,
-  blocked: 10,
-  peak: 145,
-  daemon: 32
+const threadStats: Ref<ThreadStatistic | undefined> = ref({
+  threadCount: 0,
+  peakThreadCount: 0,
+  daemonThreadCount: 0,
+  totalStartedThreadCount: 0,
+  activeThreadCount: 0,
+  waitingThreadCount: 0,
+  blockedThreadCount: 0,
 });
 
-// 线程TOP10数据
-interface ThreadInfo {
-  name: string;
-  cpu: number;
-  state: string;
-}
-
-const threadTopList: Ref<ThreadInfo[]> = ref([
+const threadTopList: Ref<BaseThreadInfo[]> = ref([
   { name: 'http-nio-8080-exec-1', cpu: 15.2, state: 'RUNNABLE' },
   { name: 'http-nio-8080-exec-2', cpu: 12.8, state: 'RUNNABLE' },
   { name: 'reactor-http-nio-3', cpu: 9.5, state: 'WAITING' },
@@ -88,14 +84,13 @@ function createDashboardCommand() {
 
 onMounted(() => {
   updateInterval = setInterval(() => {
-    threadStats.value.total = 115 + Math.floor(Math.random() * 10);
-    threadStats.value.active = 80 + Math.floor(Math.random() * 10);
     createDashboardCommand();
   }, 5000);
   eventBus.on('command:overview', (data: CommandExecuteResponse<Overview>) => {
     console.log('Received dashboard update:', data);
     const overview = data.data as Overview;
-    threadStats.value.total = overview.threadStatistic?.threadCount || 0;
+    threadStats.value = overview.threadStatistic;
+    threadTopList.value = overview.threads;
   });
 });
 
@@ -118,28 +113,28 @@ onUnmounted(() => {
         <div class="space-y-3">
           <div class="stat-row">
             <span class="stat-label">总线程数</span>
-            <span class="stat-value">{{ threadStats.total }}</span>
+            <span class="stat-value">{{ threadStats?.threadCount }}</span>
           </div>
           <div class="stat-row">
             <span class="stat-label">活跃线程</span>
-            <span class="stat-value text-success">{{ threadStats.active }}</span>
+            <span class="stat-value text-success">{{ threadStats?.activeThreadCount }}</span>
           </div>
           <div class="stat-row">
             <span class="stat-label">等待线程</span>
-            <span class="stat-value text-warning">{{ threadStats.waiting }}</span>
+            <span class="stat-value text-warning">{{ threadStats?.waitingThreadCount }}</span>
           </div>
           <div class="stat-row">
             <span class="stat-label">阻塞线程</span>
-            <span class="stat-value text-error">{{ threadStats.blocked }}</span>
+            <span class="stat-value text-error">{{ threadStats?.blockedThreadCount }}</span>
           </div>
-          <div class="divider-line" />
+          <NDivider />
           <div class="stat-row-sm">
             <span class="stat-label-sm">峰值线程数</span>
-            <span class="stat-value-sm text-info">{{ threadStats.peak }}</span>
+            <span class="stat-value-sm text-info">{{ threadStats?.peakThreadCount }}</span>
           </div>
           <div class="stat-row-sm">
             <span class="stat-label-sm">守护线程数</span>
-            <span class="stat-value-sm text-purple">{{ threadStats.daemon }}</span>
+            <span class="stat-value-sm text-purple">{{ threadStats?.daemonThreadCount }}</span>
           </div>
         </div>
       </NCard>
@@ -153,7 +148,7 @@ onUnmounted(() => {
         <div class="space-y-2">
           <div v-for="(thread, index) in threadTopList" :key="index" class="thread-item">
             <div class="mb-1.5 flex items-center justify-between">
-              <span class="thread-name">{{ index + 1 }}. {{ thread.name }}</span>
+              <span class="thread-name">{{ thread.id }}. {{ thread.name }}</span>
               <div class="flex items-center gap-2">
                 <span class="state-tag" :class="getStateTagClass(thread.state)">{{ thread.state }}</span>
                 <span class="thread-cpu">{{ thread.cpu }}%</span>
@@ -409,12 +404,6 @@ onUnmounted(() => {
   font-size: 18px;
   font-weight: bold;
   color: var(--n-text-color);
-}
-
-.divider-line {
-  height: 1px;
-  background-color: var(--n-border-color);
-  margin: 12px 0;
 }
 
 .stat-row-sm {
