@@ -1,18 +1,25 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
 import type { Ref } from 'vue';
+import { breakpointsTailwind, useBreakpoints, useElementSize } from '@vueuse/core';
 import { fetchDashboardCommand } from '@/service/api/instance';
 import eventBus from '@/utils/eventbus';
-import { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
-import { Overview } from '@/proto/command/result/Overview';
-import { ThreadStatistic } from '@/proto/command/domain/ThreadStatistic';
-import { BaseThreadInfo } from '@/proto/command/domain/BaseThreadInfo';
+import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
+import type { Overview } from '@/proto/command/result/Overview';
+import type { ThreadStatistic } from '@/proto/command/domain/ThreadStatistic';
+import type { BaseThreadInfo } from '@/proto/command/domain/BaseThreadInfo';
 
 interface Props {
   instanceId: string;
 }
 
 const props = defineProps<Props>();
+
+const breakpoints = useBreakpoints(breakpointsTailwind);
+const isLg = breakpoints.greater('lg');
+
+const statsCardRef = ref<HTMLElement | null>(null);
+const { height: statsHeight } = useElementSize(statsCardRef);
 
 // 线程统计
 const threadStats: Ref<ThreadStatistic | undefined> = ref({
@@ -22,7 +29,7 @@ const threadStats: Ref<ThreadStatistic | undefined> = ref({
   totalStartedThreadCount: 0,
   activeThreadCount: 0,
   waitingThreadCount: 0,
-  blockedThreadCount: 0,
+  blockedThreadCount: 0
 });
 
 const threadTopList: Ref<BaseThreadInfo[]> = ref([
@@ -105,47 +112,54 @@ onUnmounted(() => {
     <!-- 第一行:线程统计 + 线程TOP-10 -->
     <div class="grid grid-cols-1 mb-4 gap-4 lg:grid-cols-3">
       <!-- 线程统计 -->
-      <NCard size="small" class="card">
-        <h4 class="card-title">
-          <SvgIcon icon="mdi:chart-line" class="h-4 w-4 text-primary" />
-          线程统计
-        </h4>
-        <div class="space-y-3">
-          <div class="stat-row">
-            <span class="stat-label">总线程数</span>
-            <span class="stat-value">{{ threadStats?.threadCount }}</span>
+      <div ref="statsCardRef" class="self-start">
+        <NCard size="small" class="card">
+          <h4 class="card-title">
+            <SvgIcon icon="mdi:chart-line" class="h-4 w-4 text-primary" />
+            线程统计
+          </h4>
+          <div class="space-y-3">
+            <div class="stat-row">
+              <span class="stat-label">总线程数</span>
+              <span class="stat-value">{{ threadStats?.threadCount }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">活跃线程</span>
+              <span class="stat-value text-success">{{ threadStats?.activeThreadCount }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">等待线程</span>
+              <span class="stat-value text-warning">{{ threadStats?.waitingThreadCount }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">阻塞线程</span>
+              <span class="stat-value text-error">{{ threadStats?.blockedThreadCount }}</span>
+            </div>
+            <NDivider />
+            <div class="stat-row-sm">
+              <span class="stat-label-sm">峰值线程数</span>
+              <span class="stat-value-sm text-info">{{ threadStats?.peakThreadCount }}</span>
+            </div>
+            <div class="stat-row-sm">
+              <span class="stat-label-sm">守护线程数</span>
+              <span class="stat-value-sm text-purple">{{ threadStats?.daemonThreadCount }}</span>
+            </div>
           </div>
-          <div class="stat-row">
-            <span class="stat-label">活跃线程</span>
-            <span class="stat-value text-success">{{ threadStats?.activeThreadCount }}</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">等待线程</span>
-            <span class="stat-value text-warning">{{ threadStats?.waitingThreadCount }}</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">阻塞线程</span>
-            <span class="stat-value text-error">{{ threadStats?.blockedThreadCount }}</span>
-          </div>
-          <NDivider />
-          <div class="stat-row-sm">
-            <span class="stat-label-sm">峰值线程数</span>
-            <span class="stat-value-sm text-info">{{ threadStats?.peakThreadCount }}</span>
-          </div>
-          <div class="stat-row-sm">
-            <span class="stat-label-sm">守护线程数</span>
-            <span class="stat-value-sm text-purple">{{ threadStats?.daemonThreadCount }}</span>
-          </div>
-        </div>
-      </NCard>
+        </NCard>
+      </div>
 
       <!-- 线程TOP-10 -->
-      <NCard size="small" class="card lg:col-span-2">
-        <h4 class="card-title">
+      <NCard
+        size="small"
+        class="card flex flex-col lg:col-span-2"
+        :style="{ height: isLg && statsHeight > 0 ? `${statsHeight}px` : 'auto' }"
+        :content-style="{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
+      >
+        <h4 class="card-title shrink-0">
           <SvgIcon icon="mdi:chart-bar" class="h-4 w-4 text-primary" />
           线程 CPU 占用 TOP-10
         </h4>
-        <div class="space-y-2">
+        <div class="min-h-0 flex-1 overflow-y-auto pr-2 space-y-2">
           <div v-for="(thread, index) in threadTopList" :key="index" class="thread-item">
             <div class="mb-1.5 flex items-center justify-between">
               <span class="thread-name">{{ thread.id }}. {{ thread.name }}</span>
