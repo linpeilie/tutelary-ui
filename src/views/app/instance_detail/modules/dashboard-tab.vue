@@ -353,7 +353,7 @@ onUnmounted(() => {
           <SvgIcon icon="mdi:delete-sweep" class="h-4 w-4 text-orange" />
           垃圾回收统计
         </h4>
-        <div class="grid grid-cols-1 gap-4">
+        <div class="grid grid-cols-2 gap-4">
           <!-- Young GC -->
           <div class="gc-card">
             <div class="gc-header">
