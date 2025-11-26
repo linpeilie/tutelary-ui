@@ -248,7 +248,7 @@ onUnmounted(() => {
     </div>
 
     <!-- 第二行:堆内存 + 非堆内存 -->
-    <div class="grid grid-cols-1 mb-4 gap-4 lg:grid-cols-2">
+    <div class="grid grid-cols-1 mb-4 gap-4 lg:grid-cols-3">
       <!-- 堆内存 -->
       <NCard size="small" class="card">
         <h4 class="card-title">
@@ -346,101 +346,58 @@ onUnmounted(() => {
           </div>
         </div>
       </NCard>
+
+      <!-- 第三行:垃圾回收统计 -->
+      <NCard size="small" class="card">
+        <h4 class="card-title">
+          <SvgIcon icon="mdi:delete-sweep" class="h-4 w-4 text-orange" />
+          垃圾回收统计
+        </h4>
+        <div class="grid grid-cols-1 gap-4">
+          <!-- Young GC -->
+          <div class="gc-card">
+            <div class="gc-header">
+              <span class="gc-type">Young GC</span>
+            </div>
+            <div class="gc-body">
+              <div class="gc-count">
+                <span class="gc-number">{{ gcStats.youngGC.count.toLocaleString() }}</span>
+                <span class="gc-unit">次</span>
+              </div>
+              <div class="gc-stat">
+                <span class="gc-stat-label">总耗时</span>
+                <span class="gc-stat-value">{{ gcStats.youngGC.totalTime }}</span>
+              </div>
+              <div class="gc-stat">
+                <span class="gc-stat-label">平均耗时</span>
+                <span class="gc-stat-value">{{ gcStats.youngGC.avgTime }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Old GC -->
+          <div class="gc-card">
+            <div class="gc-header">
+              <span class="gc-type">Old GC</span>
+            </div>
+            <div class="gc-body">
+              <div class="gc-count">
+                <span class="gc-number">{{ gcStats.oldGC.count }}</span>
+                <span class="gc-unit">次</span>
+              </div>
+              <div class="gc-stat">
+                <span class="gc-stat-label">总耗时</span>
+                <span class="gc-stat-value">{{ gcStats.oldGC.totalTime }}</span>
+              </div>
+              <div class="gc-stat">
+                <span class="gc-stat-label">平均耗时</span>
+                <span class="gc-stat-value">{{ gcStats.oldGC.avgTime }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </NCard>
     </div>
-
-    <!-- 第三行:垃圾回收统计 -->
-    <NCard size="small" class="card">
-      <h4 class="card-title">
-        <SvgIcon icon="mdi:delete-sweep" class="h-4 w-4 text-orange" />
-        垃圾回收统计
-      </h4>
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-4 md:grid-cols-2">
-        <!-- Young GC -->
-        <div class="gc-card">
-          <div class="gc-header">
-            <span class="gc-type">Young GC</span>
-          </div>
-          <div class="gc-body">
-            <div class="gc-count">
-              <span class="gc-number">{{ gcStats.youngGC.count.toLocaleString() }}</span>
-              <span class="gc-unit">次</span>
-            </div>
-            <div class="gc-stat">
-              <span class="gc-stat-label">总耗时</span>
-              <span class="gc-stat-value">{{ gcStats.youngGC.totalTime }}</span>
-            </div>
-            <div class="gc-stat">
-              <span class="gc-stat-label">平均耗时</span>
-              <span class="gc-stat-value">{{ gcStats.youngGC.avgTime }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Old GC -->
-        <div class="gc-card">
-          <div class="gc-header">
-            <span class="gc-type">Old GC</span>
-          </div>
-          <div class="gc-body">
-            <div class="gc-count">
-              <span class="gc-number">{{ gcStats.oldGC.count }}</span>
-              <span class="gc-unit">次</span>
-            </div>
-            <div class="gc-stat">
-              <span class="gc-stat-label">总耗时</span>
-              <span class="gc-stat-value">{{ gcStats.oldGC.totalTime }}</span>
-            </div>
-            <div class="gc-stat">
-              <span class="gc-stat-label">平均耗时</span>
-              <span class="gc-stat-value">{{ gcStats.oldGC.avgTime }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Full GC -->
-        <div class="gc-card">
-          <div class="gc-header">
-            <span class="gc-type">Full GC</span>
-          </div>
-          <div class="gc-body">
-            <div class="gc-count">
-              <span class="gc-number">{{ gcStats.fullGC.count }}</span>
-              <span class="gc-unit">次</span>
-            </div>
-            <div class="gc-stat">
-              <span class="gc-stat-label">总耗时</span>
-              <span class="gc-stat-value">{{ gcStats.fullGC.totalTime }}</span>
-            </div>
-            <div class="gc-stat">
-              <span class="gc-stat-label">平均耗时</span>
-              <span class="gc-stat-value">{{ gcStats.fullGC.avgTime }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- GC汇总 -->
-        <div class="gc-card gc-summary">
-          <div class="gc-header">
-            <span class="gc-type">GC 汇总</span>
-            <SvgIcon icon="mdi:trending-down" class="h-4 w-4 text-success" />
-          </div>
-          <div class="gc-body">
-            <div class="gc-count">
-              <span class="gc-number">{{ gcStats.total.count.toLocaleString() }}</span>
-              <span class="gc-unit">次</span>
-            </div>
-            <div class="gc-stat">
-              <span class="gc-stat-label">总耗时</span>
-              <span class="gc-stat-value">{{ gcStats.total.totalTime }}</span>
-            </div>
-            <div class="gc-stat">
-              <span class="gc-stat-label">占比</span>
-              <span class="gc-stat-value text-success">{{ gcStats.total.percent }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </NCard>
   </div>
 </template>
 
@@ -603,7 +560,6 @@ onUnmounted(() => {
 
 .gc-card {
   padding: 16px;
-  background-color: var(--n-color-target);
   border-radius: 8px;
   border: 1px solid var(--n-border-color);
 }
