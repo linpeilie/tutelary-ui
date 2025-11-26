@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
 import type { Ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { breakpointsTailwind, useBreakpoints, useElementSize } from '@vueuse/core';
+import { divide } from 'lodash-es';
 import { fetchDashboardCommand } from '@/service/api/instance';
 import eventBus from '@/utils/eventbus';
+import { formatMemory } from '@/utils/common';
+import { div, mul } from '@/utils/math';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { Overview } from '@/proto/command/result/Overview';
 import type { ThreadStatistic } from '@/proto/command/domain/ThreadStatistic';
 import type { BaseThreadInfo } from '@/proto/command/domain/BaseThreadInfo';
+import type { JvmMemory } from '@/proto/command/domain/JvmMemory';
 
 interface Props {
   instanceId: string;
@@ -32,28 +36,32 @@ const threadStats: Ref<ThreadStatistic | undefined> = ref({
   blockedThreadCount: 0
 });
 
-const threadTopList: Ref<BaseThreadInfo[]> = ref([
-  { name: 'http-nio-8080-exec-1', cpu: 15.2, state: 'RUNNABLE' },
-  { name: 'http-nio-8080-exec-2', cpu: 12.8, state: 'RUNNABLE' },
-  { name: 'reactor-http-nio-3', cpu: 9.5, state: 'WAITING' },
-  { name: 'mysql-connector-1', cpu: 7.3, state: 'TIMED_WAITING' },
-  { name: 'redis-client-1', cpu: 6.1, state: 'RUNNABLE' }
-]);
+const threadTopList: Ref<BaseThreadInfo[]> = ref([]);
 
 // 堆内存
 const heapMemory = ref({
-  used: 2.4,
-  max: 4.0,
-  percent: 60,
-  trend: -2.3
+  used: '0',
+  usedBits: -1,
+  committed: '0',
+  eden: '0',
+  survivor: '0',
+  old: '0',
+  max: '0',
+  percent: 0,
+  trend: 0
 });
 
 // 非堆内存
 const nonHeapMemory = ref({
-  used: 512,
-  max: 1024,
-  percent: 50,
-  trend: 1.2
+  used: '0',
+  usedBits: -1,
+  committed: '0',
+  codeCache: '0',
+  metaspace: '0',
+  compressedClassSpace: '0',
+  max: '0',
+  percent: 0,
+  trend: 0
 });
 
 // GC统计
@@ -63,17 +71,6 @@ const gcStats = ref({
   fullGC: { count: 3, totalTime: '1.2s', avgTime: '400ms', status: 'normal' },
   total: { count: 1271, totalTime: '16.5s', percent: '0.09%' }
 });
-
-function getStatusTagClass(status: string): string {
-  switch (status) {
-    case 'normal':
-      return 'bg-green-500/10 text-green-500';
-    case 'attention':
-      return 'bg-yellow-500/10 text-yellow-500';
-    default:
-      return 'bg-blue-500/10 text-blue-500';
-  }
-}
 
 function getStateTagClass(state: string): string {
   return state === 'RUNNABLE' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500';
@@ -92,14 +89,88 @@ function createDashboardCommand() {
 onMounted(() => {
   updateInterval = setInterval(() => {
     createDashboardCommand();
-  }, 5000);
+  }, 2000);
   eventBus.on('command:overview', (data: CommandExecuteResponse<Overview>) => {
     console.log('Received dashboard update:', data);
     const overview = data.data as Overview;
     threadStats.value = overview.threadStatistic;
     threadTopList.value = overview.threads;
+    parseHeapMemory(overview.heapMemory);
+    parseNonHeapMemory(overview.nonHeapMemory);
   });
 });
+
+function parseHeapMemory(heapMemories: JvmMemory[]) {
+  // 更新堆内存数据
+  let used = 0;
+  let max = 0;
+  let committed = 0;
+  let eden = 0;
+  let survivor = 0;
+  let old = 0;
+
+  for (const memory of heapMemories) {
+    used += memory.used;
+    max += memory.max;
+    committed += memory.committed;
+    if (memory.name === 'Eden') {
+      eden += memory.used;
+    } else if (memory.name === 'Survivor') {
+      survivor += memory.used;
+    } else if (memory.name === 'Old') {
+      old += memory.used;
+    }
+  }
+
+  heapMemory.value.used = formatMemory(used);
+  heapMemory.value.max = formatMemory(max);
+  heapMemory.value.committed = formatMemory(committed);
+  heapMemory.value.eden = formatMemory(eden);
+  heapMemory.value.survivor = formatMemory(survivor);
+  heapMemory.value.old = formatMemory(old);
+  heapMemory.value.percent = div(mul(used, 100), max);
+  // trend
+  if (heapMemory.value.usedBits !== -1) {
+    heapMemory.value.trend = divide(used - heapMemory.value.usedBits, heapMemory.value.usedBits) * 100;
+  }
+  heapMemory.value.usedBits = used;
+}
+
+function parseNonHeapMemory(nonHeapMemories: JvmMemory[]) {
+  // 更新堆内存数据
+  let used = 0;
+  let max = 0;
+  let committed = 0;
+  let codeCache = 0;
+  let metaspace = 0;
+  let compressedClassSpace = 0;
+
+  for (const memory of nonHeapMemories) {
+    used += memory.used;
+    max += memory.max;
+    committed += memory.committed;
+    if (memory.name === 'Code Cache') {
+      codeCache += memory.used;
+    } else if (memory.name === 'Metaspace') {
+      metaspace += memory.used;
+    } else if (memory.name === 'Compressed Class Space') {
+      compressedClassSpace += memory.used;
+    }
+  }
+
+  nonHeapMemory.value.used = formatMemory(used);
+  nonHeapMemory.value.max = formatMemory(max);
+  nonHeapMemory.value.committed = formatMemory(committed);
+  nonHeapMemory.value.percent = div(mul(used, 100), max);
+  nonHeapMemory.value.codeCache = formatMemory(codeCache);
+  nonHeapMemory.value.metaspace = formatMemory(metaspace);
+  nonHeapMemory.value.compressedClassSpace = formatMemory(compressedClassSpace);
+  // trend
+  if (nonHeapMemory.value.usedBits !== -1) {
+    nonHeapMemory.value.trend = divide(used - nonHeapMemory.value.usedBits, nonHeapMemory.value.usedBits) * 100;
+  }
+  nonHeapMemory.value.usedBits = used;
+}
 
 onUnmounted(() => {
   if (updateInterval) clearInterval(updateInterval);
@@ -188,8 +259,8 @@ onUnmounted(() => {
           <div class="mb-2 flex items-end justify-between">
             <span class="memory-label">已使用</span>
             <div class="text-right">
-              <span class="memory-value text-success">{{ heapMemory.used.toFixed(1) }} GB</span>
-              <span class="memory-max">/ {{ heapMemory.max.toFixed(1) }} GB</span>
+              <span class="memory-value text-success">{{ heapMemory.used }}</span>
+              <span class="memory-max">/ {{ heapMemory.max }} GB</span>
             </div>
           </div>
           <div class="memory-progress">
@@ -210,19 +281,19 @@ onUnmounted(() => {
         <div class="grid grid-cols-2 gap-3 pt-3">
           <div class="info-item">
             <div class="info-label">已提交</div>
-            <div class="info-value">3.2 GB</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">最大可用</div>
-            <div class="info-value">4.0 GB</div>
+            <div class="info-value">{{ heapMemory.committed }}</div>
           </div>
           <div class="info-item">
             <div class="info-label">Eden区</div>
-            <div class="info-value text-info">1.2 GB</div>
+            <div class="info-value">{{ heapMemory.eden }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Survivor区</div>
+            <div class="info-value text-info">{{ heapMemory.survivor }}</div>
           </div>
           <div class="info-item">
             <div class="info-label">Old区</div>
-            <div class="info-value text-purple">1.0 GB</div>
+            <div class="info-value text-purple">{{ heapMemory.old }}</div>
           </div>
         </div>
       </NCard>
@@ -237,8 +308,8 @@ onUnmounted(() => {
           <div class="mb-2 flex items-end justify-between">
             <span class="memory-label">已使用</span>
             <div class="text-right">
-              <span class="memory-value text-purple">{{ nonHeapMemory.used }} MB</span>
-              <span class="memory-max">/ {{ (nonHeapMemory.max / 1024).toFixed(1) }} GB</span>
+              <span class="memory-value text-purple">{{ nonHeapMemory.used }}</span>
+              <span class="memory-max">/ {{ nonHeapMemory.max }}</span>
             </div>
           </div>
           <div class="memory-progress">
@@ -259,19 +330,19 @@ onUnmounted(() => {
         <div class="grid grid-cols-2 gap-3 pt-3">
           <div class="info-item">
             <div class="info-label">已提交</div>
-            <div class="info-value">768 MB</div>
+            <div class="info-value">{{ nonHeapMemory.used }}</div>
           </div>
           <div class="info-item">
-            <div class="info-label">最大可用</div>
-            <div class="info-value">1.0 GB</div>
+            <div class="info-label">Code Cache</div>
+            <div class="info-value">{{ nonHeapMemory.codeCache }}</div>
           </div>
           <div class="info-item">
             <div class="info-label">Metaspace</div>
-            <div class="info-value text-info">256 MB</div>
+            <div class="info-value text-info">{{ nonHeapMemory.metaspace }}</div>
           </div>
           <div class="info-item">
-            <div class="info-label">CodeCache</div>
-            <div class="info-value text-success">128 MB</div>
+            <div class="info-label">Compressed Class Space</div>
+            <div class="info-value text-success">{{ nonHeapMemory.compressedClassSpace }}</div>
           </div>
         </div>
       </NCard>
@@ -288,7 +359,6 @@ onUnmounted(() => {
         <div class="gc-card">
           <div class="gc-header">
             <span class="gc-type">Young GC</span>
-            <span class="gc-status" :class="getStatusTagClass(gcStats.youngGC.status)">正常</span>
           </div>
           <div class="gc-body">
             <div class="gc-count">
@@ -310,7 +380,6 @@ onUnmounted(() => {
         <div class="gc-card">
           <div class="gc-header">
             <span class="gc-type">Old GC</span>
-            <span class="gc-status" :class="getStatusTagClass(gcStats.oldGC.status)">关注</span>
           </div>
           <div class="gc-body">
             <div class="gc-count">
@@ -332,7 +401,6 @@ onUnmounted(() => {
         <div class="gc-card">
           <div class="gc-header">
             <span class="gc-type">Full GC</span>
-            <span class="gc-status" :class="getStatusTagClass(gcStats.fullGC.status)">正常</span>
           </div>
           <div class="gc-body">
             <div class="gc-count">
