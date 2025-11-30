@@ -35,6 +35,8 @@ const props = defineProps<Props>();
 const breakpoints = useBreakpoints(breakpointsTailwind);
 const isLg = breakpoints.greater('lg');
 
+const loaded = ref(false);
+
 const statsCardRef = ref<HTMLElement | null>(null);
 const { height: statsHeight } = useElementSize(statsCardRef);
 
@@ -123,6 +125,9 @@ onMounted(() => {
     parseHeapMemory(overview.heapMemory);
     parseNonHeapMemory(overview.nonHeapMemory);
     garbageCollectors.value = overview.garbageCollectors;
+    if (!loaded.value) {
+      loaded.value = true;
+    }
   });
 });
 
@@ -215,7 +220,9 @@ onUnmounted(() => {
             <SvgIcon icon="mdi:chart-line" class="h-4 w-4 text-primary" />
             {{ $t('page.instance.threadStatistics') }}
           </h4>
+          <n-skeleton v-if="!loaded" text :repeat="7" size="small" round/>
           <TDescriptions
+            v-else
             :items="threadStatsDescriptions"
             :val="threadStats"
             content-class="description-value"
@@ -262,7 +269,8 @@ onUnmounted(() => {
           <SvgIcon icon="mdi:database" class="h-4 w-4 text-success" />
           {{ $t('page.instance.heapMemory') }}
         </h4>
-        <div class="mb-4">
+        <n-skeleton v-if="!loaded" text :repeat="7" size="small" round/>
+        <div class="mb-4" v-else>
           <div class="mb-2 flex items-end justify-between">
             <span class="memory-label">{{ $t('page.instance.used') }}</span>
             <div class="text-right">
@@ -300,7 +308,8 @@ onUnmounted(() => {
           <SvgIcon icon="mdi:harddisk" class="h-4 w-4 text-purple" />
           {{ $t('page.instance.nonHeapMemory') }}
         </h4>
-        <div class="mb-4">
+        <n-skeleton v-if="!loaded" text :repeat="7" size="small" round/>
+        <div class="mb-4" v-else>
           <div class="mb-2 flex items-end justify-between">
             <span class="memory-label">{{ $t('page.instance.used') }}</span>
             <div class="text-right">
@@ -338,7 +347,8 @@ onUnmounted(() => {
           <SvgIcon icon="mdi:delete-sweep" class="h-4 w-4 text-orange" />
           {{ $t('page.instance.garbageCollectionStatistics') }}
         </h4>
-        <div class="grid grid-cols-2 gap-4">
+        <n-skeleton v-if="!loaded" text :repeat="7" size="small" round/>
+        <div class="grid grid-cols-2 gap-4" v-else>
           <!-- Young GC -->
           <div v-for="gc of garbageCollectors" :key="gc.name" class="gc-card">
             <div class="gc-header">
