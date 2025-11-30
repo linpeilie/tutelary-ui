@@ -48,7 +48,8 @@ const local: App.I18n.Schema = {
       yes: 'Yes',
       no: 'No'
     },
-    viewDetail: 'View Detail'
+    viewDetail: 'View Detail',
+    times: 'Times'
   },
   request: {
     logout: 'Logout user after request failed',
@@ -332,6 +333,7 @@ const local: App.I18n.Schema = {
       availableProcessors: 'Available Processors',
       memorySize: 'Memory Size',
       committed: 'Committed',
+      used: 'Used',
       threadTotalCount: 'Total Thread Count',
       peakThreadCount: 'Peak Thread Count',
       daemonThreadCount: 'Daemon Thread Count',
@@ -339,6 +341,13 @@ const local: App.I18n.Schema = {
       activeThreadCount: 'Active Thread Count',
       waitingThreadCount: 'Waiting Thread Count',
       blockedThreadCount: 'Blocked Thread Count',
+      totalDuration: 'Total Duration',
+      averageDuration: 'Average Duration',
+      garbageCollectionStatistics: 'Garbage Collection Statistics',
+      heapMemory: 'Heap Memory',
+      nonHeapMemory: 'NonHeap Memory',
+      top10ThreadsbyCpuUsage: 'Top 10 Threads by CPU Usage',
+      threadStatistics: 'Thread statistics'
     }
   },
   form: {

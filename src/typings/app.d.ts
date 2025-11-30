@@ -355,6 +355,7 @@ declare namespace App {
           no: string;
         };
         viewDetail: string;
+        times: string;
       };
       request: {
         logout: string;
@@ -568,6 +569,7 @@ declare namespace App {
           availableProcessors: string;
           memorySize: string;
           committed: string;
+          used: string;
           threadTotalCount: string;
           peakThreadCount: string;
           daemonThreadCount: string;
@@ -575,6 +577,13 @@ declare namespace App {
           activeThreadCount: string;
           waitingThreadCount: string;
           blockedThreadCount: string;
+          totalDuration: string;
+          averageDuration: string;
+          garbageCollectionStatistics: string;
+          heapMemory: string;
+          nonHeapMemory: string;
+          top10ThreadsbyCpuUsage: string;
+          threadStatistics: string;
         };
       };
       form: {

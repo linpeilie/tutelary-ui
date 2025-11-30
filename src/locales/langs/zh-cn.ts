@@ -48,7 +48,8 @@ const local: App.I18n.Schema = {
       yes: '是',
       no: '否'
     },
-    viewDetail: '查看详情'
+    viewDetail: '查看详情',
+    times: '次'
   },
   request: {
     logout: '请求失败后登出用户',
@@ -329,13 +330,21 @@ const local: App.I18n.Schema = {
       availableProcessors: '可用核心数',
       memorySize: '内存大小',
       committed: '已提交',
+      used: '已使用',
       threadTotalCount: '总线程数',
       peakThreadCount: '峰值线程数',
       daemonThreadCount: '守护线程数',
       totalStartedThreadCount: '启动的所有线程数',
       activeThreadCount: '活跃线程数',
       waitingThreadCount: '等待线程数',
-      blockedThreadCount: '阻塞线程数'
+      blockedThreadCount: '阻塞线程数',
+      totalDuration: '总耗时',
+      averageDuration: '平均耗时',
+      garbageCollectionStatistics: '垃圾回收统计',
+      heapMemory: '堆内存',
+      nonHeapMemory: '非堆内存',
+      top10ThreadsbyCpuUsage: '线程 CPU 占用 TOP-10',
+      threadStatistics: '线程统计'
     }
   },
   form: {

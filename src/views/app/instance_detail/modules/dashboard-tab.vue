@@ -14,6 +14,7 @@ import type { BaseThreadInfo } from '@/proto/command/domain/BaseThreadInfo';
 import type { JvmMemory } from '@/proto/command/domain/JvmMemory';
 import { $t } from '@/locales';
 import type { TDescriptionItemProps } from '@/components/advanced/t-descriptions.vue';
+import type { GarbageCollector } from '@/proto/command/domain/GarbageCollector';
 
 interface Props {
   instanceId: string;
@@ -94,6 +95,8 @@ const gcStats = ref({
   total: { count: 1271, totalTime: '16.5s', percent: '0.09%' }
 });
 
+const garbageCollectors: Ref<Array<GarbageCollector>> = ref([]);
+
 function getStateTagClass(state: string): string {
   return state === 'RUNNABLE' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500';
 }
@@ -119,6 +122,7 @@ onMounted(() => {
     threadTopList.value = overview.threads;
     parseHeapMemory(overview.heapMemory);
     parseNonHeapMemory(overview.nonHeapMemory);
+    garbageCollectors.value = overview.garbageCollectors;
   });
 });
 
@@ -209,7 +213,7 @@ onUnmounted(() => {
         <NCard size="small" class="card">
           <h4 class="card-title">
             <SvgIcon icon="mdi:chart-line" class="h-4 w-4 text-primary" />
-            线程统计
+            {{ $t('page.instance.threadStatistics') }}
           </h4>
           <TDescriptions
             :items="threadStatsDescriptions"
@@ -231,7 +235,7 @@ onUnmounted(() => {
       >
         <h4 class="card-title shrink-0">
           <SvgIcon icon="mdi:chart-bar" class="h-4 w-4 text-primary" />
-          线程 CPU 占用 TOP-10
+          {{ $t('page.instance.top10ThreadsbyCpuUsage') }}
         </h4>
         <div class="min-h-0 flex-1 overflow-y-auto pr-2 space-y-2">
           <div v-for="(thread, index) in threadTopList" :key="index" class="thread-item">
@@ -256,11 +260,11 @@ onUnmounted(() => {
       <NCard size="small" class="card">
         <h4 class="card-title">
           <SvgIcon icon="mdi:database" class="h-4 w-4 text-success" />
-          堆内存
+          {{ $t('page.instance.heapMemory') }}
         </h4>
         <div class="mb-4">
           <div class="mb-2 flex items-end justify-between">
-            <span class="memory-label">已使用</span>
+            <span class="memory-label">{{ $t('page.instance.used') }}</span>
             <div class="text-right">
               <span class="memory-value text-success">{{ heapMemory.used }}</span>
               <span class="memory-max">/ {{ heapMemory.max }} GB</span>
@@ -286,7 +290,7 @@ onUnmounted(() => {
           :items="heapMemoryDescriptions"
           :val="heapMemory"
           :column="2"
-          contentClass="description-value"
+          content-class="description-value"
         />
       </NCard>
 
@@ -294,11 +298,11 @@ onUnmounted(() => {
       <NCard size="small" class="card">
         <h4 class="card-title">
           <SvgIcon icon="mdi:harddisk" class="h-4 w-4 text-purple" />
-          非堆内存
+          {{ $t('page.instance.nonHeapMemory') }}
         </h4>
         <div class="mb-4">
           <div class="mb-2 flex items-end justify-between">
-            <span class="memory-label">已使用</span>
+            <span class="memory-label">{{ $t('page.instance.used') }}</span>
             <div class="text-right">
               <span class="memory-value text-purple">{{ nonHeapMemory.used }}</span>
               <span class="memory-max">/ {{ nonHeapMemory.max }}</span>
@@ -324,7 +328,7 @@ onUnmounted(() => {
           :items="nonHeapMemoryDescriptions"
           :val="nonHeapMemory"
           :column="2"
-          contentClass="description-value"
+          content-class="description-value"
         />
       </NCard>
 
@@ -332,47 +336,31 @@ onUnmounted(() => {
       <NCard size="small" class="card">
         <h4 class="card-title">
           <SvgIcon icon="mdi:delete-sweep" class="h-4 w-4 text-orange" />
-          垃圾回收统计
+          {{ $t('page.instance.garbageCollectionStatistics') }}
         </h4>
         <div class="grid grid-cols-2 gap-4">
           <!-- Young GC -->
-          <div class="gc-card">
+          <div v-for="gc of garbageCollectors" :key="gc.name" class="gc-card">
             <div class="gc-header">
-              <span class="gc-type">Young GC</span>
+              <span class="gc-type">{{ gc.name }}</span>
             </div>
             <div class="gc-body">
               <div class="gc-count">
-                <span class="gc-number">{{ gcStats.youngGC.count.toLocaleString() }}</span>
-                <span class="gc-unit">次</span>
+                <span class="gc-number">{{ gc.collectionCount }}</span>
+                <span class="gc-unit">{{ $t('common.times') }}</span>
+              </div>
+              <NSpace>
+                <NTag v-for="mpn of gc.memoryPoolNames" :key="mpn" :bordered="false" size="small" type="success">
+                  {{ mpn }}
+                </NTag>
+              </NSpace>
+              <div class="gc-stat">
+                <span class="gc-stat-label">{{ $t('page.instance.totalDuration') }}</span>
+                <span class="gc-stat-value">{{ gc.collectionTime }} ms</span>
               </div>
               <div class="gc-stat">
-                <span class="gc-stat-label">总耗时</span>
-                <span class="gc-stat-value">{{ gcStats.youngGC.totalTime }}</span>
-              </div>
-              <div class="gc-stat">
-                <span class="gc-stat-label">平均耗时</span>
-                <span class="gc-stat-value">{{ gcStats.youngGC.avgTime }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Old GC -->
-          <div class="gc-card">
-            <div class="gc-header">
-              <span class="gc-type">Old GC</span>
-            </div>
-            <div class="gc-body">
-              <div class="gc-count">
-                <span class="gc-number">{{ gcStats.oldGC.count }}</span>
-                <span class="gc-unit">次</span>
-              </div>
-              <div class="gc-stat">
-                <span class="gc-stat-label">总耗时</span>
-                <span class="gc-stat-value">{{ gcStats.oldGC.totalTime }}</span>
-              </div>
-              <div class="gc-stat">
-                <span class="gc-stat-label">平均耗时</span>
-                <span class="gc-stat-value">{{ gcStats.oldGC.avgTime }}</span>
+                <span class="gc-stat-label">{{ $t('page.instance.averageDuration') }}</span>
+                <span class="gc-stat-value">{{ div(gc.collectionTime, gc.collectionCount) }} ms</span>
               </div>
             </div>
           </div>
