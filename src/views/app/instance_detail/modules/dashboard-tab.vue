@@ -497,7 +497,7 @@ onUnmounted(() => {
 .gc-card {
   padding: 16px;
   border-radius: 8px;
-  border: 1px solid var(--n-border-color);
+  background-color: var(--n-color-embedded);
 }
 
 .gc-summary {
