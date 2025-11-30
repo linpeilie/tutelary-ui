@@ -23,7 +23,7 @@ const instanceDescriptions: Array<TDescriptionItemProps<Api.Instance.InstanceInf
 </script>
 
 <template>
-  <TDescriptions label-placement="top" :items="instanceDescriptions" :val="props.instance" />
+  <TDescriptions label-placement="left" :items="instanceDescriptions" :val="props.instance" />
 </template>
 
 <style scoped></style>

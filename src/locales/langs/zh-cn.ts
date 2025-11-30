@@ -327,7 +327,15 @@ const local: App.I18n.Schema = {
       osName: '系统名称',
       arch: 'Arch',
       availableProcessors: '可用核心数',
-      memorySize: '内存大小'
+      memorySize: '内存大小',
+      committed: '已提交',
+      threadTotalCount: '总线程数',
+      peakThreadCount: '峰值线程数',
+      daemonThreadCount: '守护线程数',
+      totalStartedThreadCount: '启动的所有线程数',
+      activeThreadCount: '活跃线程数',
+      waitingThreadCount: '等待线程数',
+      blockedThreadCount: '阻塞线程数'
     }
   },
   form: {

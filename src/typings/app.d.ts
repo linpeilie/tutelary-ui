@@ -567,6 +567,14 @@ declare namespace App {
           arch: string;
           availableProcessors: string;
           memorySize: string;
+          committed: string;
+          threadTotalCount: string;
+          peakThreadCount: string;
+          daemonThreadCount: string;
+          totalStartedThreadCount: string;
+          activeThreadCount: string;
+          waitingThreadCount: string;
+          blockedThreadCount: string;
         };
       };
       form: {

@@ -330,7 +330,15 @@ const local: App.I18n.Schema = {
       osName: 'OS Name',
       arch: 'Arch',
       availableProcessors: 'Available Processors',
-      memorySize: 'Memory Size'
+      memorySize: 'Memory Size',
+      committed: 'Committed',
+      threadTotalCount: 'Total Thread Count',
+      peakThreadCount: 'Peak Thread Count',
+      daemonThreadCount: 'Daemon Thread Count',
+      totalStartedThreadCount: 'Total Started Thread Count',
+      activeThreadCount: 'Active Thread Count',
+      waitingThreadCount: 'Waiting Thread Count',
+      blockedThreadCount: 'Blocked Thread Count',
     }
   },
   form: {

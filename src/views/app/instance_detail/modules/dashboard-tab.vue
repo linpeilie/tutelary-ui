@@ -12,9 +12,21 @@ import type { Overview } from '@/proto/command/result/Overview';
 import type { ThreadStatistic } from '@/proto/command/domain/ThreadStatistic';
 import type { BaseThreadInfo } from '@/proto/command/domain/BaseThreadInfo';
 import type { JvmMemory } from '@/proto/command/domain/JvmMemory';
+import { $t } from '@/locales';
+import type { TDescriptionItemProps } from '@/components/advanced/t-descriptions.vue';
 
 interface Props {
   instanceId: string;
+}
+
+interface MemoryIntf {
+  used: string;
+  usedBits: number;
+  committed: string;
+  max: string;
+  percent: number;
+  trend: number;
+  memories: JvmMemory[];
 }
 
 const props = defineProps<Props>();
@@ -36,33 +48,43 @@ const threadStats: Ref<ThreadStatistic | undefined> = ref({
   blockedThreadCount: 0
 });
 
+const threadStatsDescriptions: Ref<Array<TDescriptionItemProps<ThreadStatistic>>> = ref([
+  { label: $t('page.instance.threadTotalCount'), value: val => val.threadCount },
+  { label: $t('page.instance.activeThreadCount'), value: val => val.activeThreadCount },
+  { label: $t('page.instance.waitingThreadCount'), value: val => val.waitingThreadCount },
+  { label: $t('page.instance.blockedThreadCount'), value: val => val.blockedThreadCount },
+  { label: $t('page.instance.peakThreadCount'), value: val => val.peakThreadCount },
+  { label: $t('page.instance.daemonThreadCount'), value: val => val.daemonThreadCount },
+  { label: $t('page.instance.totalStartedThreadCount'), value: val => val.totalStartedThreadCount }
+]);
+
 const threadTopList: Ref<BaseThreadInfo[]> = ref([]);
 
 // 堆内存
-const heapMemory = ref({
+const heapMemory: Ref<MemoryIntf> = ref({
   used: '0',
   usedBits: -1,
   committed: '0',
-  eden: '0',
-  survivor: '0',
-  old: '0',
   max: '0',
   percent: 0,
-  trend: 0
+  trend: 0,
+  memories: []
 });
 
+const heapMemoryDescriptions: Ref<Array<TDescriptionItemProps<MemoryIntf>>> = ref([]);
+
 // 非堆内存
-const nonHeapMemory = ref({
+const nonHeapMemory: Ref<MemoryIntf> = ref({
   used: '0',
   usedBits: -1,
   committed: '0',
-  codeCache: '0',
-  metaspace: '0',
-  compressedClassSpace: '0',
   max: '0',
   percent: 0,
-  trend: 0
+  trend: 0,
+  memories: []
 });
+
+const nonHeapMemoryDescriptions: Ref<Array<TDescriptionItemProps<MemoryIntf>>> = ref([]);
 
 // GC统计
 const gcStats = ref({
@@ -105,35 +127,35 @@ function parseHeapMemory(heapMemories: JvmMemory[]) {
   let used = 0;
   let max = 0;
   let committed = 0;
-  let eden = 0;
-  let survivor = 0;
-  let old = 0;
 
   for (const memory of heapMemories) {
     used += memory.used;
     max += memory.max;
     committed += memory.committed;
-    if (memory.name === 'Eden') {
-      eden += memory.used;
-    } else if (memory.name === 'Survivor') {
-      survivor += memory.used;
-    } else if (memory.name === 'Old') {
-      old += memory.used;
-    }
   }
 
   heapMemory.value.used = formatMemory(used);
   heapMemory.value.max = formatMemory(max);
   heapMemory.value.committed = formatMemory(committed);
-  heapMemory.value.eden = formatMemory(eden);
-  heapMemory.value.survivor = formatMemory(survivor);
-  heapMemory.value.old = formatMemory(old);
   heapMemory.value.percent = div(mul(used, 100), max);
+  heapMemory.value.memories = heapMemories;
   // trend
   if (heapMemory.value.usedBits !== -1) {
     heapMemory.value.trend = divide(used - heapMemory.value.usedBits, heapMemory.value.usedBits) * 100;
   }
   heapMemory.value.usedBits = used;
+  if (heapMemoryDescriptions.value.length === 0) {
+    heapMemoryDescriptions.value.push({
+      label: $t('page.instance.committed'),
+      value: val => val.committed
+    });
+    for (const memory of heapMemories) {
+      heapMemoryDescriptions.value.push({
+        label: memory.name,
+        value: val => formatMemory(val.memories.find(m => m.name === memory.name)?.used)
+      });
+    }
+  }
 }
 
 function parseNonHeapMemory(nonHeapMemories: JvmMemory[]) {
@@ -141,35 +163,35 @@ function parseNonHeapMemory(nonHeapMemories: JvmMemory[]) {
   let used = 0;
   let max = 0;
   let committed = 0;
-  let codeCache = 0;
-  let metaspace = 0;
-  let compressedClassSpace = 0;
 
   for (const memory of nonHeapMemories) {
     used += memory.used;
     max += memory.max;
     committed += memory.committed;
-    if (memory.name === 'Code Cache') {
-      codeCache += memory.used;
-    } else if (memory.name === 'Metaspace') {
-      metaspace += memory.used;
-    } else if (memory.name === 'Compressed Class Space') {
-      compressedClassSpace += memory.used;
-    }
   }
 
   nonHeapMemory.value.used = formatMemory(used);
   nonHeapMemory.value.max = formatMemory(max);
   nonHeapMemory.value.committed = formatMemory(committed);
   nonHeapMemory.value.percent = div(mul(used, 100), max);
-  nonHeapMemory.value.codeCache = formatMemory(codeCache);
-  nonHeapMemory.value.metaspace = formatMemory(metaspace);
-  nonHeapMemory.value.compressedClassSpace = formatMemory(compressedClassSpace);
   // trend
   if (nonHeapMemory.value.usedBits !== -1) {
     nonHeapMemory.value.trend = divide(used - nonHeapMemory.value.usedBits, nonHeapMemory.value.usedBits) * 100;
   }
   nonHeapMemory.value.usedBits = used;
+  nonHeapMemory.value.memories = nonHeapMemories;
+  if (nonHeapMemoryDescriptions.value.length === 0) {
+    nonHeapMemoryDescriptions.value.push({
+      label: $t('page.instance.committed'),
+      value: val => val.committed
+    });
+    for (const memory of nonHeapMemories) {
+      nonHeapMemoryDescriptions.value.push({
+        label: memory.name,
+        value: val => formatMemory(val.memories.find(m => m.name === memory.name)?.used)
+      });
+    }
+  }
 }
 
 onUnmounted(() => {
@@ -189,33 +211,14 @@ onUnmounted(() => {
             <SvgIcon icon="mdi:chart-line" class="h-4 w-4 text-primary" />
             线程统计
           </h4>
-          <div class="space-y-3">
-            <div class="stat-row">
-              <span class="stat-label">总线程数</span>
-              <span class="stat-value">{{ threadStats?.threadCount }}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">活跃线程</span>
-              <span class="stat-value text-success">{{ threadStats?.activeThreadCount }}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">等待线程</span>
-              <span class="stat-value text-warning">{{ threadStats?.waitingThreadCount }}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">阻塞线程</span>
-              <span class="stat-value text-error">{{ threadStats?.blockedThreadCount }}</span>
-            </div>
-            <NDivider />
-            <div class="stat-row-sm">
-              <span class="stat-label-sm">峰值线程数</span>
-              <span class="stat-value-sm text-info">{{ threadStats?.peakThreadCount }}</span>
-            </div>
-            <div class="stat-row-sm">
-              <span class="stat-label-sm">守护线程数</span>
-              <span class="stat-value-sm text-purple">{{ threadStats?.daemonThreadCount }}</span>
-            </div>
-          </div>
+          <TDescriptions
+            :items="threadStatsDescriptions"
+            :val="threadStats"
+            content-class="description-value"
+            :columns="1"
+            label-placement="left"
+            label-align="center"
+          />
         </NCard>
       </div>
 
@@ -278,24 +281,13 @@ onUnmounted(() => {
           </div>
         </div>
         <div class="divider-line" />
-        <div class="grid grid-cols-2 gap-3 pt-3">
-          <div class="info-item">
-            <div class="info-label">已提交</div>
-            <div class="info-value">{{ heapMemory.committed }}</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">Eden区</div>
-            <div class="info-value">{{ heapMemory.eden }}</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">Survivor区</div>
-            <div class="info-value text-info">{{ heapMemory.survivor }}</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">Old区</div>
-            <div class="info-value text-purple">{{ heapMemory.old }}</div>
-          </div>
-        </div>
+        <TDescriptions
+          v-if="heapMemoryDescriptions.length > 0"
+          :items="heapMemoryDescriptions"
+          :val="heapMemory"
+          :column="2"
+          contentClass="description-value"
+        />
       </NCard>
 
       <!-- 非堆内存 -->
@@ -327,24 +319,13 @@ onUnmounted(() => {
           </div>
         </div>
         <div class="divider-line" />
-        <div class="grid grid-cols-2 gap-3 pt-3">
-          <div class="info-item">
-            <div class="info-label">已提交</div>
-            <div class="info-value">{{ nonHeapMemory.used }}</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">Code Cache</div>
-            <div class="info-value">{{ nonHeapMemory.codeCache }}</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">Metaspace</div>
-            <div class="info-value text-info">{{ nonHeapMemory.metaspace }}</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">Compressed Class Space</div>
-            <div class="info-value text-success">{{ nonHeapMemory.compressedClassSpace }}</div>
-          </div>
-        </div>
+        <TDescriptions
+          v-if="nonHeapMemoryDescriptions.length > 0"
+          :items="nonHeapMemoryDescriptions"
+          :val="nonHeapMemory"
+          :column="2"
+          contentClass="description-value"
+        />
       </NCard>
 
       <!-- 第三行:垃圾回收统计 -->
@@ -401,7 +382,7 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .dashboard-tab {
   padding: 0;
 }
@@ -420,46 +401,8 @@ onUnmounted(() => {
   margin-bottom: 16px;
 }
 
-.space-y-3 > * + * {
-  margin-top: 12px;
-}
-
 .space-y-2 > * + * {
   margin-top: 8px;
-}
-
-.stat-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: var(--n-text-color-disabled);
-}
-
-.stat-value {
-  font-size: 18px;
-  font-weight: bold;
-  color: var(--n-text-color);
-}
-
-.stat-row-sm {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.stat-label-sm {
-  font-size: 12px;
-  color: var(--n-text-color-disabled);
-}
-
-.stat-value-sm {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--n-text-color);
 }
 
 .thread-item {
@@ -552,10 +495,15 @@ onUnmounted(() => {
   margin-bottom: 4px;
 }
 
-.info-value {
-  font-size: 14px;
+.description-value {
   font-weight: 600;
   color: var(--n-text-color);
+}
+
+.divider-line {
+  height: 1px;
+  background-color: var(--n-border-color);
+  margin: 12px 0;
 }
 
 .gc-card {
