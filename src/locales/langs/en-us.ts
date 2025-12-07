@@ -49,7 +49,15 @@ const local: App.I18n.Schema = {
       no: 'No'
     },
     viewDetail: 'View Detail',
-    times: 'Times'
+    times: 'Times',
+    timeUnit: {
+      millisecond: 'ms',
+      second: 's',
+      minute: 'min',
+      hour: 'h',
+      day: 'd',
+      year: 'y'
+    }
   },
   request: {
     logout: 'Logout user after request failed',

@@ -1,6 +1,6 @@
 syntax="proto3";
 //
-message JvmInfo {  
+message JvmInfo {
 repeated string inputArguments=1;
  map<string, string> environmentProperties=2;
  string classPath=3;
@@ -10,4 +10,8 @@ repeated string inputArguments=1;
  string vmVersion=7;
  string jdkVersion=8;
  int64 startTime=9;
+ string starter=10;
+ string javaRuntimeVersion=11;
+ string javaHome=12;
+ string pid=13;
 }

@@ -1,0 +1,11 @@
+syntax="proto3";
+package cn.easii.tutelary.message.command.domain;
+option java_outer_classname = "MemoryMetrics$$ByJProtobuf";
+//
+message MemoryMetrics {  
+ int64 committedVirtualMemory=1;
+ int64 totalPhysicalMemorySize=2;
+ int64 freePhysicalMemorySize=3;
+ int64 totalSwapSpaceSize=4;
+ int64 freeSwapSpaceSize=5;
+}

@@ -18,3 +18,20 @@ export function fetchDashboardCommand(data: CommandCreateRequest<any>) {
     data
   });
 }
+
+export function fetchSystemInfoCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/systemInfo`,
+    method: 'post',
+    data
+  })
+}
+
+
+export function fetchSystemMetricsCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/systemMetricsMonitoring`,
+    method: 'post',
+    data
+  })
+}

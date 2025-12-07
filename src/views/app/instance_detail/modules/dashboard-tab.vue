@@ -89,14 +89,6 @@ const nonHeapMemory: Ref<MemoryIntf> = ref({
 
 const nonHeapMemoryDescriptions: Ref<Array<TDescriptionItemProps<MemoryIntf>>> = ref([]);
 
-// GC统计
-const gcStats = ref({
-  youngGC: { count: 1245, totalTime: '12.5s', avgTime: '10ms', status: 'normal' },
-  oldGC: { count: 23, totalTime: '2.8s', avgTime: '122ms', status: 'attention' },
-  fullGC: { count: 3, totalTime: '1.2s', avgTime: '400ms', status: 'normal' },
-  total: { count: 1271, totalTime: '16.5s', percent: '0.09%' }
-});
-
 const garbageCollectors: Ref<Array<GarbageCollector>> = ref([]);
 
 function getStateTagClass(state: string): string {

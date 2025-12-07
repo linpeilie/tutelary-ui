@@ -23,7 +23,7 @@ export default defineComponent({
     },
     val: {
       type: Object as () => any,
-      required: true
+      required: false
     },
     descriptionsStyle: {
       // 支持整体 Descriptions 样式自定义
@@ -63,6 +63,7 @@ export default defineComponent({
               label
             ),
           default: () => {
+            if (!props.val) return '-';
             if (item.render) return item.render(props.val);
             return h(
               'span',

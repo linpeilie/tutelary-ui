@@ -37,6 +37,11 @@ export const commandRouterConfig: CommandEventMapping[] = [
     description: '系统信息'
   },
   {
+    code: commandEnum.SYSTEM_METRICS.value as number,
+    eventName: 'command:system-metrics',
+    description: '系统指标监控'
+  },
+  {
     code: commandEnum.GET_VM_OPTION.value as number,
     eventName: 'command:vm-option',
     description: 'VM 选项'

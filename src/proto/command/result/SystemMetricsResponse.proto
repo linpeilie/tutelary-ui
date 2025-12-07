@@ -1,0 +1,45 @@
+syntax="proto3";
+package cn.easii.tutelary.message.command.result;
+option java_outer_classname = "SystemMetricsResponse$$ByJProtobuf";
+//
+message SystemMetricsResponse {  
+ CpuMetrics cpuMetrics=1;
+ MemoryMetrics memoryMetrics=2;
+repeated OsFileStore osFileStores=3;
+ NetworkMetrics networkMetrics=4;
+ int32 jobId=5;
+ int32 state=6;
+ string message=7;
+}
+//
+message MemoryMetrics {  
+ int64 committedVirtualMemory=1;
+ int64 totalPhysicalMemorySize=2;
+ int64 freePhysicalMemorySize=3;
+ int64 totalSwapSpaceSize=4;
+ int64 freeSwapSpaceSize=5;
+}
+//
+message OsFileStore {  
+ string mount=1;
+ int64 totalSpace=2;
+ int64 usedSpace=3;
+ string type=4;
+}
+//
+message NetworkMetrics {  
+ int64 bytesRecv=1;
+ int64 bytesSent=2;
+ int64 packetsRecv=3;
+ int64 packetsSent=4;
+ int64 recvSpeed=5;
+ int64 sendSpeed=6;
+}
+//
+message CpuMetrics {  
+ double cpuLoad=1;
+ double processCpuLoad=2;
+ double oneMinuteLoadAverage=3;
+ double fiveMinuteLoadAverage=4;
+ double fifteenMinuteLoadAverage=5;
+}

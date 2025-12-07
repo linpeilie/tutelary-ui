@@ -1,50 +1,81 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import type { Ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { fetchSystemInfoCommand, fetchSystemMetricsCommand } from '@/service/api/instance';
+import eventBus from '@/utils/eventbus';
+import { div, mul, sub } from '@/utils/math';
+import { formatMemory } from '@/utils/common';
+import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
+import type { SystemInfoResponse } from '@/proto/command/result/SystemInfoResponse';
+import type { SystemMetricsResponse } from '@/proto/command/result/SystemMetricsResponse';
+import type { CpuMetrics } from '@/proto/command/domain/CpuMetrics';
+import type { TDescriptionItemProps } from '@/components/advanced/t-descriptions.vue';
+import type { HostInfo } from '@/proto/command/domain/HostInfo';
+import type { MemoryMetrics } from '@/proto/command/domain/MemoryMetrics';
+import type { OsFileStore } from '@/proto/command/domain/OsFileStore';
+import type { NetworkMetrics } from '@/proto/command/domain/NetworkMetrics';
+import { JvmInfo } from '@/proto/command/domain/JvmInfo';
+import dayjs from 'dayjs';
+import { formatTimeDifference, getTimeDifferenceDetails } from '@/utils/time';
 
 interface Props {
   instanceId: string;
 }
 
-defineProps<Props>();
+type CpuMetricsType = Omit<
+  CpuMetrics,
+  'oneMinuteLoadAverage' | 'fiveMinuteLoadAverage' | 'fifteenMinuteLoadAverage'
+> & {
+  oneMinuteLoadAverage: string;
+  fiveMinuteLoadAverage: string;
+  fifteenMinuteLoadAverage: string;
+  idle: number;
+};
 
-// 主机信息
-const hostInfo = ref({
-  hostname: 'prod-server-01',
-  os: 'Linux',
-  osVersion: '5.15.0-91-generic',
-  arch: 'amd64',
-  cpuCores: 16,
-  cpuModel: 'Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz',
-  memory: '32 GB',
-  bootTime: '2025-11-01 08:00:00'
-});
+type Disk = OsFileStore & {
+  usedSpace: number;
+  useRatio: number;
+};
 
-// CPU使用情况
-const cpuUsage = ref({
-  system: 45.2,
-  process: 12.8,
-  load1: 2.45,
-  load5: 2.12,
-  load15: 1.98,
-  idle: 54.8
-});
+const props = defineProps<Props>();
 
-// 内存使用情况
-const memUsage = ref({
-  used: 18.5,
-  total: 32,
-  available: 13.5,
-  committed: 20.2,
-  cache: 5.2,
-  buffer: 2.8
-});
+const hostInfo: Ref<HostInfo | undefined> = ref(undefined);
 
-// 磁盘列表
-const disks = ref([
-  { name: '/', total: 500, used: 320, percent: 64 },
-  { name: '/data', total: 2000, used: 1450, percent: 72.5 },
-  { name: '/logs', total: 1000, used: 680, percent: 68 }
+const hostInfoDescriptions: Ref<Array<TDescriptionItemProps<HostInfo>>> = ref([
+  { label: '主机名', value: val => val.hostName },
+  { label: '操作系统', value: val => val.osName },
+  { label: '系统版本', value: val => val.systemVersion },
+  { label: '系统架构', value: val => val.arch },
+  { label: 'CPU核心数', value: val => val.availableProcessors },
+  { label: 'CPU型号', value: val => val.cpuModel },
+  { label: '物理内存', value: val => formatMemory(val.memorySize) },
+  { label: '系统启动时间', value: val => val.systemBootTime }
 ]);
+
+const cpuMetrics: Ref<CpuMetricsType> = ref({
+  cpuLoad: 0,
+  processCpuLoad: 0,
+  oneMinuteLoadAverage: '-',
+  fiveMinuteLoadAverage: '-',
+  fifteenMinuteLoadAverage: '-',
+  idle: 0
+});
+
+const cpuMetricsDescriptions: Ref<Array<TDescriptionItemProps<CpuMetricsType>>> = ref([
+  { label: '1分钟负载', value: val => val.oneMinuteLoadAverage },
+  { label: '5分钟负载', value: val => val.fiveMinuteLoadAverage },
+  { label: '15分钟负载', value: val => val.fifteenMinuteLoadAverage },
+  { label: '空闲率', value: val => val.idle }
+]);
+
+const memoryMetricsDescriptions: Ref<Array<TDescriptionItemProps<MemoryMetrics>>> = ref([
+  { label: '可用内存', value: val => formatMemory(val.freePhysicalMemorySize) },
+  { label: '已提交', value: val => formatMemory(val.committedVirtualMemory) }
+]);
+
+const memoryMetrics: Ref<MemoryMetrics | undefined> = ref();
+
+const disks: Ref<Disk[]> = ref([]);
 
 // 网络统计
 const network = ref({
@@ -56,18 +87,29 @@ const network = ref({
   txPackets: '7.2M'
 });
 
+const networkMetrics: Ref<NetworkMetrics | undefined> = ref();
+
+const networkMetricsDescriptions: Array<TDescriptionItemProps<NetworkMetrics>> = [
+  { label: '总接收', value: val => formatMemory(val.bytesRecv) },
+  { label: '总发送', value: val => formatMemory(val.bytesSent) },
+  { label: '接收包数', value: val => formatMemory(val.packetsRecv) },
+  { label: '发送包数', value: val => formatMemory(val.packetsSent) }
+];
+
 // JVM信息
-const jvmInfo = ref({
-  name: 'OpenJDK 64-Bit Server VM',
-  version: '11.0.16+8-LTS',
-  vendor: 'Oracle Corporation',
-  javaVersion: '11.0.16',
-  javaHome: '/usr/lib/jvm/java-11-openjdk-amd64',
-  classPath: '/app/application.jar',
-  startTime: '2025-11-10 10:30:00',
-  uptime: '48小时 23分 15秒',
-  pid: '12345'
-});
+const jvmInfo: Ref<JvmInfo | undefined> = ref();
+
+const jvmInfoDescriptions: Array<TDescriptionItemProps<JvmInfo>> = [
+  { label: '虚拟机名称', value: val => val.vmName },
+  { label: 'JVM版本号', value: val => val.javaRuntimeVersion },
+  { label: 'JVM供应商', value: val => val.vmVendor },
+  { label: 'Java版本', value: val => val.jdkVersion },
+  { label: 'Java Home', value: val => val.javaHome },
+  { label: '启动路径', value: val => val.starter },
+  { label: '启动时间', value: val => dayjs(val.startTime).format('YYYY-MM-DD HH:mm:ss') },
+  { label: '运行时长', value: val => formatTimeDifference(dayjs(val.startTime), dayjs()) },
+  { label: '进程ID', value: val => val.pid },
+]
 
 // JVM参数
 const jvmArgs = ref([
@@ -130,6 +172,75 @@ function copyJvmArgs() {
   navigator.clipboard.writeText(jvmArgs.value.join('\n'));
   window.$message?.success('已复制到剪贴板');
 }
+
+function createSystemInfoCommand() {
+  const params = {
+    instanceId: props.instanceId,
+    param: {}
+  };
+  fetchSystemInfoCommand(params);
+}
+
+function createSystemMetricsMonitoringCommand() {
+  const params = {
+    instanceId: props.instanceId,
+    param: {}
+  };
+  fetchSystemMetricsCommand(params);
+}
+
+function handleCpuMetrics(systemCpuMetrics: undefined | CpuMetrics) {
+  if (!systemCpuMetrics) {
+    return;
+  }
+  cpuMetrics.value.cpuLoad = mul(systemCpuMetrics.cpuLoad, 100);
+  cpuMetrics.value.processCpuLoad = mul(systemCpuMetrics.processCpuLoad, 100);
+  if (systemCpuMetrics.oneMinuteLoadAverage && systemCpuMetrics.oneMinuteLoadAverage >= 0) {
+    cpuMetrics.value.oneMinuteLoadAverage = mul(systemCpuMetrics.oneMinuteLoadAverage, 100).toString();
+  }
+  if (systemCpuMetrics.fiveMinuteLoadAverage && systemCpuMetrics.fiveMinuteLoadAverage >= 0) {
+    cpuMetrics.value.fiveMinuteLoadAverage = mul(systemCpuMetrics.fiveMinuteLoadAverage, 100).toString();
+  }
+  if (systemCpuMetrics.fifteenMinuteLoadAverage && systemCpuMetrics.fifteenMinuteLoadAverage >= 0) {
+    cpuMetrics.value.fifteenMinuteLoadAverage = mul(systemCpuMetrics.fifteenMinuteLoadAverage, 100).toString();
+  }
+  cpuMetrics.value.idle = sub(100, cpuMetrics.value.cpuLoad);
+}
+
+onMounted(() => {
+  eventBus.on('command:system-info', (data: CommandExecuteResponse<SystemInfoResponse>) => {
+    console.log('Received system info : ', data);
+    const systemInfo = data.data as SystemInfoResponse;
+    hostInfo.value = systemInfo.host;
+    jvmInfo.value = systemInfo.jvm;
+    if (systemInfo.jvm?.environmentProperties) {
+      envVars.value = Object.entries(systemInfo.jvm.environmentProperties).map(([key, value]) => ({
+        name: key,
+        value
+      }));
+    }
+  });
+  eventBus.on('command:system-metrics', (data: CommandExecuteResponse<SystemMetricsResponse>) => {
+    console.log('Received system metrics : ', data);
+    const systemMetrics = data.data as SystemMetricsResponse;
+    handleCpuMetrics(systemMetrics.cpuMetrics);
+    memoryMetrics.value = systemMetrics.memoryMetrics;
+    disks.value = systemMetrics.osFileStores.map(fs => {
+      const usedSpace = sub(fs.totalSpace, fs.usableSpace);
+      return {
+        totalSpace: fs.totalSpace,
+        usableSpace: fs.usableSpace,
+        usedSpace,
+        useRatio: div(mul(usedSpace, 100), fs.totalSpace),
+        mount: fs.mount,
+        type: fs.type
+      };
+    });
+    networkMetrics.value = systemMetrics.networkMetrics;
+  });
+  createSystemInfoCommand();
+  createSystemMetricsMonitoringCommand();
+});
 </script>
 
 <template>
@@ -140,40 +251,13 @@ function copyJvmArgs() {
         <SvgIcon icon="mdi:server" class="h-4 w-4 text-primary" />
         主机信息
       </h4>
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-4 md:grid-cols-2">
-        <div class="info-box">
-          <div class="info-label">主机名</div>
-          <div class="info-value font-mono">{{ hostInfo.hostname }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">操作系统</div>
-          <div class="info-value">{{ hostInfo.os }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">系统版本</div>
-          <div class="info-value font-mono">{{ hostInfo.osVersion }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">系统架构</div>
-          <div class="info-value">{{ hostInfo.arch }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">CPU核心数</div>
-          <div class="info-value">{{ hostInfo.cpuCores }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">CPU型号</div>
-          <div class="info-value truncate" :title="hostInfo.cpuModel">Intel Xeon E5-2680 v4</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">物理内存</div>
-          <div class="info-value">{{ hostInfo.memory }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">系统启动时间</div>
-          <div class="info-value">{{ hostInfo.bootTime }}</div>
-        </div>
-      </div>
+      <TDescriptions
+        :column="4"
+        :items="hostInfoDescriptions"
+        :val="hostInfo"
+        label-class="info-label"
+        content-class="info-value font-mono"
+      />
     </NCard>
 
     <!-- 主机资源 -->
@@ -188,46 +272,35 @@ function copyJvmArgs() {
           <div>
             <div class="mb-2 flex items-center justify-between">
               <span class="resource-label">系统CPU</span>
-              <span class="resource-value text-primary">{{ cpuUsage.system }}%</span>
+              <span class="resource-value text-primary">{{ cpuMetrics.cpuLoad }}%</span>
             </div>
             <div class="resource-progress">
               <div
                 class="resource-progress-fill from-primary to-primary/80 bg-gradient-to-r"
-                :style="{ width: `${cpuUsage.system}%` }"
+                :style="{ width: `${cpuMetrics.cpuLoad}%` }"
               />
             </div>
           </div>
           <div>
             <div class="mb-2 flex items-center justify-between">
               <span class="resource-label">进程CPU</span>
-              <span class="resource-value text-success">{{ cpuUsage.process }}%</span>
+              <span class="resource-value text-success">{{ cpuMetrics.processCpuLoad }}%</span>
             </div>
             <div class="resource-progress">
               <div
                 class="resource-progress-fill from-success to-success/80 bg-gradient-to-r"
-                :style="{ width: `${cpuUsage.process}%` }"
+                :style="{ width: `${cpuMetrics.processCpuLoad}%` }"
               />
             </div>
           </div>
           <div class="divider-line" />
-          <div class="grid grid-cols-2 gap-3">
-            <div class="stat-item">
-              <div class="stat-label">1分钟负载</div>
-              <div class="stat-value">{{ cpuUsage.load1 }}</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">5分钟负载</div>
-              <div class="stat-value">{{ cpuUsage.load5 }}</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">15分钟负载</div>
-              <div class="stat-value">{{ cpuUsage.load15 }}</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">空闲率</div>
-              <div class="stat-value text-success">{{ cpuUsage.idle }}%</div>
-            </div>
-          </div>
+          <TDescriptions
+            :items="cpuMetricsDescriptions"
+            :val="cpuMetrics"
+            :columns="2"
+            label-class="info-label"
+            content-class="info-value font-mono"
+          />
         </div>
       </NCard>
 
@@ -238,40 +311,51 @@ function copyJvmArgs() {
           内存 使用情况
         </h4>
         <div class="space-y-4">
-          <div>
+          <div v-if="memoryMetrics">
             <div class="mb-2 flex items-center justify-between">
-              <span class="resource-label">已使用</span>
+              <span class="resource-label">物理内存（已使用）</span>
               <div class="text-right">
-                <span class="resource-value text-purple">{{ memUsage.used }} GB</span>
-                <span class="resource-max">/ {{ memUsage.total }} GB</span>
+                <span class="resource-value text-purple">
+                  {{ formatMemory(memoryMetrics.totalPhysicalMemorySize - memoryMetrics.freePhysicalMemorySize) }}
+                </span>
+                <span class="resource-max">/ {{ formatMemory(memoryMetrics.totalPhysicalMemorySize) }}</span>
               </div>
             </div>
             <div class="resource-progress">
               <div
                 class="resource-progress-fill from-purple to-purple/80 bg-gradient-to-r"
-                :style="{ width: `${((memUsage.used / memUsage.total) * 100).toFixed(1)}%` }"
+                :style="{
+                  width: `${100 - mul(memoryMetrics.freePhysicalMemorySize / memoryMetrics.totalPhysicalMemorySize, 100)}%`
+                }"
+              />
+            </div>
+          </div>
+          <div v-if="memoryMetrics">
+            <div class="mb-2 flex items-center justify-between">
+              <span class="resource-label">Swap内存（已使用）</span>
+              <div class="text-right">
+                <span class="resource-value text-success">
+                  {{ formatMemory(memoryMetrics.totalSwapSpaceSize - memoryMetrics.freeSwapSpaceSize) }}
+                </span>
+                <span class="resource-max">/ {{ formatMemory(memoryMetrics.totalSwapSpaceSize) }}</span>
+              </div>
+            </div>
+            <div class="resource-progress">
+              <div
+                class="resource-progress-fill from-success to-purple/80 bg-gradient-to-r"
+                :style="{
+                  width: `${100 - mul(memoryMetrics.freeSwapSpaceSize / memoryMetrics.totalSwapSpaceSize, 100)}%`
+                }"
               />
             </div>
           </div>
           <div class="divider-line" />
-          <div class="grid grid-cols-2 gap-3">
-            <div class="stat-item">
-              <div class="stat-label">可用内存</div>
-              <div class="stat-value">{{ memUsage.available }} GB</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">已提交</div>
-              <div class="stat-value">{{ memUsage.committed }} GB</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">缓存</div>
-              <div class="stat-value text-info">{{ memUsage.cache }} GB</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">缓冲</div>
-              <div class="stat-value text-success">{{ memUsage.buffer }} GB</div>
-            </div>
-          </div>
+          <TDescriptions
+            :items="memoryMetricsDescriptions"
+            :val="memoryMetrics"
+            label-class="info-label"
+            content-class="info-value font-mono"
+          />
         </div>
       </NCard>
 
@@ -282,24 +366,29 @@ function copyJvmArgs() {
           磁盘 使用情况
         </h4>
         <div class="space-y-3">
-          <div v-for="disk in disks" :key="disk.name" class="disk-item">
+          <div v-for="disk in disks" :key="disk.mount" class="disk-item">
             <div class="mb-2 flex items-center justify-between">
-              <span class="disk-name">{{ disk.name }}</span>
+              <NSpace justify="center">
+                <span class="disk-name">{{ disk.mount }}</span>
+                <NTag size="small" :bordered="false">{{ disk.type }}</NTag>
+              </NSpace>
               <div class="text-right">
-                <span class="disk-value" :class="getDiskColor(disk.percent)">{{ disk.used }} GB</span>
-                <span class="disk-max">/ {{ disk.total }} GB</span>
+                <span class="disk-value" :class="getDiskColor(disk.useRatio)">
+                  {{ formatMemory(disk.usedSpace) }}
+                </span>
+                <span class="disk-max">/ {{ formatMemory(disk.totalSpace) }}</span>
               </div>
             </div>
             <div class="disk-progress">
               <div
                 class="disk-progress-fill bg-gradient-to-r"
-                :class="getDiskProgressColor(disk.percent)"
-                :style="{ width: `${disk.percent}%` }"
+                :class="getDiskProgressColor(disk.useRatio)"
+                :style="{ width: `${disk.useRatio}%` }"
               />
             </div>
             <div class="mt-1.5 flex items-center justify-between text-xs">
-              <span class="text-gray">使用率: {{ disk.percent }}%</span>
-              <span class="text-gray">可用: {{ disk.total - disk.used }} GB</span>
+              <span class="text-gray">使用率: {{ disk.useRatio }}%</span>
+              <span class="text-gray">可用: {{ formatMemory(disk.usableSpace) }}</span>
             </div>
           </div>
         </div>
@@ -337,24 +426,13 @@ function copyJvmArgs() {
             </div>
           </div>
           <div class="divider-line" />
-          <div class="grid grid-cols-2 gap-3">
-            <div class="stat-item">
-              <div class="stat-label">总接收</div>
-              <div class="stat-value">{{ network.totalRx }}</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">总发送</div>
-              <div class="stat-value">{{ network.totalTx }}</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">接收包数</div>
-              <div class="stat-value">{{ network.rxPackets }}</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">发送包数</div>
-              <div class="stat-value">{{ network.txPackets }}</div>
-            </div>
-          </div>
+          <TDescriptions
+            :items="networkMetricsDescriptions"
+            :val="networkMetrics"
+            :columns="2"
+            label-class="stat-labal"
+            content-class="stat-value"
+          />
         </div>
       </NCard>
     </div>
@@ -365,46 +443,13 @@ function copyJvmArgs() {
         <SvgIcon icon="mdi:language-java" class="h-4 w-4 text-orange" />
         JVM 信息
       </h4>
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3 md:grid-cols-2">
-        <div class="info-box">
-          <div class="info-label">JVM 名称</div>
-          <div class="info-value">{{ jvmInfo.name }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">JVM 版本</div>
-          <div class="info-value font-mono">{{ jvmInfo.version }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">JVM 供应商</div>
-          <div class="info-value">{{ jvmInfo.vendor }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">Java 版本</div>
-          <div class="info-value">{{ jvmInfo.javaVersion }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">Java Home</div>
-          <div class="info-value truncate text-xs font-mono" :title="jvmInfo.javaHome">
-            /usr/lib/jvm/java-11-openjdk
-          </div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">类路径</div>
-          <div class="info-value truncate text-xs font-mono" :title="jvmInfo.classPath">{{ jvmInfo.classPath }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">启动时间</div>
-          <div class="info-value">{{ jvmInfo.startTime }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">运行时长</div>
-          <div class="info-value text-success">{{ jvmInfo.uptime }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-label">进程ID</div>
-          <div class="info-value font-mono">{{ jvmInfo.pid }}</div>
-        </div>
-      </div>
+      <TDescriptions
+        :items="jvmInfoDescriptions"
+        :val="jvmInfo"
+        :columns="3"
+        label-class="info-label"
+        content-class="info-value font-mono"
+        />
     </NCard>
 
     <!-- JVM参数 -->
@@ -423,7 +468,7 @@ function copyJvmArgs() {
       </div>
       <NScrollbar style="max-height: 240px">
         <div class="jvm-args">
-          <div v-for="(arg, i) in jvmArgs" :key="i" class="jvm-arg">{{ arg }}</div>
+          <div v-for="(arg, i) in jvmInfo?.inputArguments" :key="i" class="jvm-arg">{{ arg }}</div>
         </div>
       </NScrollbar>
     </NCard>
@@ -456,7 +501,7 @@ function copyJvmArgs() {
   </div>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .system-tab {
   padding: 0;
 }

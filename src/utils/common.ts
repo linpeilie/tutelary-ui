@@ -62,7 +62,7 @@ const KB = 1024;
 const MB = mul(KB, 1024);
 const GB = mul(MB, 1024);
 const TB = mul(GB, 1024);
-const MEMORY_PRECISION = 0;
+const MEMORY_PRECISION = 1;
 
 export function formatMemory(memorySize: number | undefined): string  {
   if (!memorySize) {

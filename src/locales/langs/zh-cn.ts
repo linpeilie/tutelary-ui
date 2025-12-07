@@ -49,7 +49,15 @@ const local: App.I18n.Schema = {
       no: '否'
     },
     viewDetail: '查看详情',
-    times: '次'
+    times: '次',
+    timeUnit: {
+      millisecond: '毫秒',
+      second: '秒',
+      minute: '分钟',
+      hour: '小时',
+      day: '天',
+      year: '年'
+    }
   },
   request: {
     logout: '请求失败后登出用户',

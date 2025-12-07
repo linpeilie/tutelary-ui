@@ -17,6 +17,7 @@ import { UpdateLoggerLevelResponse } from '@/proto/command/result/UpdateLoggerLe
 import { VmOptionResponse } from '@/proto/command/result/VmOptionResponse'
 import { JvmMemoryResponse } from '@/proto/command/result/JvmMemoryResponse'
 import { SystemInfoResponse } from '@/proto/command/result/SystemInfoResponse'
+import { SystemMetricsResponse } from '@/proto/command/result/SystemMetricsResponse';
 
 export default {
   decode: (command: number, unit8Array: Uint8Array) => {
@@ -87,6 +88,9 @@ export default {
 
     if (command === commandEnum.SYSTEM_INFO.value)
       return SystemInfoResponse.decode(unit8Array)
+
+    if (command === commandEnum.SYSTEM_METRICS.value)
+      return SystemMetricsResponse.decode(unit8Array)
 
     return undefined
   },

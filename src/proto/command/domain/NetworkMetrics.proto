@@ -1,0 +1,12 @@
+syntax="proto3";
+package cn.easii.tutelary.message.command.domain;
+option java_outer_classname = "NetworkMetrics$$ByJProtobuf";
+//
+message NetworkMetrics {  
+ int64 bytesRecv=1;
+ int64 bytesSent=2;
+ int64 packetsRecv=3;
+ int64 packetsSent=4;
+ int64 recvSpeed=5;
+ int64 sendSpeed=6;
+}

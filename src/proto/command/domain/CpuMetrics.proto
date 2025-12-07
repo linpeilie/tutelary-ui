@@ -1,0 +1,11 @@
+syntax="proto3";
+package cn.easii.tutelary.message.command.domain;
+option java_outer_classname = "CpuMetrics$$ByJProtobuf";
+//
+message CpuMetrics {  
+ double cpuLoad=1;
+ double processCpuLoad=2;
+ double oneMinuteLoadAverage=3;
+ double fiveMinuteLoadAverage=4;
+ double fifteenMinuteLoadAverage=5;
+}

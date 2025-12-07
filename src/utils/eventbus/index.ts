@@ -2,6 +2,8 @@ import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { Overview } from '@/proto/command/result/Overview';
 import type { WebSocketStatusEnum } from '../ws/WebSocketStatusEnum';
 import { EventBus } from './EventBus';
+import { SystemMetricsResponse } from '@/proto/command/result/SystemMetricsResponse';
+import { SystemInfoResponse } from '@/proto/command/result/SystemInfoResponse';
 
 /**
  * 全局事件总线事件类型定义
@@ -21,7 +23,8 @@ export interface GlobalEvents {
 
   // 系统信息类命令
   'command:jvm-memory': CommandExecuteResponse<any>; // JVM 内存信息
-  'command:system-info': CommandExecuteResponse<any>; // 系统信息
+  'command:system-info': CommandExecuteResponse<SystemInfoResponse>; // 系统信息
+  'command:system-metrics': CommandExecuteResponse<SystemMetricsResponse>
   'command:vm-option': CommandExecuteResponse<any>; // VM 选项
   'command:vm-option-set': CommandExecuteResponse<any>; // 设置 VM 选项
 

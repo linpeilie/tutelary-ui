@@ -15,6 +15,7 @@ export const commandEnum = Object.freeze({
   SET_VM_OPTION: EnumItem.of(200021, 'SetVmOption'),
   JVM_MEMORY: EnumItem.of(200022, 'JvmMemory'),
   SYSTEM_INFO: EnumItem.of(200023, 'System Info'),
+  SYSTEM_METRICS: EnumItem.of(200024, 'System Metrics'),
 
   ENHANCE_AFFECT: EnumItem.of(210001, 'EnhanceAffect'),
   ENHANCE_COMPLETE: EnumItem.of(210002, 'EnhanceComplete'),

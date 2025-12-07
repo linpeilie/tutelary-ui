@@ -1,0 +1,10 @@
+syntax="proto3";
+package cn.easii.tutelary.message.command.domain;
+option java_outer_classname = "OsFileStore$$ByJProtobuf";
+//
+message OsFileStore {
+ string mount=1;
+ int64 totalSpace=2;
+ int64 usableSpace=3;
+ string type=4;
+}

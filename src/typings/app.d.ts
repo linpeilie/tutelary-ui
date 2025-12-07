@@ -356,6 +356,14 @@ declare namespace App {
         };
         viewDetail: string;
         times: string;
+        timeUnit: {
+          millisecond: string;
+          second: string;
+          minute: string;
+          hour: string;
+          day: string;
+          year: string;
+        };
       };
       request: {
         logout: string;
