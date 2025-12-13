@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, h, ref } from 'vue';
+import { computed, h, onMounted, onUnmounted, ref } from 'vue';
 import {
   NButton,
   NCard,
-  NCheckbox,
   NDataTable,
   NEmpty,
   NForm,
@@ -17,18 +16,25 @@ import {
   NTag
 } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
+import { fetchTraceCommand } from '@/service/api/instance';
+import eventbus from '@/utils/eventbus';
+import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
+import type { TraceResponse } from '@/proto/command/result/TraceResponse';
+import type { TraceRequest } from '@/proto/command/param/TraceRequest';
+import CommandCreateRequest = Api.Instance.Command.CommandCreateRequest;
+import { div4Round } from '@/utils/math';
 
 // Props
 interface Props {
   instanceId: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 // 表单数据
 const formData = ref({
-  className: '',
-  methodName: '',
+  className: 'com.tutelary.example.MathGame',
+  methodName: 'exec',
   count: 10,
   minTime: null as number | null,
   includeJdk: false,
@@ -61,7 +67,7 @@ interface TraceResult {
   }>;
 }
 
-const traceResults = ref<TraceResult[]>([]);
+const traceResults = ref<TraceResponse[]>([]);
 const hasResults = computed(() => traceResults.value.length > 0);
 
 // 详情模态框
@@ -82,32 +88,32 @@ const handleViewDetail = (trace: TraceResult) => {
 };
 
 // 表格列配置
-const columns: DataTableColumns<TraceResult> = [
+const columns: DataTableColumns<TraceResponse> = [
   {
-    title: '序号',
-    key: 'index',
-    width: 80,
-    render: (row: TraceResult) => `#${row.index}`
+    title: '方法',
+    key: 'method',
+    width: 200,
+    render: (row: TraceResponse) => row.node.methodName
   },
   {
     title: '调用时间',
     key: 'time',
     width: 200,
-    render: (row: TraceResult) => row.time
+    render: (row: TraceResponse) => row.finishTime
   },
   {
     title: '总耗时 (ms)',
     key: 'duration',
     width: 150,
-    render: (row: TraceResult) => {
+    render: (row: TraceResponse) => {
       return h(
         NTag,
         {
-          type: getDurationTagType(row.duration),
+          type: getDurationTagType(div4Round(row.node.totalCost, 1000000, 0)),
           size: 'small',
           bordered: false
         },
-        { default: () => `${row.duration}ms` }
+        { default: () => `${div4Round(row.node.totalCost, 1000000, 0)}ms` }
       );
     }
   },
@@ -115,7 +121,7 @@ const columns: DataTableColumns<TraceResult> = [
     title: '调用深度',
     key: 'depth',
     width: 120,
-    render: (row: TraceResult) => `${row.depth} 层`
+    render: (row: TraceResponse) => `${row.node.children.length} 层`
   },
   {
     title: '操作',
@@ -136,96 +142,19 @@ const columns: DataTableColumns<TraceResult> = [
   }
 ];
 
-// 生成调用栈树数据
-const generateTraceTreeData = (className: string, methodName: string, totalDuration: number) => {
-  return [
-    { name: `${className}.${methodName}()`, time: totalDuration, depth: 0, color: 'text-blue-400' },
-    {
-      name: '├─ com.example.service.ValidationService.validate()',
-      time: Math.round(totalDuration * 0.15),
-      depth: 1,
-      color: 'text-green-400'
-    },
-    {
-      name: '│  ├─ com.example.util.StringUtils.isEmpty()',
-      time: Math.round(totalDuration * 0.02),
-      depth: 2,
-      color: 'text-gray-400'
-    },
-    {
-      name: '│  └─ com.example.util.ValidationUtils.checkFormat()',
-      time: Math.round(totalDuration * 0.08),
-      depth: 2,
-      color: 'text-gray-400'
-    },
-    {
-      name: '├─ com.example.repository.UserRepository.findById()',
-      time: Math.round(totalDuration * 0.55),
-      depth: 1,
-      color: 'text-purple-400'
-    },
-    {
-      name: '│  ├─ org.hibernate.SessionImpl.find()',
-      time: Math.round(totalDuration * 0.45),
-      depth: 2,
-      color: 'text-cyan-400'
-    },
-    {
-      name: '│  │  ├─ org.hibernate.loader.Loader.load()',
-      time: Math.round(totalDuration * 0.35),
-      depth: 3,
-      color: 'text-gray-400'
-    },
-    {
-      name: '│  │  │  ├─ java.sql.PreparedStatement.executeQuery()',
-      time: Math.round(totalDuration * 0.28),
-      depth: 4,
-      color: 'text-gray-400'
-    },
-    {
-      name: '│  │  │  └─ org.hibernate.loader.Loader.getResultSet()',
-      time: Math.round(totalDuration * 0.05),
-      depth: 4,
-      color: 'text-gray-400'
-    },
-    {
-      name: '│  │  └─ org.hibernate.engine.EntityEntry.load()',
-      time: Math.round(totalDuration * 0.08),
-      depth: 3,
-      color: 'text-gray-400'
-    },
-    {
-      name: '│  └─ org.hibernate.cache.CacheProvider.get()',
-      time: Math.round(totalDuration * 0.08),
-      depth: 2,
-      color: 'text-gray-400'
-    },
-    {
-      name: '├─ com.example.service.LogService.logAccess()',
-      time: Math.round(totalDuration * 0.12),
-      depth: 1,
-      color: 'text-yellow-400'
-    },
-    {
-      name: '│  ├─ org.slf4j.Logger.info()',
-      time: Math.round(totalDuration * 0.05),
-      depth: 2,
-      color: 'text-gray-400'
-    },
-    {
-      name: '│  └─ com.example.util.DateUtils.format()',
-      time: Math.round(totalDuration * 0.03),
-      depth: 2,
-      color: 'text-gray-400'
-    },
-    {
-      name: '└─ com.example.mapper.UserMapper.toDTO()',
-      time: Math.round(totalDuration * 0.08),
-      depth: 1,
-      color: 'text-orange-400'
+onMounted(() => {
+  eventbus.on('command:trace', (data: CommandExecuteResponse<TraceResponse>) => {
+    console.log('data', data);
+    if (data.data) {
+      const traceResponse = data.data as TraceResponse;
+      traceResults.value.push(traceResponse);
     }
-  ];
-};
+  });
+});
+
+onUnmounted(() => {
+  eventbus.off('command:trace');
+});
 
 // 开始追踪
 const handleStartTrace = async () => {
@@ -239,34 +168,48 @@ const handleStartTrace = async () => {
   totalCount.value = formData.value.count;
   traceResults.value = [];
 
-  // 模拟追踪过程
-  const interval = setInterval(() => {
-    capturedCount.value++;
-
-    // 生成单条追踪结果
-    const time = new Date().toLocaleString('zh-CN');
-    const duration = Math.round(Math.random() * 500 + 10);
-    const depth = Math.floor(Math.random() * 5 + 3);
-    const traceTree = generateTraceTreeData(formData.value.className, formData.value.methodName, duration);
-
-    const result: TraceResult = {
-      index: capturedCount.value,
-      time,
-      duration,
-      depth,
-      className: formData.value.className,
-      methodName: formData.value.methodName,
-      traceTree
-    };
-
-    traceResults.value.push(result);
-
-    if (capturedCount.value >= totalCount.value) {
-      clearInterval(interval);
-      isTracing.value = false;
-      window.$message?.success(`追踪完成! 已捕获 ${totalCount.value} 条调用记录`);
+  const params = {
+    instanceId: props.instanceId,
+    param: {
+      qualifiedClassName: formData.value.className,
+      methodNames: [formData.value.methodName],
+      times: formData.value.count,
+      cost: formData.value.minTime
     }
-  }, 200);
+  } as CommandCreateRequest<TraceRequest>;
+
+  fetchTraceCommand(params).catch(() => {
+    isTracing.value = false;
+  });
+
+  // // 模拟追踪过程
+  // const interval = setInterval(() => {
+  //   capturedCount.value++;
+  //
+  //   // 生成单条追踪结果
+  //   const time = new Date().toLocaleString('zh-CN');
+  //   const duration = Math.round(Math.random() * 500 + 10);
+  //   const depth = Math.floor(Math.random() * 5 + 3);
+  //   const traceTree = generateTraceTreeData(formData.value.className, formData.value.methodName, duration);
+  //
+  //   const result: TraceResult = {
+  //     index: capturedCount.value,
+  //     time,
+  //     duration,
+  //     depth,
+  //     className: formData.value.className,
+  //     methodName: formData.value.methodName,
+  //     traceTree
+  //   };
+  //
+  //   traceResults.value.push(result);
+  //
+  //   if (capturedCount.value >= totalCount.value) {
+  //     clearInterval(interval);
+  //     isTracing.value = false;
+  //     window.$message?.success(`追踪完成! 已捕获 ${totalCount.value} 条调用记录`);
+  //   }
+  // }, 200);
 };
 
 // 停止追踪
@@ -308,9 +251,6 @@ const handleClear = () => {
   capturedCount.value = 0;
   window.$message?.success('已清空追踪结果');
 };
-
-// 显示高级选项
-const showAdvanced = ref(false);
 </script>
 
 <template>
@@ -360,30 +300,6 @@ const showAdvanced = ref(false);
             </NFormItem>
           </NGridItem>
         </NGrid>
-
-        <!-- 高级选项 -->
-        <div class="advanced-section">
-          <NButton text class="advanced-toggle" @click="showAdvanced = !showAdvanced">
-            <template #icon>
-              <div :class="showAdvanced ? 'i-carbon-chevron-up' : 'i-carbon-chevron-down'" class="text-12px" />
-            </template>
-            高级选项
-          </NButton>
-
-          <div v-show="showAdvanced" class="advanced-options">
-            <NGrid :x-gap="16" :y-gap="8" :cols="3">
-              <NGridItem>
-                <NCheckbox v-model:checked="formData.includeJdk">包含JDK方法</NCheckbox>
-              </NGridItem>
-              <NGridItem>
-                <NCheckbox v-model:checked="formData.skipConstructor">跳过构造方法</NCheckbox>
-              </NGridItem>
-              <NGridItem>
-                <NCheckbox v-model:checked="formData.deepTrace">深度追踪</NCheckbox>
-              </NGridItem>
-            </NGrid>
-          </div>
-        </div>
 
         <!-- 操作按钮 -->
         <div class="action-buttons">
@@ -445,7 +361,7 @@ const showAdvanced = ref(false);
             <div class="i-carbon-tree-view text-16px text-green-500" />
             <span>调用栈列表</span>
             <span v-if="hasResults" class="result-info">
-              追踪: {{ traceResults[0].className }}.{{ traceResults[0].methodName }}()
+              追踪: {{ traceResults[0].node.className }}.{{ traceResults[0].node.methodName }}()
             </span>
           </div>
           <div class="result-actions">
@@ -556,10 +472,6 @@ const showAdvanced = ref(false);
 </template>
 
 <style scoped lang="scss">
-.trace-container {
-  padding: 16px;
-}
-
 .config-card {
   border-radius: 12px;
 

@@ -5,6 +5,7 @@ import { EventBus } from './EventBus';
 import { SystemMetricsResponse } from '@/proto/command/result/SystemMetricsResponse';
 import { SystemInfoResponse } from '@/proto/command/result/SystemInfoResponse';
 import { DecompileResponse } from '@/proto/command/result/DecompileResponse';
+import { TraceResponse } from '@/proto/command/result/TraceResponse';
 
 /**
  * 全局事件总线事件类型定义
@@ -49,7 +50,7 @@ export interface GlobalEvents {
   // 增强相关命令
   'command:enhance-affect': CommandExecuteResponse<any>; // 增强影响
   'command:enhance-complete': CommandExecuteResponse<any>; // 增强完成
-  'command:trace': CommandExecuteResponse<any>; // 方法追踪
+  'command:trace': CommandExecuteResponse<TraceResponse>; // 方法追踪
   'command:stack': CommandExecuteResponse<any>; // 方法调用栈
   'command:retransform': CommandExecuteResponse<any>; // 重置类
 

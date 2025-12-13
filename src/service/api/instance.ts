@@ -1,6 +1,7 @@
 import { request } from '@/service/request';
 import CommandCreateRequest = Api.Instance.Command.CommandCreateRequest;
 import type { DecompileRequest } from '@/proto/command/param/DecompileRequest';
+import { TraceRequest } from '@/proto/command/param/TraceRequest';
 
 export function fetchInstanceDetail(instanceId: string) {
   return request<Api.Instance.InstanceInfo>({
@@ -39,6 +40,14 @@ export function fetchSystemMetricsCommand(data: CommandCreateRequest<any>) {
 export function fetchDecompileCommand(data: CommandCreateRequest<DecompileRequest>) {
   return request<Api.Instance.Command.CommandTaskResponse>({
     url: `/command/creation/decompile`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchTraceCommand(data: CommandCreateRequest<TraceRequest>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/traceMethod`,
     method: 'post',
     data
   });
