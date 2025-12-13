@@ -1,22 +1,25 @@
 <script setup lang="ts">
-import type { Ref } from 'vue';
-import { computed, onMounted, ref } from 'vue';
-import { fetchSystemInfoCommand, fetchSystemMetricsCommand } from '@/service/api/instance';
-import eventBus from '@/utils/eventbus';
-import { div, mul, sub } from '@/utils/math';
-import { formatMemory } from '@/utils/common';
-import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
-import type { SystemInfoResponse } from '@/proto/command/result/SystemInfoResponse';
-import type { SystemMetricsResponse } from '@/proto/command/result/SystemMetricsResponse';
-import type { CpuMetrics } from '@/proto/command/domain/CpuMetrics';
-import type { TDescriptionItemProps } from '@/components/advanced/t-descriptions.vue';
-import type { HostInfo } from '@/proto/command/domain/HostInfo';
-import type { MemoryMetrics } from '@/proto/command/domain/MemoryMetrics';
-import type { OsFileStore } from '@/proto/command/domain/OsFileStore';
-import type { NetworkMetrics } from '@/proto/command/domain/NetworkMetrics';
-import { JvmInfo } from '@/proto/command/domain/JvmInfo';
-import dayjs from 'dayjs';
-import { formatTimeDifference, getTimeDifferenceDetails } from '@/utils/time';
+import type { Ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+import dayjs from "dayjs";
+import {
+  fetchSystemInfoCommand,
+  fetchSystemMetricsCommand,
+} from "@/service/api/instance";
+import eventBus from "@/utils/eventbus";
+import { div, mul, sub } from "@/utils/math";
+import { formatMemory } from "@/utils/common";
+import { formatTimeDifference, getTimeDifferenceDetails } from "@/utils/time";
+import type { CommandExecuteResponse } from "@/proto/CommandExecuteResponse";
+import type { SystemInfoResponse } from "@/proto/command/result/SystemInfoResponse";
+import type { SystemMetricsResponse } from "@/proto/command/result/SystemMetricsResponse";
+import type { CpuMetrics } from "@/proto/command/domain/CpuMetrics";
+import type { TDescriptionItemProps } from "@/components/advanced/t-descriptions.vue";
+import type { HostInfo } from "@/proto/command/domain/HostInfo";
+import type { MemoryMetrics } from "@/proto/command/domain/MemoryMetrics";
+import type { OsFileStore } from "@/proto/command/domain/OsFileStore";
+import type { NetworkMetrics } from "@/proto/command/domain/NetworkMetrics";
+import type { JvmInfo } from "@/proto/command/domain/JvmInfo";
 
 interface Props {
   instanceId: string;
@@ -24,7 +27,7 @@ interface Props {
 
 type CpuMetricsType = Omit<
   CpuMetrics,
-  'oneMinuteLoadAverage' | 'fiveMinuteLoadAverage' | 'fifteenMinuteLoadAverage'
+  "oneMinuteLoadAverage" | "fiveMinuteLoadAverage" | "fifteenMinuteLoadAverage"
 > & {
   oneMinuteLoadAverage: string;
   fiveMinuteLoadAverage: string;
@@ -42,93 +45,97 @@ const props = defineProps<Props>();
 const hostInfo: Ref<HostInfo | undefined> = ref(undefined);
 
 const hostInfoDescriptions: Ref<Array<TDescriptionItemProps<HostInfo>>> = ref([
-  { label: '主机名', value: val => val.hostName },
-  { label: '操作系统', value: val => val.osName },
-  { label: '系统版本', value: val => val.systemVersion },
-  { label: '系统架构', value: val => val.arch },
-  { label: 'CPU核心数', value: val => val.availableProcessors },
-  { label: 'CPU型号', value: val => val.cpuModel },
-  { label: '物理内存', value: val => formatMemory(val.memorySize) },
-  { label: '系统启动时间', value: val => val.systemBootTime }
+  { label: "主机名", value: (val) => val.hostName },
+  { label: "操作系统", value: (val) => val.osName },
+  { label: "系统版本", value: (val) => val.systemVersion },
+  { label: "系统架构", value: (val) => val.arch },
+  { label: "CPU核心数", value: (val) => val.availableProcessors },
+  { label: "CPU型号", value: (val) => val.cpuModel },
+  { label: "物理内存", value: (val) => formatMemory(val.memorySize) },
+  { label: "系统启动时间", value: (val) => val.systemBootTime },
 ]);
 
 const cpuMetrics: Ref<CpuMetricsType> = ref({
   cpuLoad: 0,
   processCpuLoad: 0,
-  oneMinuteLoadAverage: '-',
-  fiveMinuteLoadAverage: '-',
-  fifteenMinuteLoadAverage: '-',
-  idle: 0
+  oneMinuteLoadAverage: "-",
+  fiveMinuteLoadAverage: "-",
+  fifteenMinuteLoadAverage: "-",
+  idle: 0,
 });
 
-const cpuMetricsDescriptions: Ref<Array<TDescriptionItemProps<CpuMetricsType>>> = ref([
-  { label: '1分钟负载', value: val => val.oneMinuteLoadAverage },
-  { label: '5分钟负载', value: val => val.fiveMinuteLoadAverage },
-  { label: '15分钟负载', value: val => val.fifteenMinuteLoadAverage },
-  { label: '空闲率', value: val => val.idle }
+const cpuMetricsDescriptions: Ref<
+  Array<TDescriptionItemProps<CpuMetricsType>>
+> = ref([
+  { label: "1分钟负载", value: (val) => val.oneMinuteLoadAverage },
+  { label: "5分钟负载", value: (val) => val.fiveMinuteLoadAverage },
+  { label: "15分钟负载", value: (val) => val.fifteenMinuteLoadAverage },
+  { label: "空闲率", value: (val) => val.idle },
 ]);
 
-const memoryMetricsDescriptions: Ref<Array<TDescriptionItemProps<MemoryMetrics>>> = ref([
-  { label: '可用内存', value: val => formatMemory(val.freePhysicalMemorySize) },
-  { label: '已提交', value: val => formatMemory(val.committedVirtualMemory) }
+const memoryMetricsDescriptions: Ref<
+  Array<TDescriptionItemProps<MemoryMetrics>>
+> = ref([
+  {
+    label: "可用内存",
+    value: (val) => formatMemory(val.freePhysicalMemorySize),
+  },
+  { label: "已提交", value: (val) => formatMemory(val.committedVirtualMemory) },
 ]);
 
 const memoryMetrics: Ref<MemoryMetrics | undefined> = ref();
 
 const disks: Ref<Disk[]> = ref([]);
 
-// 网络统计
-const network = ref({
-  rxSpeed: 12.5,
-  txSpeed: 8.3,
-  totalRx: '1.2 TB',
-  totalTx: '856 GB',
-  rxPackets: '8.5M',
-  txPackets: '7.2M'
-});
-
 const networkMetrics: Ref<NetworkMetrics | undefined> = ref();
 
-const networkMetricsDescriptions: Array<TDescriptionItemProps<NetworkMetrics>> = [
-  { label: '总接收', value: val => formatMemory(val.bytesRecv) },
-  { label: '总发送', value: val => formatMemory(val.bytesSent) },
-  { label: '接收包数', value: val => formatMemory(val.packetsRecv) },
-  { label: '发送包数', value: val => formatMemory(val.packetsSent) }
-];
+const networkMetricsDescriptions: Array<TDescriptionItemProps<NetworkMetrics>> =
+  [
+    { label: "总接收", value: (val) => formatMemory(val.bytesRecv) },
+    { label: "总发送", value: (val) => formatMemory(val.bytesSent) },
+    { label: "接收包数", value: (val) => formatMemory(val.packetsRecv) },
+    { label: "发送包数", value: (val) => formatMemory(val.packetsSent) },
+  ];
 
 // JVM信息
 const jvmInfo: Ref<JvmInfo | undefined> = ref();
 
 const jvmInfoDescriptions: Array<TDescriptionItemProps<JvmInfo>> = [
-  { label: '虚拟机名称', value: val => val.vmName },
-  { label: 'JVM版本号', value: val => val.javaRuntimeVersion },
-  { label: 'JVM供应商', value: val => val.vmVendor },
-  { label: 'Java版本', value: val => val.jdkVersion },
-  { label: 'Java Home', value: val => val.javaHome },
-  { label: '启动路径', value: val => val.starter },
-  { label: '启动时间', value: val => dayjs(val.startTime).format('YYYY-MM-DD HH:mm:ss') },
-  { label: '运行时长', value: val => formatTimeDifference(dayjs(val.startTime), dayjs()) },
-  { label: '进程ID', value: val => val.pid },
-]
+  { label: "虚拟机名称", value: (val) => val.vmName },
+  { label: "JVM版本号", value: (val) => val.javaRuntimeVersion },
+  { label: "JVM供应商", value: (val) => val.vmVendor },
+  { label: "Java版本", value: (val) => val.jdkVersion },
+  { label: "Java Home", value: (val) => val.javaHome },
+  { label: "启动路径", value: (val) => val.starter },
+  {
+    label: "启动时间",
+    value: (val) => dayjs(val.startTime).format("YYYY-MM-DD HH:mm:ss"),
+  },
+  {
+    label: "运行时长",
+    value: (val) => formatTimeDifference(dayjs(val.startTime), dayjs()),
+  },
+  { label: "进程ID", value: (val) => val.pid },
+];
 
 // JVM参数
 const jvmArgs = ref([
-  '-Xms4096m',
-  '-Xmx4096m',
-  '-XX:MetaspaceSize=256m',
-  '-XX:MaxMetaspaceSize=512m',
-  '-XX:+UseG1GC',
-  '-XX:MaxGCPauseMillis=200',
-  '-XX:ParallelGCThreads=8',
-  '-XX:ConcGCThreads=2',
-  '-XX:InitiatingHeapOccupancyPercent=45',
-  '-XX:+HeapDumpOnOutOfMemoryError',
-  '-XX:HeapDumpPath=/logs/heapdump.hprof',
-  '-XX:+PrintGCDetails',
-  '-XX:+PrintGCDateStamps',
-  '-Xloggc:/logs/gc.log',
-  '-Dspring.profiles.active=prod',
-  '-Dserver.port=8080'
+  "-Xms4096m",
+  "-Xmx4096m",
+  "-XX:MetaspaceSize=256m",
+  "-XX:MaxMetaspaceSize=512m",
+  "-XX:+UseG1GC",
+  "-XX:MaxGCPauseMillis=200",
+  "-XX:ParallelGCThreads=8",
+  "-XX:ConcGCThreads=2",
+  "-XX:InitiatingHeapOccupancyPercent=45",
+  "-XX:+HeapDumpOnOutOfMemoryError",
+  "-XX:HeapDumpPath=/logs/heapdump.hprof",
+  "-XX:+PrintGCDetails",
+  "-XX:+PrintGCDateStamps",
+  "-Xloggc:/logs/gc.log",
+  "-Dspring.profiles.active=prod",
+  "-Dserver.port=8080",
 ]);
 
 // 环境变量
@@ -138,45 +145,51 @@ interface EnvVar {
 }
 
 const envVars = ref<EnvVar[]>([
-  { name: 'JAVA_HOME', value: '/usr/lib/jvm/java-11-openjdk-amd64' },
-  { name: 'PATH', value: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' },
-  { name: 'SPRING_PROFILES_ACTIVE', value: 'prod' },
-  { name: 'SERVER_PORT', value: '8080' },
-  { name: 'DATABASE_URL', value: 'jdbc:mysql://mysql-server:3306/mydb' },
-  { name: 'REDIS_HOST', value: 'redis-server' },
-  { name: 'LOG_LEVEL', value: 'INFO' },
-  { name: 'TZ', value: 'Asia/Shanghai' }
+  { name: "JAVA_HOME", value: "/usr/lib/jvm/java-11-openjdk-amd64" },
+  {
+    name: "PATH",
+    value: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+  },
+  { name: "SPRING_PROFILES_ACTIVE", value: "prod" },
+  { name: "SERVER_PORT", value: "8080" },
+  { name: "DATABASE_URL", value: "jdbc:mysql://mysql-server:3306/mydb" },
+  { name: "REDIS_HOST", value: "redis-server" },
+  { name: "LOG_LEVEL", value: "INFO" },
+  { name: "TZ", value: "Asia/Shanghai" },
 ]);
 
-const envSearch = ref('');
+const envSearch = ref("");
 
 const filteredEnvVars = computed(() => {
   if (!envSearch.value) return envVars.value;
   const s = envSearch.value.toLowerCase();
-  return envVars.value.filter((e: EnvVar) => e.name.toLowerCase().includes(s) || e.value.toLowerCase().includes(s));
+  return envVars.value.filter(
+    (e: EnvVar) =>
+      e.name.toLowerCase().includes(s) || e.value.toLowerCase().includes(s),
+  );
 });
 
 function getDiskColor(percent: number) {
-  if (percent > 80) return 'text-error';
-  if (percent > 60) return 'text-warning';
-  return 'text-success';
+  if (percent > 80) return "text-error";
+  if (percent > 60) return "text-warning";
+  return "text-success";
 }
 
 function getDiskProgressColor(percent: number) {
-  if (percent > 80) return 'from-error to-error/80';
-  if (percent > 60) return 'from-warning to-warning/80';
-  return 'from-success to-success/80';
+  if (percent > 80) return "from-error to-error/80";
+  if (percent > 60) return "from-warning to-warning/80";
+  return "from-success to-success/80";
 }
 
 function copyJvmArgs() {
-  navigator.clipboard.writeText(jvmArgs.value.join('\n'));
-  window.$message?.success('已复制到剪贴板');
+  navigator.clipboard.writeText(jvmArgs.value.join("\n"));
+  window.$message?.success("已复制到剪贴板");
 }
 
 function createSystemInfoCommand() {
   const params = {
     instanceId: props.instanceId,
-    param: {}
+    param: {},
   };
   fetchSystemInfoCommand(params);
 }
@@ -184,7 +197,7 @@ function createSystemInfoCommand() {
 function createSystemMetricsMonitoringCommand() {
   const params = {
     instanceId: props.instanceId,
-    param: {}
+    param: {},
   };
   fetchSystemMetricsCommand(params);
 }
@@ -195,49 +208,75 @@ function handleCpuMetrics(systemCpuMetrics: undefined | CpuMetrics) {
   }
   cpuMetrics.value.cpuLoad = mul(systemCpuMetrics.cpuLoad, 100);
   cpuMetrics.value.processCpuLoad = mul(systemCpuMetrics.processCpuLoad, 100);
-  if (systemCpuMetrics.oneMinuteLoadAverage && systemCpuMetrics.oneMinuteLoadAverage >= 0) {
-    cpuMetrics.value.oneMinuteLoadAverage = mul(systemCpuMetrics.oneMinuteLoadAverage, 100).toString();
+  if (
+    systemCpuMetrics.oneMinuteLoadAverage &&
+    systemCpuMetrics.oneMinuteLoadAverage >= 0
+  ) {
+    cpuMetrics.value.oneMinuteLoadAverage = mul(
+      systemCpuMetrics.oneMinuteLoadAverage,
+      100,
+    ).toString();
   }
-  if (systemCpuMetrics.fiveMinuteLoadAverage && systemCpuMetrics.fiveMinuteLoadAverage >= 0) {
-    cpuMetrics.value.fiveMinuteLoadAverage = mul(systemCpuMetrics.fiveMinuteLoadAverage, 100).toString();
+  if (
+    systemCpuMetrics.fiveMinuteLoadAverage &&
+    systemCpuMetrics.fiveMinuteLoadAverage >= 0
+  ) {
+    cpuMetrics.value.fiveMinuteLoadAverage = mul(
+      systemCpuMetrics.fiveMinuteLoadAverage,
+      100,
+    ).toString();
   }
-  if (systemCpuMetrics.fifteenMinuteLoadAverage && systemCpuMetrics.fifteenMinuteLoadAverage >= 0) {
-    cpuMetrics.value.fifteenMinuteLoadAverage = mul(systemCpuMetrics.fifteenMinuteLoadAverage, 100).toString();
+  if (
+    systemCpuMetrics.fifteenMinuteLoadAverage &&
+    systemCpuMetrics.fifteenMinuteLoadAverage >= 0
+  ) {
+    cpuMetrics.value.fifteenMinuteLoadAverage = mul(
+      systemCpuMetrics.fifteenMinuteLoadAverage,
+      100,
+    ).toString();
   }
   cpuMetrics.value.idle = sub(100, cpuMetrics.value.cpuLoad);
 }
 
 onMounted(() => {
-  eventBus.on('command:system-info', (data: CommandExecuteResponse<SystemInfoResponse>) => {
-    console.log('Received system info : ', data);
-    const systemInfo = data.data as SystemInfoResponse;
-    hostInfo.value = systemInfo.host;
-    jvmInfo.value = systemInfo.jvm;
-    if (systemInfo.jvm?.environmentProperties) {
-      envVars.value = Object.entries(systemInfo.jvm.environmentProperties).map(([key, value]) => ({
-        name: key,
-        value
-      }));
-    }
-  });
-  eventBus.on('command:system-metrics', (data: CommandExecuteResponse<SystemMetricsResponse>) => {
-    console.log('Received system metrics : ', data);
-    const systemMetrics = data.data as SystemMetricsResponse;
-    handleCpuMetrics(systemMetrics.cpuMetrics);
-    memoryMetrics.value = systemMetrics.memoryMetrics;
-    disks.value = systemMetrics.osFileStores.map(fs => {
-      const usedSpace = sub(fs.totalSpace, fs.usableSpace);
-      return {
-        totalSpace: fs.totalSpace,
-        usableSpace: fs.usableSpace,
-        usedSpace,
-        useRatio: div(mul(usedSpace, 100), fs.totalSpace),
-        mount: fs.mount,
-        type: fs.type
-      };
-    });
-    networkMetrics.value = systemMetrics.networkMetrics;
-  });
+  eventBus.on(
+    "command:system-info",
+    (data: CommandExecuteResponse<SystemInfoResponse>) => {
+      console.log("Received system info : ", data);
+      const systemInfo = data.data as SystemInfoResponse;
+      hostInfo.value = systemInfo.host;
+      jvmInfo.value = systemInfo.jvm;
+      if (systemInfo.jvm?.environmentProperties) {
+        envVars.value = Object.entries(
+          systemInfo.jvm.environmentProperties,
+        ).map(([key, value]) => ({
+          name: key,
+          value,
+        }));
+      }
+    },
+  );
+  eventBus.on(
+    "command:system-metrics",
+    (data: CommandExecuteResponse<SystemMetricsResponse>) => {
+      console.log("Received system metrics : ", data);
+      const systemMetrics = data.data as SystemMetricsResponse;
+      handleCpuMetrics(systemMetrics.cpuMetrics);
+      memoryMetrics.value = systemMetrics.memoryMetrics;
+      disks.value = systemMetrics.osFileStores.map((fs) => {
+        const usedSpace = sub(fs.totalSpace, fs.usableSpace);
+        return {
+          totalSpace: fs.totalSpace,
+          usableSpace: fs.usableSpace,
+          usedSpace,
+          useRatio: div(mul(usedSpace, 100), fs.totalSpace),
+          mount: fs.mount,
+          type: fs.type,
+        };
+      });
+      networkMetrics.value = systemMetrics.networkMetrics;
+    },
+  );
   createSystemInfoCommand();
   createSystemMetricsMonitoringCommand();
 });
@@ -272,7 +311,9 @@ onMounted(() => {
           <div>
             <div class="mb-2 flex items-center justify-between">
               <span class="resource-label">系统CPU</span>
-              <span class="resource-value text-primary">{{ cpuMetrics.cpuLoad }}%</span>
+              <span class="resource-value text-primary"
+                >{{ cpuMetrics.cpuLoad }}%</span
+              >
             </div>
             <div class="resource-progress">
               <div
@@ -284,7 +325,9 @@ onMounted(() => {
           <div>
             <div class="mb-2 flex items-center justify-between">
               <span class="resource-label">进程CPU</span>
-              <span class="resource-value text-success">{{ cpuMetrics.processCpuLoad }}%</span>
+              <span class="resource-value text-success"
+                >{{ cpuMetrics.processCpuLoad }}%</span
+              >
             </div>
             <div class="resource-progress">
               <div
@@ -316,16 +359,26 @@ onMounted(() => {
               <span class="resource-label">物理内存（已使用）</span>
               <div class="text-right">
                 <span class="resource-value text-purple">
-                  {{ formatMemory(memoryMetrics.totalPhysicalMemorySize - memoryMetrics.freePhysicalMemorySize) }}
+                  {{
+                    formatMemory(
+                      memoryMetrics.totalPhysicalMemorySize -
+                        memoryMetrics.freePhysicalMemorySize,
+                    )
+                  }}
                 </span>
-                <span class="resource-max">/ {{ formatMemory(memoryMetrics.totalPhysicalMemorySize) }}</span>
+                <span class="resource-max"
+                  >/
+                  {{
+                    formatMemory(memoryMetrics.totalPhysicalMemorySize)
+                  }}</span
+                >
               </div>
             </div>
             <div class="resource-progress">
               <div
                 class="resource-progress-fill from-purple to-purple/80 bg-gradient-to-r"
                 :style="{
-                  width: `${100 - mul(memoryMetrics.freePhysicalMemorySize / memoryMetrics.totalPhysicalMemorySize, 100)}%`
+                  width: `${100 - mul(memoryMetrics.freePhysicalMemorySize / memoryMetrics.totalPhysicalMemorySize, 100)}%`,
                 }"
               />
             </div>
@@ -335,16 +388,23 @@ onMounted(() => {
               <span class="resource-label">Swap内存（已使用）</span>
               <div class="text-right">
                 <span class="resource-value text-success">
-                  {{ formatMemory(memoryMetrics.totalSwapSpaceSize - memoryMetrics.freeSwapSpaceSize) }}
+                  {{
+                    formatMemory(
+                      memoryMetrics.totalSwapSpaceSize -
+                        memoryMetrics.freeSwapSpaceSize,
+                    )
+                  }}
                 </span>
-                <span class="resource-max">/ {{ formatMemory(memoryMetrics.totalSwapSpaceSize) }}</span>
+                <span class="resource-max"
+                  >/ {{ formatMemory(memoryMetrics.totalSwapSpaceSize) }}</span
+                >
               </div>
             </div>
             <div class="resource-progress">
               <div
                 class="resource-progress-fill from-success to-purple/80 bg-gradient-to-r"
                 :style="{
-                  width: `${100 - mul(memoryMetrics.freeSwapSpaceSize / memoryMetrics.totalSwapSpaceSize, 100)}%`
+                  width: `${100 - mul(memoryMetrics.freeSwapSpaceSize / memoryMetrics.totalSwapSpaceSize, 100)}%`,
                 }"
               />
             </div>
@@ -376,7 +436,9 @@ onMounted(() => {
                 <span class="disk-value" :class="getDiskColor(disk.useRatio)">
                   {{ formatMemory(disk.usedSpace) }}
                 </span>
-                <span class="disk-max">/ {{ formatMemory(disk.totalSpace) }}</span>
+                <span class="disk-max"
+                  >/ {{ formatMemory(disk.totalSpace) }}</span
+                >
               </div>
             </div>
             <div class="disk-progress">
@@ -388,7 +450,9 @@ onMounted(() => {
             </div>
             <div class="mt-1.5 flex items-center justify-between text-xs">
               <span class="text-gray">使用率: {{ disk.useRatio }}%</span>
-              <span class="text-gray">可用: {{ formatMemory(disk.usableSpace) }}</span>
+              <span class="text-gray"
+                >可用: {{ formatMemory(disk.usableSpace) }}</span
+              >
             </div>
           </div>
         </div>
@@ -401,29 +465,23 @@ onMounted(() => {
           网络 统计
         </h4>
         <div class="space-y-4">
-          <div>
-            <div class="mb-2 flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <SvgIcon icon="mdi:arrow-down" class="h-3 w-3 text-success" />
-                <span class="resource-label">接收速率</span>
-              </div>
-              <span class="resource-value text-success">{{ network.rxSpeed }} MB/s</span>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <SvgIcon icon="mdi:arrow-down" class="h-3 w-3 text-success" />
+              <span class="resource-label">接收速率</span>
             </div>
-            <div class="network-progress">
-              <div class="network-progress-fill bg-success" :style="{ width: '62%' }" />
-            </div>
+            <span class="resource-value text-success"
+              >{{ formatMemory(networkMetrics?.recvSpeed) }}/s</span
+            >
           </div>
-          <div>
-            <div class="mb-2 flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <SvgIcon icon="mdi:arrow-up" class="h-3 w-3 text-primary" />
-                <span class="resource-label">发送速率</span>
-              </div>
-              <span class="resource-value text-primary">{{ network.txSpeed }} MB/s</span>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <SvgIcon icon="mdi:arrow-up" class="h-3 w-3 text-primary" />
+              <span class="resource-label">发送速率</span>
             </div>
-            <div class="network-progress">
-              <div class="network-progress-fill bg-primary" :style="{ width: '41%' }" />
-            </div>
+            <span class="resource-value text-primary"
+              >{{ formatMemory(networkMetrics?.sendSpeed) }}/s</span
+            >
           </div>
           <div class="divider-line" />
           <TDescriptions
@@ -449,7 +507,7 @@ onMounted(() => {
         :columns="3"
         label-class="info-label"
         content-class="info-value font-mono"
-        />
+      />
     </NCard>
 
     <!-- JVM参数 -->
@@ -468,7 +526,13 @@ onMounted(() => {
       </div>
       <NScrollbar style="max-height: 240px">
         <div class="jvm-args">
-          <div v-for="(arg, i) in jvmInfo?.inputArguments" :key="i" class="jvm-arg">{{ arg }}</div>
+          <div
+            v-for="(arg, i) in jvmInfo?.inputArguments"
+            :key="i"
+            class="jvm-arg"
+          >
+            {{ arg }}
+          </div>
         </div>
       </NScrollbar>
     </NCard>
@@ -480,7 +544,13 @@ onMounted(() => {
           <SvgIcon icon="mdi:cog" class="h-4 w-4 text-purple" />
           环境变量
         </h4>
-        <NInput v-model:value="envSearch" size="small" placeholder="搜索..." clearable style="width: 200px">
+        <NInput
+          v-model:value="envSearch"
+          size="small"
+          placeholder="搜索..."
+          clearable
+          style="width: 200px"
+        >
           <template #prefix>
             <SvgIcon icon="mdi:magnify" />
           </template>
@@ -489,8 +559,13 @@ onMounted(() => {
       <NScrollbar style="max-height: 400px">
         <NDataTable
           :columns="[
-            { title: '变量名', key: 'name', width: 200, ellipsis: { tooltip: true } },
-            { title: '变量值', key: 'value', ellipsis: { tooltip: true } }
+            {
+              title: '变量名',
+              key: 'name',
+              width: 200,
+              ellipsis: { tooltip: true },
+            },
+            { title: '变量值', key: 'value', ellipsis: { tooltip: true } },
           ]"
           :data="filteredEnvVars"
           :bordered="false"
@@ -607,7 +682,7 @@ onMounted(() => {
 
 .disk-name {
   font-size: 14px;
-  font-family: 'Consolas', 'Monaco', monospace;
+  font-family: "Consolas", "Monaco", monospace;
   color: var(--n-text-color);
 }
 
@@ -649,7 +724,7 @@ onMounted(() => {
 }
 
 .jvm-args {
-  font-family: 'Consolas', 'Monaco', monospace;
+  font-family: "Consolas", "Monaco", monospace;
   font-size: 12px;
 }
 
