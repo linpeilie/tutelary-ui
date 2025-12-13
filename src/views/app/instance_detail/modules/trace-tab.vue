@@ -34,7 +34,7 @@ const props = defineProps<Props>();
 // 表单数据
 const formData = ref({
   className: 'com.tutelary.example.MathGame',
-  methodName: 'exec',
+  methodName: 'primeFactors',
   count: 10,
   minTime: null as number | null,
   includeJdk: false,
@@ -93,7 +93,20 @@ const columns: DataTableColumns<TraceResponse> = [
     title: '方法',
     key: 'method',
     width: 200,
-    render: (row: TraceResponse) => row.node.methodName
+    render: (row: TraceResponse) => {
+      if (row.node.isThrow) {
+        return h(
+          'div',
+          [
+            h('span', row.node.methodName),
+            h('span', {
+              class: 'text-red-600/[.40] font-semibold'
+            }, ' Throw ex'),
+          ]
+        );
+      }
+      return h('div', `${row.node.methodName}`);
+    }
   },
   {
     title: '调用时间',
@@ -401,6 +414,7 @@ const handleClear = () => {
         :bordered="false"
         :single-line="false"
         :max-height="500"
+        :row-class-name="(row: TraceResponse) => (row.node.isThrow ? 'trace-row-error' : '')"
         class="trace-table"
       />
     </NCard>
@@ -662,6 +676,35 @@ const handleClear = () => {
   :deep(.n-data-table-tr:hover) {
     background-color: var(--n-td-color-hover);
   }
+
+  // 异常行样式
+  :deep(.trace-row-error) {
+    background-color: rgba(239, 68, 68, 0.08);
+    border-left: 3px solid rgb(239, 68, 68);
+
+    &:hover {
+      background-color: rgba(239, 68, 68, 0.12);
+    }
+  }
+}
+
+// 方法名样式
+.method-with-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgb(239, 68, 68);
+  font-weight: 600;
+  cursor: help;
+}
+
+.method-error-icon {
+  flex-shrink: 0;
+  color: rgb(239, 68, 68);
+}
+
+.method-normal {
+  color: var(--n-text-color);
 }
 
 .detail-content {
