@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, onMounted, onUnmounted, ref } from 'vue';
 import type { Ref } from 'vue';
-import { NButton, NDrawer, NSelect } from 'naive-ui';
+import { NButton, NDrawer } from 'naive-ui';
 
 interface Props {
   instanceId: string;
@@ -151,19 +151,13 @@ function filterThreads() {
   filteredThreads.value = result;
 }
 
-function getStateColor(state: string): string {
-  switch (state) {
-    case 'RUNNABLE':
-      return 'text-success';
-    case 'WAITING':
-      return 'text-warning';
-    case 'TIMED_WAITING':
-      return 'text-info';
-    case 'BLOCKED':
-      return 'text-error';
-    default:
-      return 'text-gray';
+function toggleStateFilter(state: string) {
+  if (selectedState.value === state) {
+    selectedState.value = null;
+  } else {
+    selectedState.value = state;
   }
+  filterThreads();
 }
 
 function getStateTagClass(state: string): string {
@@ -208,126 +202,37 @@ onUnmounted(() => {
 
 <template>
   <div class="thread-tab">
-    <!-- 线程统计 -->
-    <div class="grid grid-cols-1 mb-4 gap-4 lg:grid-cols-5 md:grid-cols-2">
-      <NCard size="small" class="stat-card">
-        <div class="stat-card-content">
-          <div class="stat-card-header">
-            <span class="stat-card-label">总线程数</span>
-            <SvgIcon icon="mdi:chart-line" class="h-4 w-4 text-primary" />
-          </div>
-          <div class="stat-card-value">{{ threadStats.total }}</div>
-          <div class="stat-card-footer">当前活跃</div>
-        </div>
-      </NCard>
-
-      <NCard size="small" class="stat-card stat-card-success">
-        <div class="stat-card-content">
-          <div class="stat-card-header">
-            <span class="stat-card-label">活跃线程</span>
-            <SvgIcon icon="mdi:play-circle" class="h-4 w-4 text-success" />
-          </div>
-          <div class="stat-card-value text-success">{{ threadStats.active }}</div>
-          <div class="stat-card-footer">Runnable</div>
-        </div>
-      </NCard>
-
-      <NCard size="small" class="stat-card stat-card-warning">
-        <div class="stat-card-content">
-          <div class="stat-card-header">
-            <span class="stat-card-label">等待线程</span>
-            <SvgIcon icon="mdi:pause-circle" class="h-4 w-4 text-warning" />
-          </div>
-          <div class="stat-card-value text-warning">{{ threadStats.waiting }}</div>
-          <div class="stat-card-footer">Waiting</div>
-        </div>
-      </NCard>
-
-      <NCard size="small" class="stat-card stat-card-error">
-        <div class="stat-card-content">
-          <div class="stat-card-header">
-            <span class="stat-card-label">阻塞线程</span>
-            <SvgIcon icon="mdi:stop-circle" class="h-4 w-4 text-error" />
-          </div>
-          <div class="stat-card-value text-error">{{ threadStats.blocked }}</div>
-          <div class="stat-card-footer">Blocked</div>
-        </div>
-      </NCard>
-
-      <NCard size="small" class="stat-card stat-card-info">
-        <div class="stat-card-content">
-          <div class="stat-card-header">
-            <span class="stat-card-label">峰值线程</span>
-            <SvgIcon icon="mdi:trending-up" class="h-4 w-4 text-info" />
-          </div>
-          <div class="stat-card-value text-info">{{ threadStats.peak }}</div>
-          <div class="stat-card-footer">历史峰值</div>
-        </div>
-      </NCard>
+    <div class="flex items-center gap-2 mb-3">
+              <span
+                v-for="item in threadStates"
+                :key="item.state"
+                class="state-filter-tag"
+                :class="[getStateTagClass(item.state), selectedState === item.state ? 'state-filter-tag-active' : '']"
+                @click="toggleStateFilter(item.state)"
+              >
+                {{ item.state }} ({{ item.count }})
+              </span>
     </div>
-
-    <!-- 线程状态分布 -->
-    <NCard size="small" class="card mb-4">
-      <h4 class="card-title">
-        <SvgIcon icon="mdi:chart-donut" class="h-4 w-4 text-primary" />
-        线程状态分布
-      </h4>
-      <div class="space-y-3">
-        <div v-for="item in threadStates" :key="item.state" class="state-item">
-          <div class="mb-2 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="state-tag" :class="getStateTagClass(item.state)">{{ item.state }}</span>
-              <span class="state-count">{{ item.count }} 个线程</span>
-            </div>
-            <span class="state-percent" :class="getStateColor(item.state)">{{ item.percent }}%</span>
-          </div>
-          <div class="state-progress">
-            <div
-              class="state-progress-fill"
-              :class="getStateColor(item.state)"
-              :style="{ width: `${item.percent}%` }"
-            />
-          </div>
-        </div>
-      </div>
-    </NCard>
-
     <!-- 线程列表 -->
     <NCard size="small" class="card">
-      <div class="mb-4 flex items-center justify-between">
+      <NSpace justify="space-between">
         <h4 class="card-title mb-0">
           <SvgIcon icon="mdi:format-list-bulleted" class="h-4 w-4 text-primary" />
           线程列表
         </h4>
-        <div class="flex items-center gap-2">
-          <NSelect
-            v-model:value="selectedState"
-            size="small"
-            placeholder="筛选状态"
-            clearable
-            class="w-150px"
-            :options="[
-              { label: 'RUNNABLE', value: 'RUNNABLE' },
-              { label: 'WAITING', value: 'WAITING' },
-              { label: 'TIMED_WAITING', value: 'TIMED_WAITING' },
-              { label: 'BLOCKED', value: 'BLOCKED' }
-            ]"
-            @update:value="filterThreads"
-          />
-          <NInput
-            v-model:value="searchText"
-            size="small"
-            placeholder="搜索线程..."
-            clearable
-            class="w-200px"
-            @input="filterThreads"
-          >
-            <template #prefix>
-              <SvgIcon icon="mdi:magnify" />
-            </template>
-          </NInput>
-        </div>
-      </div>
+        <NInput
+          v-model:value="searchText"
+          size="small"
+          placeholder="搜索线程..."
+          clearable
+          class="w-200px"
+          @input="filterThreads"
+        >
+          <template #prefix>
+            <SvgIcon icon="mdi:magnify" />
+          </template>
+        </NInput>
+      </NSpace>
 
       <NDataTable
         :columns="[
@@ -558,13 +463,6 @@ onUnmounted(() => {
   margin-top: 12px;
 }
 
-.state-item {
-  padding: 12px;
-  background-color: rgba(var(--n-color-target-rgb), 0.3);
-  border-radius: 8px;
-  border: 1px solid var(--n-border-color);
-}
-
 .state-tag {
   padding: 2px 8px;
   border-radius: 4px;
@@ -572,28 +470,30 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
-.state-count {
-  font-size: 13px;
-  color: var(--n-text-color);
+.state-filter-tag {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  border: 1.5px solid transparent;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 }
 
-.state-percent {
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.state-progress {
-  width: 100%;
-  height: 6px;
-  background-color: var(--n-border-color);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.state-progress-fill {
-  height: 100%;
-  transition: width 0.5s ease;
-  border-radius: 3px;
+.state-filter-tag-active {
+  border-color: currentColor;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-weight: 600;
 }
 
 .detail-section {
