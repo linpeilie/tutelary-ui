@@ -193,6 +193,7 @@ onMounted(() => {
     threadStats.value.active = 80 + Math.floor(Math.random() * 10);
     threadStats.value.runnable = 60 + Math.floor(Math.random() * 10);
   }, 5000);
+
 });
 
 onUnmounted(() => {
@@ -202,16 +203,16 @@ onUnmounted(() => {
 
 <template>
   <div class="thread-tab">
-    <div class="flex items-center gap-2 mb-3">
-              <span
-                v-for="item in threadStates"
-                :key="item.state"
-                class="state-filter-tag"
-                :class="[getStateTagClass(item.state), selectedState === item.state ? 'state-filter-tag-active' : '']"
-                @click="toggleStateFilter(item.state)"
-              >
-                {{ item.state }} ({{ item.count }})
-              </span>
+    <div class="mb-3 flex items-center gap-2">
+      <span
+        v-for="item in threadStates"
+        :key="item.state"
+        class="state-filter-tag"
+        :class="[getStateTagClass(item.state), selectedState === item.state ? 'state-filter-tag-active' : '']"
+        @click="toggleStateFilter(item.state)"
+      >
+        {{ item.state }} ({{ item.count }})
+      </span>
     </div>
     <!-- 线程列表 -->
     <NCard size="small" class="card">

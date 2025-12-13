@@ -275,310 +275,71 @@ onUnmounted(() => {
     </div>
 
     <!-- 垃圾回收统计概览 -->
-    <div class="grid grid-cols-1 mb-6 gap-6 lg:grid-cols-2">
+    <div class="grid grid-cols-1 mb-4 gap-4 lg:grid-cols-2">
       <!-- Young GC 统计 -->
-      <NCard size="small" class="gc-card gc-card-young">
-        <div class="mb-4 flex items-center justify-between">
-          <h3 class="card-title mb-0 flex items-center gap-2">
-            <SvgIcon icon="mdi:lightning-bolt" class="h-5 w-5 text-warning" />
+      <NCard size="small" class="card gc-card">
+        <div class="mb-3 flex items-center justify-between">
+          <h4 class="card-title mb-0">
+            <SvgIcon icon="mdi:lightning-bolt" class="h-4 w-4 text-warning" />
             Young GC 统计
-          </h3>
+          </h4>
           <NTag type="warning" size="small">新生代</NTag>
         </div>
-        <div class="space-y-4">
-          <div class="stat-row">
-            <span class="stat-label">垃圾回收次数</span>
-            <span class="stat-value text-2xl">{{ gcStats.youngGc.count.toLocaleString() }}</span>
+        <div class="gc-stats-grid">
+          <div class="gc-stat-item">
+            <span class="gc-stat-label">回收次数</span>
+            <span class="gc-stat-value text-warning">{{ gcStats.youngGc.count.toLocaleString() }}</span>
           </div>
-          <div class="stat-row">
-            <span class="stat-label">总回收时间</span>
-            <span class="stat-value text-xl text-warning">{{ gcStats.youngGc.totalTime }} 秒</span>
+          <div class="gc-stat-item">
+            <span class="gc-stat-label">总时间</span>
+            <span class="gc-stat-value">{{ gcStats.youngGc.totalTime }}s</span>
           </div>
-          <div class="stat-row">
-            <span class="stat-label">平均回收时间</span>
-            <span class="stat-value">{{ gcStats.youngGc.avgTime }} 毫秒</span>
+          <div class="gc-stat-item">
+            <span class="gc-stat-label">平均时间</span>
+            <span class="gc-stat-value">{{ gcStats.youngGc.avgTime }}ms</span>
           </div>
-          <div class="stat-row">
-            <span class="stat-label">最大回收时间</span>
-            <span class="stat-value">{{ gcStats.youngGc.maxTime }} 毫秒</span>
+          <div class="gc-stat-item">
+            <span class="gc-stat-label">最大时间</span>
+            <span class="gc-stat-value">{{ gcStats.youngGc.maxTime }}ms</span>
           </div>
-          <div class="stat-row border-t-1 border-gray pt-3">
-            <span class="stat-label text-sm">上次GC时间</span>
-            <span class="stat-value text-sm">{{ gcStats.youngGc.lastGc }}</span>
-          </div>
+        </div>
+        <div class="gc-last-time">
+          <span class="text-xs text-gray-400">上次GC: {{ gcStats.youngGc.lastGc }}</span>
         </div>
       </NCard>
 
       <!-- Old GC 统计 -->
-      <NCard size="small" class="gc-card gc-card-old">
-        <div class="mb-4 flex items-center justify-between">
-          <h3 class="card-title mb-0 flex items-center gap-2">
-            <SvgIcon icon="mdi:chart-line" class="h-5 w-5 text-error" />
+      <NCard size="small" class="card gc-card">
+        <div class="mb-3 flex items-center justify-between">
+          <h4 class="card-title mb-0">
+            <SvgIcon icon="mdi:chart-line" class="h-4 w-4 text-error" />
             Old GC 统计
-          </h3>
+          </h4>
           <NTag type="error" size="small">老年代</NTag>
         </div>
-        <div class="space-y-4">
-          <div class="stat-row">
-            <span class="stat-label">垃圾回收次数</span>
-            <span class="stat-value text-2xl">{{ gcStats.oldGc.count }}</span>
+        <div class="gc-stats-grid">
+          <div class="gc-stat-item">
+            <span class="gc-stat-label">回收次数</span>
+            <span class="gc-stat-value text-error">{{ gcStats.oldGc.count }}</span>
           </div>
-          <div class="stat-row">
-            <span class="stat-label">总回收时间</span>
-            <span class="stat-value text-xl text-error">{{ gcStats.oldGc.totalTime }} 秒</span>
+          <div class="gc-stat-item">
+            <span class="gc-stat-label">总时间</span>
+            <span class="gc-stat-value">{{ gcStats.oldGc.totalTime }}s</span>
           </div>
-          <div class="stat-row">
-            <span class="stat-label">平均回收时间</span>
-            <span class="stat-value">{{ gcStats.oldGc.avgTime }} 毫秒</span>
+          <div class="gc-stat-item">
+            <span class="gc-stat-label">平均时间</span>
+            <span class="gc-stat-value">{{ gcStats.oldGc.avgTime }}ms</span>
           </div>
-          <div class="stat-row">
-            <span class="stat-label">最大回收时间</span>
-            <span class="stat-value">{{ gcStats.oldGc.maxTime }} 毫秒</span>
+          <div class="gc-stat-item">
+            <span class="gc-stat-label">最大时间</span>
+            <span class="gc-stat-value">{{ gcStats.oldGc.maxTime }}ms</span>
           </div>
-          <div class="stat-row border-t-1 border-gray pt-3">
-            <span class="stat-label text-sm">上次GC时间</span>
-            <span class="stat-value text-sm">{{ gcStats.oldGc.lastGc }}</span>
-          </div>
+        </div>
+        <div class="gc-last-time">
+          <span class="text-xs text-gray-400">上次GC: {{ gcStats.oldGc.lastGc }}</span>
         </div>
       </NCard>
     </div>
-
-    <!-- GC时间趋势图 -->
-    <NCard size="small" class="card mb-6">
-      <h3 class="card-title">
-        <SvgIcon icon="mdi:chart-timeline-variant" class="h-5 w-5 text-primary" />
-        GC时间趋势
-      </h3>
-      <div class="space-y-3">
-        <div>
-          <div class="mb-1 flex justify-between text-sm">
-            <span class="text-gray-400">Young GC 时间占比</span>
-            <span class="text-warning">{{ gcStats.youngGcPercent }}%</span>
-          </div>
-          <div class="gc-progress">
-            <div class="gc-progress-fill gc-progress-young" :style="{ width: `${gcStats.youngGcPercent}%` }" />
-          </div>
-        </div>
-        <div>
-          <div class="mb-1 flex justify-between text-sm">
-            <span class="text-gray-400">Old GC 时间占比</span>
-            <span class="text-error">{{ gcStats.oldGcPercent }}%</span>
-          </div>
-          <div class="gc-progress">
-            <div class="gc-progress-fill gc-progress-old" :style="{ width: `${gcStats.oldGcPercent}%` }" />
-          </div>
-        </div>
-      </div>
-    </NCard>
-
-    <!-- 堆内存详情 -->
-    <NCard size="small" class="card mb-6">
-      <div class="mb-6 flex items-center justify-between">
-        <h3 class="card-title mb-0">
-          <SvgIcon icon="mdi:database" class="h-5 w-5 text-success" />
-          堆内存详情
-        </h3>
-        <NTag type="success" size="small">Heap Memory</NTag>
-      </div>
-
-      <div class="grid grid-cols-1 mb-6 gap-6 lg:grid-cols-3">
-        <div class="text-center">
-          <div class="mb-1 text-3xl font-bold">{{ heapMemory.used }} GB</div>
-          <div class="text-sm text-gray-400">已使用</div>
-        </div>
-        <div class="text-center">
-          <div class="mb-1 text-3xl text-primary font-bold">{{ heapMemory.committed }} GB</div>
-          <div class="text-sm text-gray-400">已分配</div>
-        </div>
-        <div class="text-center">
-          <div class="mb-1 text-3xl text-success font-bold">{{ heapMemory.max }} GB</div>
-          <div class="text-sm text-gray-400">最大值</div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <div class="mb-2 flex justify-between text-sm">
-          <span class="text-gray-400">堆内存使用率</span>
-          <span class="font-semibold">{{ heapMemory.usagePercent.toFixed(1) }}%</span>
-        </div>
-        <NProgress
-          type="line"
-          :percentage="heapMemory.usagePercent"
-          :height="16"
-          :border-radius="8"
-          :fill-border-radius="8"
-          :show-indicator="false"
-          processing
-        />
-      </div>
-
-      <!-- 堆内存区域详情 -->
-      <div class="mt-6 space-y-3">
-        <h4 class="mb-3 text-sm text-gray-300 font-semibold">堆内存区域分布</h4>
-
-        <!-- Eden Space -->
-        <div class="memory-region">
-          <div class="mb-2 flex items-center justify-between">
-            <span class="font-medium">Eden Space (伊甸园区)</span>
-            <span class="text-sm text-warning">
-              {{ heapMemory.regions.eden.used }} MB / {{ heapMemory.regions.eden.max }} MB
-            </span>
-          </div>
-          <NProgress
-            type="line"
-            :percentage="heapMemory.regions.eden.percent"
-            :height="8"
-            :border-radius="4"
-            :fill-border-radius="4"
-            :show-indicator="false"
-            color="#eab308"
-          />
-        </div>
-
-        <!-- Survivor Space -->
-        <div class="memory-region">
-          <div class="mb-2 flex items-center justify-between">
-            <span class="font-medium">Survivor Space (幸存者区)</span>
-            <span class="text-sm text-info">
-              {{ heapMemory.regions.survivor.used }} MB / {{ heapMemory.regions.survivor.max }} MB
-            </span>
-          </div>
-          <NProgress
-            type="line"
-            :percentage="heapMemory.regions.survivor.percent"
-            :height="8"
-            :border-radius="4"
-            :fill-border-radius="4"
-            :show-indicator="false"
-            color="#06b6d4"
-          />
-        </div>
-
-        <!-- Old Gen -->
-        <div class="memory-region">
-          <div class="mb-2 flex items-center justify-between">
-            <span class="font-medium">Old Gen (老年代)</span>
-            <span class="text-sm text-error">
-              {{ heapMemory.regions.oldGen.used }} MB / {{ heapMemory.regions.oldGen.max }} MB
-            </span>
-          </div>
-          <NProgress
-            type="line"
-            :percentage="heapMemory.regions.oldGen.percent"
-            :height="8"
-            :border-radius="4"
-            :fill-border-radius="4"
-            :show-indicator="false"
-            color="#f97316"
-          />
-        </div>
-      </div>
-    </NCard>
-
-    <!-- 非堆内存详情 -->
-    <NCard size="small" class="card mb-6">
-      <div class="mb-6 flex items-center justify-between">
-        <h3 class="card-title mb-0">
-          <SvgIcon icon="mdi:harddisk" class="h-5 w-5 text-purple-500" />
-          非堆内存详情
-        </h3>
-        <NTag color="#a855f7" size="small">Non-Heap Memory</NTag>
-      </div>
-
-      <div class="grid grid-cols-1 mb-6 gap-6 lg:grid-cols-3">
-        <div class="text-center">
-          <div class="mb-1 text-3xl font-bold">{{ nonHeapMemory.used }} MB</div>
-          <div class="text-sm text-gray-400">已使用</div>
-        </div>
-        <div class="text-center">
-          <div class="mb-1 text-3xl text-primary font-bold">{{ nonHeapMemory.committed }} MB</div>
-          <div class="text-sm text-gray-400">已分配</div>
-        </div>
-        <div class="text-center">
-          <div class="mb-1 text-3xl text-purple-500 font-bold">{{ nonHeapMemory.max }} MB</div>
-          <div class="text-sm text-gray-400">最大值</div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <div class="mb-2 flex justify-between text-sm">
-          <span class="text-gray-400">非堆内存使用率</span>
-          <span class="font-semibold">{{ nonHeapMemory.usagePercent.toFixed(1) }}%</span>
-        </div>
-        <NProgress
-          type="line"
-          :percentage="nonHeapMemory.usagePercent"
-          :height="16"
-          :border-radius="8"
-          :fill-border-radius="8"
-          :show-indicator="false"
-          color="#a855f7"
-          rail-color="rgba(168, 85, 247, 0.2)"
-        />
-      </div>
-
-      <!-- 非堆内存区域详情 -->
-      <div class="mt-6 space-y-3">
-        <h4 class="mb-3 text-sm text-gray-300 font-semibold">非堆内存区域分布</h4>
-
-        <!-- Metaspace -->
-        <div class="memory-region">
-          <div class="mb-2 flex items-center justify-between">
-            <span class="font-medium">Metaspace (元空间)</span>
-            <span class="text-sm text-purple-400">
-              {{ nonHeapMemory.regions.metaspace.used }} MB / {{ nonHeapMemory.regions.metaspace.max }} MB
-            </span>
-          </div>
-          <NProgress
-            type="line"
-            :percentage="nonHeapMemory.regions.metaspace.percent"
-            :height="8"
-            :border-radius="4"
-            :fill-border-radius="4"
-            :show-indicator="false"
-            color="#a855f7"
-          />
-        </div>
-
-        <!-- Code Cache -->
-        <div class="memory-region">
-          <div class="mb-2 flex items-center justify-between">
-            <span class="font-medium">Code Cache (代码缓存)</span>
-            <span class="text-sm text-pink-400">
-              {{ nonHeapMemory.regions.codeCache.used }} MB / {{ nonHeapMemory.regions.codeCache.max }} MB
-            </span>
-          </div>
-          <NProgress
-            type="line"
-            :percentage="nonHeapMemory.regions.codeCache.percent"
-            :height="8"
-            :border-radius="4"
-            :fill-border-radius="4"
-            :show-indicator="false"
-            color="#ec4899"
-          />
-        </div>
-
-        <!-- Compressed Class Space -->
-        <div class="memory-region">
-          <div class="mb-2 flex items-center justify-between">
-            <span class="font-medium">Compressed Class Space (压缩类空间)</span>
-            <span class="text-sm text-indigo-400">
-              {{ nonHeapMemory.regions.compressedClass.used }} MB / {{ nonHeapMemory.regions.compressedClass.max }} MB
-            </span>
-          </div>
-          <NProgress
-            type="line"
-            :percentage="nonHeapMemory.regions.compressedClass.percent"
-            :height="8"
-            :border-radius="4"
-            :fill-border-radius="4"
-            :show-indicator="false"
-            color="#6366f1"
-          />
-        </div>
-      </div>
-    </NCard>
 
     <!-- 内存池详细信息 -->
     <NCard size="small" class="card mb-6">
@@ -596,7 +357,10 @@ onUnmounted(() => {
             render: (row: MemoryPool) => {
               return h(
                 NTag,
-                { type: row.type === 'HEAP' ? 'success' : 'info', size: 'small' },
+                {
+                  type: row.type === 'HEAP' ? 'success' : 'info',
+                  size: 'small'
+                },
                 { default: () => row.type }
               );
             }
@@ -677,34 +441,42 @@ onUnmounted(() => {
 
 .gc-card {
   border-radius: 12px;
+}
+
+.gc-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.gc-stat-item {
+  padding: 8px 12px;
+  background-color: rgba(var(--n-color-target-rgb), 0.3);
+  border-radius: 6px;
   border: 1px solid var(--n-border-color);
-}
-
-.gc-card-young {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.05) 0%, rgba(234, 179, 8, 0.02) 100%);
-  border-color: rgba(234, 179, 8, 0.2);
-}
-
-.gc-card-old {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.02) 100%);
-  border-color: rgba(239, 68, 68, 0.2);
-}
-
-.stat-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.stat-label {
+.gc-stat-label {
+  font-size: 11px;
   color: var(--n-text-color-disabled);
-  font-size: 14px;
+  line-height: 1;
 }
 
-.stat-value {
-  color: var(--n-text-color);
-  font-weight: 600;
+.gc-stat-value {
   font-size: 16px;
+  font-weight: 600;
+  color: var(--n-text-color);
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.gc-last-time {
+  padding-top: 8px;
+  border-top: 1px solid var(--n-border-color);
+  text-align: center;
 }
 
 .gc-progress {
