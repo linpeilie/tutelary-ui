@@ -4,6 +4,7 @@ import type { WebSocketStatusEnum } from '../ws/WebSocketStatusEnum';
 import { EventBus } from './EventBus';
 import { SystemMetricsResponse } from '@/proto/command/result/SystemMetricsResponse';
 import { SystemInfoResponse } from '@/proto/command/result/SystemInfoResponse';
+import { DecompileResponse } from '@/proto/command/result/DecompileResponse';
 
 /**
  * 全局事件总线事件类型定义
@@ -42,7 +43,7 @@ export interface GlobalEvents {
 
   // 诊断相关命令
   'command:heap-dump': CommandExecuteResponse<any>; // 堆转储
-  'command:decompile': CommandExecuteResponse<any>; // 反编译
+  'command:decompile': CommandExecuteResponse<DecompileResponse>; // 反编译
   'command:get-static': CommandExecuteResponse<any>; // 获取静态字段
 
   // 增强相关命令

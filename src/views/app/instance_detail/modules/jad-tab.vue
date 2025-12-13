@@ -1,11 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
+// 引入组件
+import { Codemirror } from 'vue-codemirror';
+// 引入JavaScript语言支持
+import { java } from '@codemirror/lang-java';
+// 引入One Dark主题
+import { oneDark } from '@codemirror/theme-one-dark';
+import { fetchDecompileCommand } from '@/service/api/instance';
+import eventbus from '@/utils/eventbus';
+import type { DecompileResponse } from '@/proto/command/result/DecompileResponse';
 
 interface Props {
   instanceId: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 // 表单数据
 const formData = ref({
@@ -24,12 +33,17 @@ const showAdvanced = ref(false);
 
 // 反编译结果相关
 const decompileResult = ref('');
+
 const decompileClassName = ref('');
+const decompileMethod = ref('');
+
 const isLoading = ref(false);
 const hasResult = ref(false);
+
 const isEditMode = ref(false);
+
 const hasUnsavedChanges = ref(false);
-const editedCode = ref('');
+
 const originalCode = ref('');
 
 // 反编译历史
@@ -39,11 +53,7 @@ interface HistoryItem {
   time: string;
 }
 
-const decompileHistory = ref<HistoryItem[]>([
-  { className: 'com.example.service.UserService', time: '5分钟前' },
-  { className: 'com.example.controller.OrderController', methodName: 'createOrder', time: '10分钟前' },
-  { className: 'com.example.util.DateUtils', time: '15分钟前' }
-]);
+const decompileHistory = ref<HistoryItem[]>([]);
 
 // 热更新历史
 interface HotswapRecord {
@@ -65,140 +75,16 @@ function performDecompile() {
   isLoading.value = true;
   hasResult.value = false;
 
-  // 模拟反编译过程
-  setTimeout(() => {
-    decompileClassName.value = formData.value.className;
-    decompileResult.value = generateSampleCode(formData.value.className, formData.value.methodName);
-    originalCode.value = decompileResult.value;
+  const params = {
+    instanceId: props.instanceId,
+    param: {
+      qualifiedClassName: formData.value.className,
+      methodName: formData.value.methodName
+    }
+  };
+  fetchDecompileCommand(params).catch(() => {
     isLoading.value = false;
-    hasResult.value = true;
-
-    // 添加到历史记录
-    addToHistory(formData.value.className, formData.value.methodName);
-
-    window.$message?.success('反编译成功');
-  }, 1500);
-}
-
-// 生成示例代码
-function generateSampleCode(_className: string, _methodName?: string): string {
-  return `package com.example.service;
-
-import com.example.model.User;
-import com.example.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
-
-/**
- * 用户服务类
- *
- * @author System
- * @version 1.0
- */
-@Service
-@Transactional
-public class UserService {
-
-    @Autowired
-    private UserRepository userRepository;
-
-    /**
-     * 根据ID获取用户
-     *
-     * @param id 用户ID
-     * @return 用户对象
-     */
-    public User getUserById(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("User ID cannot be null");
-        }
-
-        Optional<User> userOptional = this.userRepository.findById(id);
-
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            // 记录日志
-            this.logUserAccess(user);
-            return user;
-        } else {
-            throw new UserNotFoundException("User not found with id: " + id);
-        }
-    }
-
-    /**
-     * 获取所有用户列表
-     *
-     * @return 用户列表
-     */
-    public List<User> getAllUsers() {
-        return this.userRepository.findAll();
-    }
-
-    /**
-     * 创建新用户
-     *
-     * @param user 用户对象
-     * @return 保存后的用户对象
-     */
-    public User createUser(User user) {
-        if (user == null) {
-            throw new IllegalArgumentException("User cannot be null");
-        }
-
-        // 验证用户数据
-        this.validateUser(user);
-
-        // 保存用户
-        User savedUser = this.userRepository.save(user);
-
-        // 发送欢迎邮件
-        this.sendWelcomeEmail(savedUser);
-
-        return savedUser;
-    }
-
-    /**
-     * 更新用户信息
-     *
-     * @param id 用户ID
-     * @param user 用户对象
-     * @return 更新后的用户对象
-     */
-    public User updateUser(Long id, User user) {
-        User existingUser = this.getUserById(id);
-
-        // 更新字段
-        existingUser.setName(user.getName());
-        existingUser.setEmail(user.getEmail());
-        existingUser.setPhone(user.getPhone());
-
-        return this.userRepository.save(existingUser);
-    }
-
-    /**
-     * 删除用户
-     *
-     * @param id 用户ID
-     */
-    public void deleteUser(Long id) {
-        User user = this.getUserById(id);
-        this.userRepository.delete(user);
-
-        // 记录删除日志
-        this.logUserDeletion(user);
-    }
-}`;
-}
-
-// 加载示例
-function loadSample() {
-  formData.value.className = 'com.example.service.UserService';
-  formData.value.methodName = 'getUserById';
-  window.$message?.success('已加载示例');
+  });
 }
 
 // 重置表单
@@ -256,18 +142,17 @@ function loadFromHistory(item: HistoryItem) {
 function toggleEditMode() {
   isEditMode.value = !isEditMode.value;
   if (isEditMode.value) {
-    editedCode.value = decompileResult.value;
+    originalCode.value = decompileResult.value;
   }
 }
 
 // 保存代码更改
 function saveCodeChanges() {
-  if (!editedCode.value) {
+  if (!decompileResult.value) {
     window.$message?.warning('代码内容为空');
     return;
   }
 
-  decompileResult.value = editedCode.value;
   hasUnsavedChanges.value = false;
   isEditMode.value = false;
   window.$message?.success('代码已保存,可以进行热更新');
@@ -284,18 +169,13 @@ function cancelEdit() {
       onPositiveClick: () => {
         isEditMode.value = false;
         hasUnsavedChanges.value = false;
-        editedCode.value = '';
+
+        decompileResult.value = originalCode.value;
       }
     });
   } else {
     isEditMode.value = false;
-    editedCode.value = '';
   }
-}
-
-// 监听代码更改
-function onCodeChange() {
-  hasUnsavedChanges.value = editedCode.value !== originalCode.value;
 }
 
 // 执行热更新
@@ -357,6 +237,32 @@ function clearHotswapHistory() {
     }
   });
 }
+
+onMounted(() => {
+  eventbus.on('command:decompile', data => {
+    console.log('data', data);
+    const decompile = data.data as DecompileResponse;
+    let source = decompile.source;
+    if (source === 'null') {
+      source = '';
+    }
+
+    decompileResult.value = source;
+    originalCode.value = source;
+
+    decompileClassName.value = decompile.qualifiedClassName;
+    decompileMethod.value = decompile.methodName;
+
+    isLoading.value = false;
+    hasResult.value = true;
+
+    addToHistory(formData.value.className, formData.value.methodName);
+  });
+});
+
+onUnmounted(() => {
+  eventbus.off('command:decompile');
+});
 </script>
 
 <template>
@@ -378,7 +284,7 @@ function clearHotswapHistory() {
               </template>
             </NInput>
             <template #feedback>
-              <span class="text-xs text-gray-500">请输入完整的类路径</span>
+              <span class="text-xs text-gray-400">请输入完整的类路径</span>
             </template>
           </NFormItem>
 
@@ -390,25 +296,9 @@ function clearHotswapHistory() {
               </template>
             </NInput>
             <template #feedback>
-              <span class="text-xs text-gray-500">留空则反编译整个类</span>
+              <span class="text-xs text-gray-400">留空则反编译整个类</span>
             </template>
           </NFormItem>
-        </div>
-
-        <!-- 高级选项 -->
-        <div class="border-t-1 border-gray pt-4">
-          <NButton text size="small" @click="showAdvanced = !showAdvanced">
-            <template #icon>
-              <SvgIcon :icon="showAdvanced ? 'mdi:chevron-up' : 'mdi:chevron-down'" />
-            </template>
-            高级选项
-          </NButton>
-
-          <div v-show="showAdvanced" class="grid grid-cols-1 mt-3 gap-3 md:grid-cols-3">
-            <NCheckbox v-model:checked="advancedOptions.showLineNumbers">显示行号</NCheckbox>
-            <NCheckbox v-model:checked="advancedOptions.showComments">显示注释</NCheckbox>
-            <NCheckbox v-model:checked="advancedOptions.beautifyCode">美化代码</NCheckbox>
-          </div>
         </div>
 
         <!-- 操作按钮 -->
@@ -418,12 +308,6 @@ function clearHotswapHistory() {
               <SvgIcon icon="mdi:play" />
             </template>
             开始反编译
-          </NButton>
-          <NButton @click="loadSample">
-            <template #icon>
-              <SvgIcon icon="mdi:file-code" />
-            </template>
-            加载示例
           </NButton>
           <NButton @click="resetForm">
             <template #icon>
@@ -460,8 +344,10 @@ function clearHotswapHistory() {
           >
             <div class="flex items-center gap-2">
               <SvgIcon icon="mdi:file-code" class="h-3 w-3" />
-              <span class="text-xs">{{ item.className.split('.').pop() }}</span>
-              <span v-if="item.methodName" class="text-xs text-gray-400">.{{ item.methodName }}</span>
+              <span class="text-xs">
+                {{ item.className.split('.').pop() }}
+                <span v-if="item.methodName" class="text-gray-400">#{{ item.methodName }}</span>
+              </span>
             </div>
           </NTag>
         </div>
@@ -485,11 +371,13 @@ function clearHotswapHistory() {
       </div>
 
       <!-- 空状态 -->
-      <NEmpty v-if="hotswapHistory.length === 0" description="暂无修改和热更新记录" class="py-8">
-        <template #icon>
-          <SvgIcon icon="mdi:file-clock" class="text-6xl text-gray-600" />
-        </template>
-      </NEmpty>
+      <NEmpty
+        v-if="hotswapHistory.length === 0"
+        description="暂无修改和热更新记录"
+        class="py-8"
+        size="small"
+        :show-icon="false"
+      />
 
       <!-- 历史记录列表 -->
       <div v-else class="space-y-3">
@@ -523,7 +411,9 @@ function clearHotswapHistory() {
           <div class="flex items-center gap-2">
             <SvgIcon icon="mdi:file-code-outline" class="h-4 w-4 text-success" />
             <h4 class="text-sm font-semibold">反编译结果</h4>
-            <NTag v-if="decompileClassName" type="info" size="small">{{ decompileClassName }}</NTag>
+            <NTag v-if="decompileClassName" type="info" size="small">
+              {{ decompileClassName }}{{ decompileMethod ? '#' + decompileMethod : '' }}
+            </NTag>
             <NTag v-if="isEditMode" type="warning" size="small">
               <template #icon>
                 <SvgIcon icon="mdi:pencil" class="h-3 w-3" />
@@ -538,7 +428,12 @@ function clearHotswapHistory() {
             </NTag>
           </div>
           <div class="flex items-center gap-2">
-            <NButton v-if="hasResult && !isEditMode" size="small" type="warning" @click="toggleEditMode">
+            <NButton
+              v-if="hasResult && !isEditMode && !decompileMethod"
+              size="small"
+              type="warning"
+              @click="toggleEditMode"
+            >
               <template #icon>
                 <SvgIcon icon="mdi:pencil" />
               </template>
@@ -586,7 +481,7 @@ function clearHotswapHistory() {
       <!-- 空状态 -->
       <NEmpty v-if="!hasResult && !isLoading" description="请输入类名并点击开始反编译按钮" class="py-12">
         <template #icon>
-          <SvgIcon icon="mdi:file-search" class="text-6xl text-gray-600" />
+          <SvgIcon icon="mdi:file-search" class="text-gray-600" />
         </template>
       </NEmpty>
 
@@ -599,25 +494,12 @@ function clearHotswapHistory() {
 
       <!-- 代码展示区 -->
       <div v-if="hasResult && !isLoading">
-        <!-- 只读模式 -->
-        <div v-if="!isEditMode" class="code-container">
-          <NScrollbar>
-            <pre class="code-content">{{ decompileResult }}</pre>
-          </NScrollbar>
-        </div>
-
-        <!-- 编辑模式 -->
-        <div v-else>
-          <NInput
-            v-model:value="editedCode"
-            type="textarea"
-            :rows="25"
-            :autosize="false"
-            placeholder="编辑代码..."
-            class="code-editor"
-            @input="onCodeChange"
-          />
-        </div>
+        <Codemirror
+          :disabled="!isEditMode"
+          :model-value="decompileResult"
+          :extensions="[java(), oneDark]"
+          :style="{ height: 'auto' }"
+        />
       </div>
     </NCard>
   </div>
@@ -638,13 +520,6 @@ function clearHotswapHistory() {
   &:hover {
     background-color: rgba(var(--n-color-target-rgb), 0.3);
   }
-}
-
-.code-container {
-  max-height: 600px;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  overflow: hidden;
 }
 
 .code-content {
