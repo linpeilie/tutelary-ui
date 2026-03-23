@@ -1,6 +1,8 @@
 import { request } from '@/service/request';
 import CommandCreateRequest = Api.Instance.Command.CommandCreateRequest;
 import type { DecompileRequest } from '@/proto/command/param/DecompileRequest';
+import type { ThreadDetailRequest } from '@/proto/command/param/ThreadDetailRequest';
+import type { ThreadListRequest } from '@/proto/command/param/ThreadListRequest';
 import { TraceRequest } from '@/proto/command/param/TraceRequest';
 
 export function fetchInstanceDetail(instanceId: string) {
@@ -32,6 +34,22 @@ export function fetchSystemInfoCommand(data: CommandCreateRequest<any>) {
 export function fetchSystemMetricsCommand(data: CommandCreateRequest<any>) {
   return request<Api.Instance.Command.CommandTaskResponse>({
     url: `/command/creation/systemMetricsMonitoring`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchThreadListCommand(data: CommandCreateRequest<ThreadListRequest>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/threadList`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchThreadDetailCommand(data: CommandCreateRequest<ThreadDetailRequest>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/threadDetail`,
     method: 'post',
     data
   });

@@ -1,163 +1,203 @@
 <script setup lang="ts">
-import { h, onMounted, onUnmounted, ref } from 'vue';
-import type { Ref } from 'vue';
-import { NButton, NDrawer } from 'naive-ui';
+import { computed, h, onMounted, onUnmounted, ref, watch } from 'vue';
+import { NButton } from 'naive-ui';
+import type { DataTableColumns } from 'naive-ui';
+import { fetchThreadDetailCommand, fetchThreadListCommand } from '@/service/api/instance';
+import eventBus from '@/utils/eventbus';
+import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
+import type { BaseThreadInfo } from '@/proto/command/domain/BaseThreadInfo';
+import type { StackTraceNode } from '@/proto/command/domain/StackTraceNode';
+import type { ThreadStatistic } from '@/proto/command/domain/ThreadStatistic';
+import type { ThreadDetail as ThreadDetailResult } from '@/proto/command/result/ThreadDetail';
+import type { ThreadList as ThreadListResult } from '@/proto/command/result/ThreadList';
 
 interface Props {
   instanceId: string;
 }
 
-defineProps<Props>();
-
-// 线程统计
-const threadStats = ref({
-  total: 120,
-  active: 85,
-  runnable: 65,
-  waiting: 25,
-  timedWaiting: 18,
-  blocked: 10,
-  peak: 145,
-  daemon: 32,
-  started: 156
-});
-
-// 线程状态分布
-const threadStates = ref([
-  { state: 'RUNNABLE', count: 65, percent: 54.2, color: 'text-success' },
-  { state: 'WAITING', count: 25, percent: 20.8, color: 'text-warning' },
-  { state: 'TIMED_WAITING', count: 18, percent: 15.0, color: 'text-info' },
-  { state: 'BLOCKED', count: 10, percent: 8.3, color: 'text-error' },
-  { state: 'NEW', count: 2, percent: 1.7, color: 'text-gray' }
-]);
-
-// 线程列表
-interface ThreadInfo {
-  id: number;
-  name: string;
+interface ThreadStateItem {
   state: string;
-  cpu: number;
-  cpuTime: string;
-  userTime: string;
-  blockedCount: number;
-  blockedTime: string;
-  waitedCount: number;
-  waitedTime: string;
-  priority: number;
-  daemon: boolean;
-  stackTrace?: string[];
+  count: number;
 }
 
-const threads: Ref<ThreadInfo[]> = ref([
+const props = defineProps<Props>();
+
+const THREAD_LIST_REFRESH_INTERVAL = 5000;
+const THREAD_SAMPLER_INTERVAL = 200;
+const THREAD_STATE_ORDER = ['RUNNABLE', 'WAITING', 'TIMED_WAITING', 'BLOCKED', 'NEW', 'TERMINATED'];
+
+const listLoading = ref(false);
+const detailLoading = ref(false);
+const threads = ref<BaseThreadInfo[]>([]);
+const threadStatistic = ref<ThreadStatistic>();
+const searchText = ref('');
+const selectedState = ref<string | null>(null);
+const selectedThreadBase = ref<BaseThreadInfo | null>(null);
+const selectedThreadDetail = ref<ThreadDetailResult | null>(null);
+const showThreadDrawer = ref(false);
+
+const totalThreads = computed(() => threadStatistic.value?.threadCount || threads.value.length);
+const activeThreads = computed(() => threadStatistic.value?.activeThreadCount || 0);
+const waitingThreads = computed(() => threadStatistic.value?.waitingThreadCount || 0);
+const blockedThreads = computed(() => threadStatistic.value?.blockedThreadCount || 0);
+
+const threadStates = computed<ThreadStateItem[]>(() => {
+  const counts = new Map<string, number>();
+
+  for (const thread of threads.value) {
+    counts.set(thread.state, (counts.get(thread.state) || 0) + 1);
+  }
+
+  const entries = Array.from(counts.entries()).map(([state, count]) => ({ state, count }));
+
+  return entries.sort((a, b) => {
+    const left = THREAD_STATE_ORDER.indexOf(a.state);
+    const right = THREAD_STATE_ORDER.indexOf(b.state);
+
+    if (left === -1 && right === -1) return a.state.localeCompare(b.state);
+    if (left === -1) return 1;
+    if (right === -1) return -1;
+
+    return left - right;
+  });
+});
+
+const filteredThreads = computed(() => {
+  const search = searchText.value.trim().toLowerCase();
+
+  return threads.value.filter((thread: BaseThreadInfo) => {
+    const matchesSearch =
+      !search || thread.name.toLowerCase().includes(search) || thread.id.toString().includes(search);
+    const matchesState = !selectedState.value || thread.state === selectedState.value;
+
+    return matchesSearch && matchesState;
+  });
+});
+
+const selectedThreadState = computed(
+  () => selectedThreadDetail.value?.threadState || selectedThreadBase.value?.state || ''
+);
+
+const selectedThreadStackTrace = computed(() => {
+  return (selectedThreadDetail.value?.stackTrace || []).map(formatStackTraceNode);
+});
+
+const hasLockInfo = computed(() => {
+  const detail = selectedThreadDetail.value;
+
+  return Boolean(
+    detail?.lockName || detail?.lockOwnerName || detail?.lock?.className || detail?.lock?.identityHashCode
+  );
+});
+
+const columns = computed<DataTableColumns<BaseThreadInfo>>(() => [
+  { title: 'ID', key: 'id', width: 80 },
+  { title: '线程名称', key: 'name', ellipsis: { tooltip: true }, minWidth: 220 },
+  { title: '线程组', key: 'group', width: 140, ellipsis: { tooltip: true } },
   {
-    id: 1,
-    name: 'http-nio-8080-exec-1',
-    state: 'RUNNABLE',
-    cpu: 15.2,
-    cpuTime: '125ms',
-    userTime: '120ms',
-    blockedCount: 0,
-    blockedTime: '0ms',
-    waitedCount: 5,
-    waitedTime: '25ms',
-    priority: 5,
-    daemon: true,
-    stackTrace: [
-      'java.net.SocketInputStream.socketRead0(Native Method)',
-      'java.net.SocketInputStream.socketRead(SocketInputStream.java:116)',
-      'org.apache.coyote.http11.Http11InputBuffer.fill(Http11InputBuffer.java:789)'
-    ]
+    title: '状态',
+    key: 'state',
+    width: 140,
+    render: (row: BaseThreadInfo) => h('span', { class: ['state-tag', getStateTagClass(row.state)] }, row.state)
   },
   {
-    id: 2,
-    name: 'http-nio-8080-exec-2',
-    state: 'RUNNABLE',
-    cpu: 12.8,
-    cpuTime: '98ms',
-    userTime: '95ms',
-    blockedCount: 2,
-    blockedTime: '5ms',
-    waitedCount: 3,
-    waitedTime: '15ms',
-    priority: 5,
-    daemon: true
+    title: 'CPU %',
+    key: 'cpu',
+    width: 90,
+    render: (row: BaseThreadInfo) => h('span', { class: 'font-bold' }, `${row.cpu}%`)
+  },
+  { title: '优先级', key: 'priority', width: 90, align: 'center' },
+  {
+    title: '守护线程',
+    key: 'daemon',
+    width: 100,
+    render: (row: BaseThreadInfo) =>
+      h('span', { class: row.daemon ? 'text-info' : 'text-gray' }, row.daemon ? '是' : '否')
   },
   {
-    id: 3,
-    name: 'reactor-http-nio-3',
-    state: 'WAITING',
-    cpu: 9.5,
-    cpuTime: '75ms',
-    userTime: '72ms',
-    blockedCount: 1,
-    blockedTime: '2ms',
-    waitedCount: 8,
-    waitedTime: '45ms',
-    priority: 5,
-    daemon: true
-  },
-  {
-    id: 4,
-    name: 'mysql-connector-1',
-    state: 'TIMED_WAITING',
-    cpu: 7.3,
-    cpuTime: '58ms',
-    userTime: '55ms',
-    blockedCount: 0,
-    blockedTime: '0ms',
-    waitedCount: 12,
-    waitedTime: '68ms',
-    priority: 5,
-    daemon: false
-  },
-  {
-    id: 5,
-    name: 'redis-client-1',
-    state: 'RUNNABLE',
-    cpu: 6.1,
-    cpuTime: '48ms',
-    userTime: '46ms',
-    blockedCount: 3,
-    blockedTime: '8ms',
-    waitedCount: 6,
-    waitedTime: '32ms',
-    priority: 5,
-    daemon: true
+    title: '操作',
+    key: 'actions',
+    width: 80,
+    render: (row: BaseThreadInfo) => {
+      return h(
+        NButton,
+        {
+          size: 'tiny',
+          onClick: () => showThreadDetail(row)
+        },
+        { default: () => '详情' }
+      );
+    }
   }
 ]);
 
-const searchText = ref('');
-const selectedState = ref<string | null>(null);
-const selectedThread = ref<ThreadInfo | null>(null);
-const showThreadDrawer = ref(false);
+function createThreadListCommand() {
+  listLoading.value = true;
 
-// 过滤线程
-const filteredThreads = ref(threads.value);
+  fetchThreadListCommand({
+    instanceId: props.instanceId,
+    param: {
+      samplerInterval: THREAD_SAMPLER_INTERVAL
+    }
+  }).catch(() => {
+    listLoading.value = false;
+  });
+}
 
-function filterThreads() {
-  let result = threads.value;
+function createThreadDetailCommand(threadId: number) {
+  detailLoading.value = true;
 
-  if (searchText.value) {
-    const search = searchText.value.toLowerCase();
-    result = result.filter(
-      (t: ThreadInfo) => t.name.toLowerCase().includes(search) || t.id.toString().includes(search)
-    );
+  fetchThreadDetailCommand({
+    instanceId: props.instanceId,
+    param: {
+      id: threadId
+    }
+  }).catch(() => {
+    detailLoading.value = false;
+  });
+}
+
+function handleThreadList(response: CommandExecuteResponse<any>) {
+  const data = response.data as ThreadListResult | undefined;
+  listLoading.value = false;
+
+  if (!data || data.state === 0) {
+    threads.value = [];
+    threadStatistic.value = undefined;
+
+    if (data?.message) {
+      window.$message?.error(data.message);
+    }
+
+    return;
   }
 
-  if (selectedState.value) {
-    result = result.filter((t: ThreadInfo) => t.state === selectedState.value);
+  threadStatistic.value = data.threadStatistic;
+  threads.value = data.threads || [];
+}
+
+function handleThreadDetail(response: CommandExecuteResponse<any>) {
+  console.log('response', response);
+  const data = response.data as ThreadDetailResult | undefined;
+  detailLoading.value = false;
+
+  if (!data || data.state === 0) {
+    if (data?.message) {
+      window.$message?.error(data.message);
+    }
+
+    return;
   }
 
-  filteredThreads.value = result;
+  if (selectedThreadBase.value?.id !== data.id) {
+    return;
+  }
+
+  selectedThreadDetail.value = data;
 }
 
 function toggleStateFilter(state: string) {
-  if (selectedState.value === state) {
-    selectedState.value = null;
-  } else {
-    selectedState.value = state;
-  }
-  filterThreads();
+  selectedState.value = selectedState.value === state ? null : state;
 }
 
 function getStateTagClass(state: string): string {
@@ -175,35 +215,57 @@ function getStateTagClass(state: string): string {
   }
 }
 
-function showThreadDetail(thread: ThreadInfo) {
-  selectedThread.value = thread;
-  showThreadDrawer.value = true;
+function formatStackTraceNode(node: StackTraceNode): string {
+  if (node.isNative) {
+    return `${node.declaringClass}.${node.methodName}(Native Method)`;
+  }
+
+  if (node.lineNumber > 0) {
+    return `${node.declaringClass}.${node.methodName}:${node.lineNumber}`;
+  }
+
+  return `${node.declaringClass}.${node.methodName}`;
 }
 
-function _closeThreadDrawer() {
-  showThreadDrawer.value = false;
-  selectedThread.value = null;
+function showThreadDetail(thread: BaseThreadInfo) {
+  selectedThreadBase.value = thread;
+  selectedThreadDetail.value = null;
+  showThreadDrawer.value = true;
+  createThreadDetailCommand(thread.id);
 }
+
+watch(showThreadDrawer, (show: boolean) => {
+  if (!show) {
+    selectedThreadBase.value = null;
+    selectedThreadDetail.value = null;
+    detailLoading.value = false;
+  }
+});
 
 let updateInterval: NodeJS.Timeout | null = null;
 
 onMounted(() => {
-  filterThreads();
+  createThreadListCommand();
   updateInterval = setInterval(() => {
-    threadStats.value.active = 80 + Math.floor(Math.random() * 10);
-    threadStats.value.runnable = 60 + Math.floor(Math.random() * 10);
-  }, 5000);
-
+    createThreadListCommand();
+  }, THREAD_LIST_REFRESH_INTERVAL);
+  eventBus.on('command:thread-list', handleThreadList);
+  eventBus.on('command:thread-detail', handleThreadDetail);
 });
 
 onUnmounted(() => {
-  if (updateInterval) clearInterval(updateInterval);
+  if (updateInterval) {
+    clearInterval(updateInterval);
+  }
+
+  eventBus.off('command:thread-list', handleThreadList);
+  eventBus.off('command:thread-detail', handleThreadDetail);
 });
 </script>
 
 <template>
   <div class="thread-tab">
-    <div class="mb-3 flex items-center gap-2">
+    <div class="mb-3 flex flex-wrap items-center gap-2">
       <span
         v-for="item in threadStates"
         :key="item.state"
@@ -214,172 +276,106 @@ onUnmounted(() => {
         {{ item.state }} ({{ item.count }})
       </span>
     </div>
-    <!-- 线程列表 -->
+
     <NCard size="small" class="card">
-      <NSpace justify="space-between">
-        <h4 class="card-title mb-0">
-          <SvgIcon icon="mdi:format-list-bulleted" class="h-4 w-4 text-primary" />
-          线程列表
-        </h4>
-        <NInput
-          v-model:value="searchText"
-          size="small"
-          placeholder="搜索线程..."
-          clearable
-          class="w-200px"
-          @input="filterThreads"
-        >
+      <NSpace justify="space-between" align="center">
+        <div class="flex items-center gap-2">
+          <h4 class="card-title" style="margin-bottom: 0">
+            <SvgIcon icon="mdi:format-list-bulleted" class="h-4 w-4 text-primary" />
+            线程列表
+          </h4>
+          <span class="text-12px text-gray">{{ filteredThreads.length }} / {{ totalThreads }}</span>
+        </div>
+        <NInput v-model:value="searchText" size="small" placeholder="搜索线程..." clearable class="w-220px">
           <template #prefix>
             <SvgIcon icon="mdi:magnify" />
           </template>
         </NInput>
       </NSpace>
 
-      <NDataTable
-        :columns="[
-          { title: 'ID', key: 'id', width: 60 },
-          { title: '线程名称', key: 'name', ellipsis: { tooltip: true } },
-          {
-            title: '状态',
-            key: 'state',
-            width: 140,
-            render: (row: ThreadInfo) => {
-              return h('span', { class: ['state-tag', getStateTagClass(row.state)] }, row.state);
-            }
-          },
-          {
-            title: 'CPU %',
-            key: 'cpu',
-            width: 80,
-            render: (row: ThreadInfo) => {
-              return h('span', { class: 'font-bold' }, row.cpu + '%');
-            }
-          },
-          { title: 'CPU时间', key: 'cpuTime', width: 100 },
-          { title: '阻塞次数', key: 'blockedCount', width: 100 },
-          { title: '等待次数', key: 'waitedCount', width: 100 },
-          {
-            title: '优先级',
-            key: 'priority',
-            width: 80,
-            align: 'center'
-          },
-          {
-            title: '守护线程',
-            key: 'daemon',
-            width: 100,
-            render: (row: ThreadInfo) => {
-              return h('span', { class: row.daemon ? 'text-info' : 'text-gray' }, row.daemon ? '是' : '否');
-            }
-          },
-          {
-            title: '操作',
-            key: 'actions',
-            width: 80,
-            render: (row: ThreadInfo) => {
-              return h(
-                NButton,
-                {
-                  size: 'tiny',
-                  onClick: () => showThreadDetail(row)
-                },
-                { default: () => '详情' }
-              );
-            }
-          }
-        ]"
-        :data="filteredThreads"
-        :bordered="false"
-        :max-height="500"
-        size="small"
-      />
+      <NDataTable :columns="columns" :data="filteredThreads" :bordered="false" :loading="listLoading" size="small" />
     </NCard>
 
-    <!-- 线程详情抽屉 -->
     <NDrawer v-model:show="showThreadDrawer" :width="600" placement="right">
-      <NDrawerContent v-if="selectedThread" :title="`线程详情 - ${selectedThread.name}`">
+      <NDrawerContent v-if="selectedThreadBase" :title="`线程详情 - ${selectedThreadBase.name}`">
         <div class="space-y-4">
-          <!-- 基本信息 -->
           <div class="detail-section">
             <h5 class="detail-section-title">基本信息</h5>
             <div class="grid grid-cols-2 gap-3">
               <div class="detail-item">
                 <span class="detail-label">线程ID</span>
-                <span class="detail-value font-mono">{{ selectedThread.id }}</span>
+                <span class="detail-value font-mono">{{ selectedThreadBase.id }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">线程名称</span>
-                <span class="detail-value font-mono">{{ selectedThread.name }}</span>
+                <span class="detail-value font-mono">{{ selectedThreadBase.name }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">线程状态</span>
-                <span class="state-tag" :class="getStateTagClass(selectedThread.state)">
-                  {{ selectedThread.state }}
+                <span class="state-tag" :class="getStateTagClass(selectedThreadState)">
+                  {{ selectedThreadState }}
                 </span>
               </div>
               <div class="detail-item">
+                <span class="detail-label">线程组</span>
+                <span class="detail-value">{{ selectedThreadBase.group || '-' }}</span>
+              </div>
+              <div class="detail-item">
                 <span class="detail-label">优先级</span>
-                <span class="detail-value">{{ selectedThread.priority }}</span>
+                <span class="detail-value">{{ selectedThreadBase.priority }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">守护线程</span>
-                <span class="detail-value" :class="selectedThread.daemon ? 'text-info' : 'text-gray'">
-                  {{ selectedThread.daemon ? '是' : '否' }}
+                <span class="detail-value" :class="selectedThreadBase.daemon ? 'text-info' : 'text-gray'">
+                  {{ selectedThreadBase.daemon ? '是' : '否' }}
                 </span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">CPU占用</span>
-                <span class="detail-value text-primary font-bold">{{ selectedThread.cpu }}%</span>
+                <span class="detail-value text-primary font-bold">{{ selectedThreadBase.cpu }}%</span>
               </div>
             </div>
           </div>
 
-          <!-- 时间统计 -->
+          <div v-if="hasLockInfo || detailLoading" class="detail-section">
+            <h5 class="detail-section-title">锁信息</h5>
+            <NSpin :show="detailLoading">
+              <div class="grid grid-cols-2 gap-3">
+                <div class="detail-item">
+                  <span class="detail-label">锁名称</span>
+                  <span class="detail-value">{{ selectedThreadDetail?.lockName || '-' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">锁拥有者</span>
+                  <span class="detail-value">{{ selectedThreadDetail?.lockOwnerName || '-' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">锁拥有者ID</span>
+                  <span class="detail-value">{{ selectedThreadDetail?.lockOwnerId || '-' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">锁对象</span>
+                  <span class="detail-value font-mono">
+                    {{ selectedThreadDetail?.lock?.className || '-' }}
+                    <template v-if="selectedThreadDetail?.lock?.identityHashCode">
+                      #{{ selectedThreadDetail.lock.identityHashCode }}
+                    </template>
+                  </span>
+                </div>
+              </div>
+            </NSpin>
+          </div>
+
           <div class="detail-section">
-            <h5 class="detail-section-title">时间统计</h5>
-            <div class="grid grid-cols-2 gap-3">
-              <div class="detail-item">
-                <span class="detail-label">CPU时间</span>
-                <span class="detail-value">{{ selectedThread.cpuTime }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">用户时间</span>
-                <span class="detail-value">{{ selectedThread.userTime }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">阻塞时间</span>
-                <span class="detail-value">{{ selectedThread.blockedTime }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">等待时间</span>
-                <span class="detail-value">{{ selectedThread.waitedTime }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 阻塞和等待统计 -->
-          <div class="detail-section">
-            <h5 class="detail-section-title">阻塞和等待统计</h5>
-            <div class="grid grid-cols-2 gap-3">
-              <div class="detail-item">
-                <span class="detail-label">阻塞次数</span>
-                <span class="detail-value font-bold">{{ selectedThread.blockedCount }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">等待次数</span>
-                <span class="detail-value font-bold">{{ selectedThread.waitedCount }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 堆栈信息 -->
-          <div v-if="selectedThread.stackTrace" class="detail-section">
             <h5 class="detail-section-title">堆栈跟踪</h5>
-            <div class="stack-trace">
-              <div v-for="(line, index) in selectedThread.stackTrace" :key="index" class="stack-line">
-                {{ line }}
+            <NSpin :show="detailLoading">
+              <div v-if="selectedThreadStackTrace.length > 0" class="stack-trace">
+                <div v-for="(line, index) in selectedThreadStackTrace" :key="index" class="stack-line">
+                  {{ line }}
+                </div>
               </div>
-            </div>
+              <NEmpty v-else description="暂无堆栈信息" />
+            </NSpin>
           </div>
         </div>
       </NDrawerContent>
@@ -406,62 +402,12 @@ onUnmounted(() => {
   margin-bottom: 16px;
 }
 
-.stat-card {
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.02) 100%);
-  border: 1px solid rgba(59, 130, 246, 0.1);
-}
-
-.stat-card-success {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(34, 197, 94, 0.02) 100%);
-  border-color: rgba(34, 197, 94, 0.1);
-}
-
-.stat-card-warning {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.05) 0%, rgba(234, 179, 8, 0.02) 100%);
-  border-color: rgba(234, 179, 8, 0.1);
-}
-
-.stat-card-error {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.02) 100%);
-  border-color: rgba(239, 68, 68, 0.1);
-}
-
-.stat-card-info {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(99, 102, 241, 0.02) 100%);
-  border-color: rgba(99, 102, 241, 0.1);
-}
-
-.stat-card-content {
-  padding: 4px;
-}
-
-.stat-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.stat-card-label {
+.summary-tag {
+  padding: 4px 10px;
+  border-radius: 999px;
   font-size: 12px;
-  color: var(--n-text-color-disabled);
-}
-
-.stat-card-value {
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--n-text-color);
-  margin: 8px 0;
-}
-
-.stat-card-footer {
-  font-size: 11px;
-  color: var(--n-text-color-disabled);
-}
-
-.space-y-3 > * + * {
-  margin-top: 12px;
+  font-weight: 500;
+  background-color: var(--n-color-target);
 }
 
 .state-tag {
