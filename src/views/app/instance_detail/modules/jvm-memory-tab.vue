@@ -1,61 +1,27 @@
 <script setup lang="ts">
-import { h, onMounted, onUnmounted, ref } from 'vue';
+import { computed, h, onMounted, onUnmounted, ref } from 'vue';
 import type { Ref } from 'vue';
 import { NTag } from 'naive-ui';
+import { fetchJvmMemoryCommand } from '@/service/api/instance';
+import eventBus from '@/utils/eventbus';
+import { formatMemory } from '@/utils/common';
+import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
+import type { GarbageCollector } from '@/proto/command/domain/GarbageCollector';
+import type { JvmMemory } from '@/proto/command/domain/JvmMemory';
+import type { JvmMemoryResponse } from '@/proto/command/result/JvmMemoryResponse';
 
 interface Props {
   instanceId: string;
 }
 
-defineProps<Props>();
+interface GcStat {
+  count: number;
+  totalTime: number | null;
+  avgTime: number | null;
+  maxTime: number | null;
+  lastGc: string;
+}
 
-// GC统计数据
-const gcStats = ref({
-  youngGc: {
-    count: 1247,
-    totalTime: 12.34,
-    avgTime: 9.89,
-    maxTime: 45.6,
-    lastGc: '2分钟前'
-  },
-  oldGc: {
-    count: 89,
-    totalTime: 8.76,
-    avgTime: 98.43,
-    maxTime: 256.7,
-    lastGc: '15分钟前'
-  },
-  youngGcPercent: 58.5,
-  oldGcPercent: 41.5
-});
-
-// 堆内存数据
-const heapMemory = ref({
-  used: 1.2,
-  committed: 2.0,
-  max: 4.0,
-  usagePercent: 60.0,
-  regions: {
-    eden: { used: 256, max: 512, percent: 50 },
-    survivor: { used: 64, max: 128, percent: 50 },
-    oldGen: { used: 900, max: 1400, percent: 64.3 }
-  }
-});
-
-// 非堆内存数据
-const nonHeapMemory = ref({
-  used: 256,
-  committed: 280,
-  max: 512,
-  usagePercent: 50.0,
-  regions: {
-    metaspace: { used: 128, max: 256, percent: 50 },
-    codeCache: { used: 64, max: 128, percent: 50 },
-    compressedClass: { used: 64, max: 128, percent: 50 }
-  }
-});
-
-// 内存池数据
 interface MemoryPool {
   name: string;
   type: 'HEAP' | 'NON_HEAP';
@@ -66,64 +32,6 @@ interface MemoryPool {
   status: string;
 }
 
-const memoryPools: Ref<MemoryPool[]> = ref([
-  {
-    name: 'PS Eden Space',
-    type: 'HEAP',
-    used: '256 MB',
-    committed: '512 MB',
-    max: '512 MB',
-    usage: 50,
-    status: '正常'
-  },
-  {
-    name: 'PS Survivor Space',
-    type: 'HEAP',
-    used: '64 MB',
-    committed: '128 MB',
-    max: '128 MB',
-    usage: 50,
-    status: '正常'
-  },
-  {
-    name: 'PS Old Gen',
-    type: 'HEAP',
-    used: '900 MB',
-    committed: '1.4 GB',
-    max: '2.8 GB',
-    usage: 64.3,
-    status: '正常'
-  },
-  {
-    name: 'Metaspace',
-    type: 'NON_HEAP',
-    used: '128 MB',
-    committed: '140 MB',
-    max: '256 MB',
-    usage: 50,
-    status: '正常'
-  },
-  {
-    name: 'Code Cache',
-    type: 'NON_HEAP',
-    used: '64 MB',
-    committed: '80 MB',
-    max: '128 MB',
-    usage: 50,
-    status: '正常'
-  },
-  {
-    name: 'Compressed Class Space',
-    type: 'NON_HEAP',
-    used: '64 MB',
-    committed: '70 MB',
-    max: '128 MB',
-    usage: 50,
-    status: '正常'
-  }
-]);
-
-// GC日志
 interface GcLog {
   time: string;
   type: string;
@@ -133,72 +41,28 @@ interface GcLog {
   reason: string;
 }
 
-const gcLogs: Ref<GcLog[]> = ref([
-  {
-    time: '2024-01-15 14:35:42',
-    type: 'Young GC',
-    duration: '8.5ms',
-    before: '512MB',
-    after: '256MB',
-    reason: 'Allocation Failure'
-  },
-  {
-    time: '2024-01-15 14:33:18',
-    type: 'Young GC',
-    duration: '9.2ms',
-    before: '510MB',
-    after: '248MB',
-    reason: 'Allocation Failure'
-  },
-  {
-    time: '2024-01-15 14:20:35',
-    type: 'Old GC',
-    duration: '156.3ms',
-    before: '2.1GB',
-    after: '900MB',
-    reason: 'Ergonomics'
-  },
-  {
-    time: '2024-01-15 14:18:22',
-    type: 'Young GC',
-    duration: '7.8ms',
-    before: '508MB',
-    after: '252MB',
-    reason: 'Allocation Failure'
-  },
-  {
-    time: '2024-01-15 14:15:45',
-    type: 'Young GC',
-    duration: '10.1ms',
-    before: '515MB',
-    after: '260MB',
-    reason: 'Allocation Failure'
-  },
-  {
-    time: '2024-01-15 14:10:12',
-    type: 'Young GC',
-    duration: '8.9ms',
-    before: '511MB',
-    after: '255MB',
-    reason: 'Allocation Failure'
-  },
-  {
-    time: '2024-01-15 14:05:33',
-    type: 'Old GC',
-    duration: '142.7ms',
-    before: '2.3GB',
-    after: '950MB',
-    reason: 'Ergonomics'
-  },
-  {
-    time: '2024-01-15 14:02:58',
-    type: 'Young GC',
-    duration: '9.5ms',
-    before: '513MB',
-    after: '258MB',
-    reason: 'Allocation Failure'
-  }
-]);
+const props = defineProps<Props>();
+
+const loading = ref(false);
+const memoryPools: Ref<MemoryPool[]> = ref([]);
+const gcLogs: Ref<GcLog[]> = ref([]);
+
+const gcStats = ref<{ youngGc: GcStat; oldGc: GcStat }>({
+  youngGc: createEmptyGcStat(),
+  oldGc: createEmptyGcStat()
+});
+
+const gcLogPlaceholder = computed(() => gcLogs.value.length === 0);
+
+function createEmptyGcStat(): GcStat {
+  return {
+    count: 0,
+    totalTime: null,
+    avgTime: null,
+    maxTime: null,
+    lastGc: '待补充'
+  };
+}
 
 function getUsageColor(usage: number): string {
   if (usage > 80) return 'text-error';
@@ -212,41 +76,123 @@ function getUsageTagType(usage: number): 'error' | 'warning' | 'success' {
   return 'success';
 }
 
-function refreshMemoryData() {
-  window.$message?.success('内存数据刷新成功');
-  gcStats.value.youngGc.count += 1;
+function getUsagePercent(memory: JvmMemory): number {
+  const denominator = memory.max > 0 ? memory.max : memory.committed;
+
+  if (!denominator) {
+    return 0;
+  }
+
+  return Number(((memory.used / denominator) * 100).toFixed(1));
 }
 
-function forceGC() {
-  window.$dialog?.warning({
-    title: '确认操作',
-    content: '确定要强制执行垃圾回收吗？\n\n注意:强制GC可能会暂停应用程序执行,影响性能。',
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: () => {
-      window.$message?.success('垃圾回收执行成功');
-    }
+function getPoolStatus(usage: number): string {
+  if (usage > 80) return '偏高';
+  return '正常';
+}
+
+function getGcGroup(name: string): 'young' | 'old' {
+  return /(young|new|scavenge|copy|parnew|eden)/i.test(name) ? 'young' : 'old';
+}
+
+function formatMetric(value: number | null, unit: string): string {
+  if (value === null) {
+    return '待补充';
+  }
+
+  return `${value}${unit}`;
+}
+
+function updateMemoryPools(response: JvmMemoryResponse) {
+  memoryPools.value = [
+    ...response.heapMemory.map(memory => toMemoryPool(memory, 'HEAP')),
+    ...response.nonHeapMemory.map(memory => toMemoryPool(memory, 'NON_HEAP')),
+    ...response.bufferPoolMemory.map(memory => toMemoryPool(memory, 'NON_HEAP'))
+  ];
+}
+
+function toMemoryPool(memory: JvmMemory, type: 'HEAP' | 'NON_HEAP'): MemoryPool {
+  const usage = getUsagePercent(memory);
+
+  return {
+    name: memory.name,
+    type,
+    used: formatMemory(memory.used),
+    committed: formatMemory(memory.committed),
+    max: memory.max > 0 ? formatMemory(memory.max) : '未限制',
+    usage,
+    status: getPoolStatus(usage)
+  };
+}
+
+function updateGcStats(collectors: GarbageCollector[]) {
+  const next = {
+    youngGc: createEmptyGcStat(),
+    oldGc: createEmptyGcStat()
+  };
+
+  for (const collector of collectors) {
+    const target = getGcGroup(collector.name) === 'young' ? next.youngGc : next.oldGc;
+    target.count += collector.collectionCount;
+    target.totalTime = Number((((target.totalTime || 0) * 1000 + collector.collectionTime) / 1000).toFixed(2));
+  }
+
+  gcStats.value = next;
+}
+
+function createJvmMemoryCommand() {
+  loading.value = true;
+
+  fetchJvmMemoryCommand({
+    instanceId: props.instanceId,
+    param: {}
+  }).catch(() => {
+    loading.value = false;
   });
 }
 
-function clearGCLogs() {
-  gcLogs.value = [];
-  window.$message?.success('GC日志已清空');
+function handleJvmMemory(response: CommandExecuteResponse<JvmMemoryResponse>) {
+  console.log('Received JVM Memory Response:', response);
+  loading.value = false;
+  const data = response.data as JvmMemoryResponse | undefined;
+
+  if (!data || data.state === 0) {
+    memoryPools.value = [];
+    gcStats.value = {
+      youngGc: createEmptyGcStat(),
+      oldGc: createEmptyGcStat()
+    };
+
+    if (data?.message) {
+      window.$message?.error(data.message);
+    }
+
+    return;
+  }
+
+  updateMemoryPools(data);
+  updateGcStats(data.garbageCollectors || []);
 }
 
-let updateInterval: NodeJS.Timeout | null = null;
+function refreshMemoryData() {
+  createJvmMemoryCommand();
+}
+
+function forceGC() {
+  window.$message?.info('后端暂未提供强制 GC 命令，先保留当前页面样式');
+}
+
+function clearGCLogs() {
+  window.$message?.info('后端暂未提供 GC 日志，当前区域仅保留样式占位');
+}
 
 onMounted(() => {
-  updateInterval = setInterval(() => {
-    // 随机更新堆内存使用率
-    heapMemory.value.usagePercent = 55 + Math.random() * 10;
-    // 随机更新非堆内存使用率
-    nonHeapMemory.value.usagePercent = 48 + Math.random() * 6;
-  }, 3000);
+  createJvmMemoryCommand();
+  eventBus.on('command:jvm-memory', handleJvmMemory);
 });
 
 onUnmounted(() => {
-  if (updateInterval) clearInterval(updateInterval);
+  eventBus.off('command:jvm-memory', handleJvmMemory);
 });
 </script>
 
@@ -259,13 +205,13 @@ onUnmounted(() => {
         <p class="text-gray-400">垃圾回收统计和内存使用详情</p>
       </div>
       <div class="flex gap-3">
-        <NButton type="primary" @click="refreshMemoryData">
+        <NButton type="primary" :loading="loading" @click="refreshMemoryData">
           <template #icon>
             <SvgIcon icon="mdi:refresh" />
           </template>
           刷新数据
         </NButton>
-        <NButton type="success" @click="forceGC">
+        <NButton type="success" disabled @click="forceGC">
           <template #icon>
             <SvgIcon icon="mdi:delete" />
           </template>
@@ -292,15 +238,15 @@ onUnmounted(() => {
           </div>
           <div class="gc-stat-item">
             <span class="gc-stat-label">总时间</span>
-            <span class="gc-stat-value">{{ gcStats.youngGc.totalTime }}s</span>
+            <span class="gc-stat-value">{{ formatMetric(gcStats.youngGc.totalTime, 's') }}</span>
           </div>
           <div class="gc-stat-item">
             <span class="gc-stat-label">平均时间</span>
-            <span class="gc-stat-value">{{ gcStats.youngGc.avgTime }}ms</span>
+            <span class="gc-stat-value">{{ formatMetric(gcStats.youngGc.avgTime, 'ms') }}</span>
           </div>
           <div class="gc-stat-item">
             <span class="gc-stat-label">最大时间</span>
-            <span class="gc-stat-value">{{ gcStats.youngGc.maxTime }}ms</span>
+            <span class="gc-stat-value">{{ formatMetric(gcStats.youngGc.maxTime, 'ms') }}</span>
           </div>
         </div>
         <div class="gc-last-time">
@@ -324,15 +270,15 @@ onUnmounted(() => {
           </div>
           <div class="gc-stat-item">
             <span class="gc-stat-label">总时间</span>
-            <span class="gc-stat-value">{{ gcStats.oldGc.totalTime }}s</span>
+            <span class="gc-stat-value">{{ formatMetric(gcStats.oldGc.totalTime, 's') }}</span>
           </div>
           <div class="gc-stat-item">
             <span class="gc-stat-label">平均时间</span>
-            <span class="gc-stat-value">{{ gcStats.oldGc.avgTime }}ms</span>
+            <span class="gc-stat-value">{{ formatMetric(gcStats.oldGc.avgTime, 'ms') }}</span>
           </div>
           <div class="gc-stat-item">
             <span class="gc-stat-label">最大时间</span>
-            <span class="gc-stat-value">{{ gcStats.oldGc.maxTime }}ms</span>
+            <span class="gc-stat-value">{{ formatMetric(gcStats.oldGc.maxTime, 'ms') }}</span>
           </div>
         </div>
         <div class="gc-last-time">
@@ -374,7 +320,7 @@ onUnmounted(() => {
             align: 'right',
             width: 120,
             render: (row: MemoryPool) => {
-              return h('span', { class: ['font-semibold', getUsageColor(row.usage)] }, row.usage.toFixed(1) + '%');
+              return h('span', { class: ['font-semibold', getUsageColor(row.usage)] }, `${row.usage.toFixed(1)}%`);
             }
           },
           {
@@ -400,10 +346,12 @@ onUnmounted(() => {
           <SvgIcon icon="mdi:text-box" class="h-5 w-5 text-gray-400" />
           最近GC日志
         </h3>
-        <NButton size="small" type="error" quaternary @click="clearGCLogs">清空日志</NButton>
+        <NButton size="small" type="error" quaternary :disabled="gcLogPlaceholder" @click="clearGCLogs">
+          清空日志
+        </NButton>
       </div>
       <NScrollbar class="gc-log-container">
-        <div class="text-xs font-mono space-y-2">
+        <div v-if="gcLogs.length > 0" class="text-xs font-mono space-y-2">
           <div v-for="(log, index) in gcLogs" :key="index" class="gc-log-item">
             <span class="text-gray-500">{{ log.time }}</span>
             <NTag :type="log.type.includes('Young') ? 'warning' : 'error'" size="small">{{ log.type }}</NTag>
@@ -414,6 +362,9 @@ onUnmounted(() => {
             <span class="text-gray-400">{{ log.before }} → {{ log.after }}</span>
             <span class="text-gray-500">[{{ log.reason }}]</span>
           </div>
+        </div>
+        <div v-else class="h-full flex items-center justify-center text-sm text-gray-500">
+          后端暂未返回 GC 日志，当前保留区域样式占位。
         </div>
       </NScrollbar>
     </NCard>

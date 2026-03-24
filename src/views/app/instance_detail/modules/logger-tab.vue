@@ -1,43 +1,35 @@
 <script setup lang="ts">
-import { computed, h, ref } from 'vue';
-import {
-  NButton,
-  NCard,
-  NDataTable,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NInput,
-  NModal,
-  NSelect,
-  NTag
-} from 'naive-ui';
-import type { DataTableColumns } from 'naive-ui';
+import { computed, h, onMounted, onUnmounted, ref } from 'vue';
+import { NButton, NTag } from 'naive-ui';
+import type { DataTableColumns, PaginationProps, SelectOption } from 'naive-ui';
+import { fetchLoggerInfoCommand, fetchUpdateLoggerLevelCommand } from '@/service/api/instance';
+import eventBus from '@/utils/eventbus';
+import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
+import type { LoggerInfoResponse } from '@/proto/command/result/LoggerInfoResponse';
+import type { UpdateLoggerLevelResponse } from '@/proto/command/result/UpdateLoggerLevelResponse';
 
-// Props
 interface Props {
   instanceId: string;
 }
 
-defineProps<Props>();
+interface LoggerRow {
+  name: string;
+  configuredLevel: string | null;
+  effectiveLevel: string;
+  additivity: boolean;
+  appenders: string[];
+  classLoaderHash: string;
+}
 
-// 日志级别统计
-const levelStats = ref({
-  total: 68,
-  error: 3,
-  warn: 8,
-  info: 42,
-  debug: 12,
-  trace: 3
-});
+const props = defineProps<Props>();
 
-// 搜索和筛选
 const searchText = ref('');
 const selectedLevel = ref<string | null>(null);
+const loading = ref(false);
+const submitting = ref(false);
+const loggers = ref<LoggerRow[]>([]);
 
-const levelFilterOptions = [
-  { label: '全部级别', value: null },
+const levelFilterOptions: SelectOption[] = [
   { label: 'TRACE', value: 'TRACE' },
   { label: 'DEBUG', value: 'DEBUG' },
   { label: 'INFO', value: 'INFO' },
@@ -46,235 +38,15 @@ const levelFilterOptions = [
   { label: 'OFF', value: 'OFF' }
 ];
 
-// Logger 数据
-interface Logger {
-  name: string;
-  configuredLevel: string | null;
-  effectiveLevel: string;
-  additivity: boolean;
-  appenders: string[];
-}
-
-const loggers = ref<Logger[]>([
-  { name: 'ROOT', configuredLevel: 'INFO', effectiveLevel: 'INFO', additivity: false, appenders: ['console', 'file'] },
-  {
-    name: 'com.example',
-    configuredLevel: 'INFO',
-    effectiveLevel: 'INFO',
-    additivity: true,
-    appenders: ['file']
-  },
-  {
-    name: 'com.example.controller',
-    configuredLevel: 'DEBUG',
-    effectiveLevel: 'DEBUG',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'com.example.controller.UserController',
-    configuredLevel: null,
-    effectiveLevel: 'DEBUG',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'com.example.controller.OrderController',
-    configuredLevel: 'INFO',
-    effectiveLevel: 'INFO',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'com.example.service',
-    configuredLevel: 'INFO',
-    effectiveLevel: 'INFO',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'com.example.service.UserService',
-    configuredLevel: 'DEBUG',
-    effectiveLevel: 'DEBUG',
-    additivity: true,
-    appenders: ['user-service']
-  },
-  {
-    name: 'com.example.service.OrderService',
-    configuredLevel: null,
-    effectiveLevel: 'INFO',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'com.example.repository',
-    configuredLevel: 'WARN',
-    effectiveLevel: 'WARN',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'com.example.repository.UserRepository',
-    configuredLevel: null,
-    effectiveLevel: 'WARN',
-    additivity: true,
-    appenders: []
-  },
-  { name: 'com.example.util', configuredLevel: 'ERROR', effectiveLevel: 'ERROR', additivity: true, appenders: [] },
-  { name: 'com.example.config', configuredLevel: 'INFO', effectiveLevel: 'INFO', additivity: true, appenders: [] },
-  {
-    name: 'org.springframework',
-    configuredLevel: 'INFO',
-    effectiveLevel: 'INFO',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'org.springframework.boot',
-    configuredLevel: 'INFO',
-    effectiveLevel: 'INFO',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'org.springframework.web',
-    configuredLevel: 'DEBUG',
-    effectiveLevel: 'DEBUG',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'org.springframework.security',
-    configuredLevel: 'WARN',
-    effectiveLevel: 'WARN',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'org.springframework.data',
-    configuredLevel: 'INFO',
-    effectiveLevel: 'INFO',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'org.springframework.transaction',
-    configuredLevel: 'DEBUG',
-    effectiveLevel: 'DEBUG',
-    additivity: true,
-    appenders: []
-  },
-  { name: 'org.hibernate', configuredLevel: 'WARN', effectiveLevel: 'WARN', additivity: true, appenders: [] },
-  {
-    name: 'org.hibernate.SQL',
-    configuredLevel: 'DEBUG',
-    effectiveLevel: 'DEBUG',
-    additivity: true,
-    appenders: ['sql']
-  },
-  {
-    name: 'org.hibernate.type',
-    configuredLevel: 'TRACE',
-    effectiveLevel: 'TRACE',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'org.hibernate.cache',
-    configuredLevel: 'INFO',
-    effectiveLevel: 'INFO',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'org.apache.catalina',
-    configuredLevel: 'INFO',
-    effectiveLevel: 'INFO',
-    additivity: true,
-    appenders: []
-  },
-  { name: 'org.apache.tomcat', configuredLevel: 'INFO', effectiveLevel: 'INFO', additivity: true, appenders: [] },
-  { name: 'org.apache.coyote', configuredLevel: 'WARN', effectiveLevel: 'WARN', additivity: true, appenders: [] },
-  { name: 'com.zaxxer.hikari', configuredLevel: 'INFO', effectiveLevel: 'INFO', additivity: true, appenders: [] },
-  {
-    name: 'com.zaxxer.hikari.pool',
-    configuredLevel: 'DEBUG',
-    effectiveLevel: 'DEBUG',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'redis.clients.jedis',
-    configuredLevel: 'WARN',
-    effectiveLevel: 'WARN',
-    additivity: true,
-    appenders: []
-  },
-  { name: 'io.lettuce', configuredLevel: 'INFO', effectiveLevel: 'INFO', additivity: true, appenders: [] },
-  { name: 'org.mybatis', configuredLevel: 'DEBUG', effectiveLevel: 'DEBUG', additivity: true, appenders: [] },
-  {
-    name: 'org.apache.ibatis',
-    configuredLevel: 'TRACE',
-    effectiveLevel: 'TRACE',
-    additivity: true,
-    appenders: []
-  },
-  { name: 'com.alibaba.druid', configuredLevel: 'INFO', effectiveLevel: 'INFO', additivity: true, appenders: [] },
-  {
-    name: 'com.netflix.discovery',
-    configuredLevel: 'WARN',
-    effectiveLevel: 'WARN',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'com.netflix.eureka',
-    configuredLevel: 'WARN',
-    effectiveLevel: 'WARN',
-    additivity: true,
-    appenders: []
-  },
-  { name: 'org.apache.kafka', configuredLevel: 'INFO', effectiveLevel: 'INFO', additivity: true, appenders: [] },
-  {
-    name: 'org.apache.zookeeper',
-    configuredLevel: 'ERROR',
-    effectiveLevel: 'ERROR',
-    additivity: true,
-    appenders: []
-  },
-  { name: 'io.netty', configuredLevel: 'WARN', effectiveLevel: 'WARN', additivity: true, appenders: [] },
-  {
-    name: 'com.fasterxml.jackson',
-    configuredLevel: 'INFO',
-    effectiveLevel: 'INFO',
-    additivity: true,
-    appenders: []
-  },
-  {
-    name: 'org.quartz',
-    configuredLevel: 'INFO',
-    effectiveLevel: 'INFO',
-    additivity: true,
-    appenders: ['scheduler']
-  },
-  {
-    name: 'springfox.documentation',
-    configuredLevel: 'WARN',
-    effectiveLevel: 'WARN',
-    additivity: true,
-    appenders: []
-  }
-]);
-
-// 编辑模态框
 const showEditModal = ref(false);
 const editForm = ref({
   name: '',
+  classLoaderHash: '',
   currentLevel: '',
   newLevel: ''
 });
 
-const levelOptions = [
+const levelOptions: SelectOption[] = [
   { label: 'TRACE - 最详细的日志', value: 'TRACE' },
   { label: 'DEBUG - 调试信息', value: 'DEBUG' },
   { label: 'INFO - 一般信息', value: 'INFO' },
@@ -283,9 +55,8 @@ const levelOptions = [
   { label: 'OFF - 关闭日志', value: 'OFF' }
 ];
 
-// 筛选后的数据
 const filteredData = computed(() => {
-  return loggers.value.filter((logger: Logger) => {
+  return loggers.value.filter((logger: LoggerRow) => {
     const matchSearch = !searchText.value || logger.name.toLowerCase().includes(searchText.value.toLowerCase());
     const matchLevel =
       !selectedLevel.value ||
@@ -295,7 +66,31 @@ const filteredData = computed(() => {
   });
 });
 
-// 日志级别颜色映射
+const levelStats = computed(() => {
+  return loggers.value.reduce(
+    (stats, logger) => {
+      const level = logger.effectiveLevel || 'INFO';
+      stats.total += 1;
+
+      if (level === 'ERROR') stats.error += 1;
+      if (level === 'WARN') stats.warn += 1;
+      if (level === 'INFO') stats.info += 1;
+      if (level === 'DEBUG') stats.debug += 1;
+      if (level === 'TRACE') stats.trace += 1;
+
+      return stats;
+    },
+    {
+      total: 0,
+      error: 0,
+      warn: 0,
+      info: 0,
+      debug: 0,
+      trace: 0
+    }
+  );
+});
+
 const getLevelTagType = (level: string) => {
   const map: Record<string, 'default' | 'info' | 'success' | 'warning' | 'error'> = {
     TRACE: 'info',
@@ -308,8 +103,7 @@ const getLevelTagType = (level: string) => {
   return map[level] || 'default';
 };
 
-// 表格列配置
-const columns: DataTableColumns<Logger> = [
+const columns: DataTableColumns<LoggerRow> = [
   {
     title: 'Logger 名称',
     key: 'name',
@@ -317,7 +111,7 @@ const columns: DataTableColumns<Logger> = [
     ellipsis: {
       tooltip: true
     },
-    render: (row: Logger) => {
+    render: (row: LoggerRow) => {
       return row.name;
     }
   },
@@ -325,7 +119,7 @@ const columns: DataTableColumns<Logger> = [
     title: '配置级别',
     key: 'configuredLevel',
     width: 120,
-    render: (row: Logger) => {
+    render: (row: LoggerRow) => {
       if (row.configuredLevel) {
         return h(
           NTag,
@@ -340,11 +134,11 @@ const columns: DataTableColumns<Logger> = [
     title: '有效级别',
     key: 'effectiveLevel',
     width: 120,
-    render: (row: Logger) => {
+    render: (row: LoggerRow) => {
       return h(
         NTag,
         { type: getLevelTagType(row.effectiveLevel), size: 'small' },
-        { default: () => row.effectiveLevel }
+        { default: () => row.effectiveLevel || '-' }
       );
     }
   },
@@ -353,7 +147,7 @@ const columns: DataTableColumns<Logger> = [
     key: 'additivity',
     width: 100,
     align: 'center',
-    render: (row: Logger) => {
+    render: (row: LoggerRow) => {
       return h(
         NTag,
         {
@@ -368,7 +162,7 @@ const columns: DataTableColumns<Logger> = [
     title: 'Appenders',
     key: 'appenders',
     width: 200,
-    render: (row: Logger) => {
+    render: (row: LoggerRow) => {
       if (row.appenders.length > 0) {
         return h(
           'div',
@@ -386,7 +180,7 @@ const columns: DataTableColumns<Logger> = [
     key: 'actions',
     width: 120,
     align: 'center',
-    render: (row: Logger) => {
+    render: (row: LoggerRow) => {
       return h(
         NButton,
         {
@@ -400,8 +194,7 @@ const columns: DataTableColumns<Logger> = [
   }
 ];
 
-// 分页
-const pagination = ref({
+const pagination = ref<PaginationProps>({
   page: 1,
   pageSize: 50,
   showSizePicker: true,
@@ -413,59 +206,151 @@ const pagination = ref({
     pagination.value.pageSize = pageSize;
     pagination.value.page = 1;
   },
-  prefix: (info: { startIndex: number; endIndex: number; itemCount: number }) => {
-    return `显示 ${info.startIndex}-${info.endIndex} / 共 ${info.itemCount} 条`;
+  prefix: ({ startIndex, endIndex, itemCount }) => {
+    return `显示 ${startIndex}-${endIndex} / 共 ${itemCount ?? 0} 条`;
   }
 });
 
-// 处理编辑
-const handleEdit = (logger: Logger) => {
+function mapLoggerInfo(response: LoggerInfoResponse) {
+  loggers.value = (response.loggers || []).map(logger => ({
+    name: logger.name,
+    configuredLevel: logger.level || null,
+    effectiveLevel: logger.effectiveLevel || logger.level || '-',
+    additivity: logger.additivity,
+    appenders: (logger.appenders || [])
+      .map(appender => appender.name || appender.target || appender.file || appender.appenderRef.join(','))
+      .filter(Boolean),
+    classLoaderHash: logger.classLoaderHash
+  }));
+}
+
+function createLoggerInfoCommand() {
+  loading.value = true;
+
+  fetchLoggerInfoCommand({
+    instanceId: props.instanceId,
+    param: {
+      name: '',
+      includeNoAppender: true,
+      classLoaderHashCode: ''
+    }
+  }).catch(() => {
+    loading.value = false;
+  });
+}
+
+function handleLoggerInfo(response: CommandExecuteResponse<LoggerInfoResponse>) {
+  loading.value = false;
+  const data = response.data as LoggerInfoResponse | undefined;
+
+  if (!data || data.state === 0) {
+    if (data?.message) {
+      window.$message?.error(data.message);
+    }
+    return;
+  }
+
+  mapLoggerInfo(data);
+}
+
+function handleLoggerLevelUpdate(response: CommandExecuteResponse<UpdateLoggerLevelResponse>) {
+  submitting.value = false;
+  const data = response.data as UpdateLoggerLevelResponse | undefined;
+
+  if (!data || data.state === 0 || !data.success) {
+    if (data?.message) {
+      window.$message?.error(data.message);
+    }
+    return;
+  }
+
+  loggers.value = loggers.value.map(logger => {
+    if (logger.name !== editForm.value.name || logger.classLoaderHash !== editForm.value.classLoaderHash) {
+      return logger;
+    }
+
+    return {
+      ...logger,
+      configuredLevel: editForm.value.newLevel,
+      effectiveLevel: editForm.value.newLevel
+    };
+  });
+
+  showEditModal.value = false;
+  editForm.value = {
+    name: '',
+    classLoaderHash: '',
+    currentLevel: '',
+    newLevel: ''
+  };
+  window.$message?.success('Logger 级别更新成功');
+  createLoggerInfoCommand();
+}
+
+const handleEdit = (logger: LoggerRow) => {
   editForm.value = {
     name: logger.name,
-    currentLevel: logger.effectiveLevel,
-    newLevel: ''
+    classLoaderHash: logger.classLoaderHash,
+    currentLevel: logger.configuredLevel || logger.effectiveLevel,
+    newLevel: logger.configuredLevel || logger.effectiveLevel
   };
   showEditModal.value = true;
 };
 
-// 提交编辑
 const handleSubmitEdit = () => {
-  // 这里应该调用 API 提交修改
-  console.log('提交修改:', editForm.value);
-  showEditModal.value = false;
-  // 重置表单
-  editForm.value = {
-    name: '',
-    currentLevel: '',
-    newLevel: ''
-  };
+  if (!editForm.value.newLevel) {
+    window.$message?.warning('请选择新级别');
+    return;
+  }
+
+  submitting.value = true;
+
+  fetchUpdateLoggerLevelCommand({
+    instanceId: props.instanceId,
+    param: {
+      classLoaderHashCode: editForm.value.classLoaderHash,
+      name: editForm.value.name,
+      level: editForm.value.newLevel
+    }
+  }).catch(() => {
+    submitting.value = false;
+  });
 };
 
-// 快速操作
 const handleSetAllInfo = () => {
-  console.log('设置全部为 INFO');
+  window.$message?.info('批量修改日志级别后续补充，当前先保留页面样式');
 };
 
 const handleSetAllDebug = () => {
-  console.log('设置全部为 DEBUG');
+  window.$message?.info('批量修改日志级别后续补充，当前先保留页面样式');
 };
 
 const handleSetAllWarn = () => {
-  console.log('设置全部为 WARN');
+  window.$message?.info('批量修改日志级别后续补充，当前先保留页面样式');
 };
 
 const handleResetDefault = () => {
-  console.log('恢复默认配置');
+  window.$message?.info('恢复默认配置能力后续补充，当前先保留页面样式');
 };
 
 const handleExport = () => {
-  console.log('导出配置');
+  window.$message?.info('导出配置能力后续补充，当前先保留页面样式');
 };
 
-// 刷新数据
 const handleRefresh = () => {
-  console.log('刷新 Logger 数据');
+  createLoggerInfoCommand();
 };
+
+onMounted(() => {
+  createLoggerInfoCommand();
+  eventBus.on('command:logger-info', handleLoggerInfo);
+  eventBus.on('command:logger-level-update', handleLoggerLevelUpdate);
+});
+
+onUnmounted(() => {
+  eventBus.off('command:logger-info', handleLoggerInfo);
+  eventBus.off('command:logger-level-update', handleLoggerLevelUpdate);
+});
 </script>
 
 <template>
@@ -618,7 +503,7 @@ const handleRefresh = () => {
             </NInput>
 
             <!-- 刷新 -->
-            <NButton type="primary" @click="handleRefresh">
+            <NButton type="primary" :loading="loading" @click="handleRefresh">
               <template #icon>
                 <div class="i-carbon-renew" />
               </template>
@@ -634,6 +519,7 @@ const handleRefresh = () => {
         :pagination="pagination"
         :bordered="false"
         :single-line="false"
+        :loading="loading"
         class="logger-table"
       />
     </NCard>
@@ -665,7 +551,7 @@ const handleRefresh = () => {
       <template #footer>
         <div class="modal-footer">
           <NButton @click="showEditModal = false">取消</NButton>
-          <NButton type="primary" @click="handleSubmitEdit">确认修改</NButton>
+          <NButton type="primary" :loading="submitting" @click="handleSubmitEdit">确认修改</NButton>
         </div>
       </template>
     </NModal>

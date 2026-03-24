@@ -5,7 +5,15 @@ import { EventBus } from './EventBus';
 import { SystemMetricsResponse } from '@/proto/command/result/SystemMetricsResponse';
 import { SystemInfoResponse } from '@/proto/command/result/SystemInfoResponse';
 import { DecompileResponse } from '@/proto/command/result/DecompileResponse';
+import { EnhanceAffect } from '@/proto/command/result/EnhanceAffect';
+import { EnhanceCommandComplete } from '@/proto/command/result/EnhanceCommandComplete';
+import { JvmMemoryResponse } from '@/proto/command/result/JvmMemoryResponse';
+import { LoggerInfoResponse } from '@/proto/command/result/LoggerInfoResponse';
+import { SetVmOptionResponse } from '@/proto/command/result/SetVmOptionResponse';
+import { StackResponse } from '@/proto/command/result/StackResponse';
 import { TraceResponse } from '@/proto/command/result/TraceResponse';
+import { UpdateLoggerLevelResponse } from '@/proto/command/result/UpdateLoggerLevelResponse';
+import { VmOptionResponse } from '@/proto/command/result/VmOptionResponse';
 
 /**
  * 全局事件总线事件类型定义
@@ -24,19 +32,19 @@ export interface GlobalEvents {
   'command:unknown': CommandExecuteResponse<any>; // 未知命令码
 
   // 系统信息类命令
-  'command:jvm-memory': CommandExecuteResponse<any>; // JVM 内存信息
+  'command:jvm-memory': CommandExecuteResponse<JvmMemoryResponse>; // JVM 内存信息
   'command:system-info': CommandExecuteResponse<SystemInfoResponse>; // 系统信息
   'command:system-metrics': CommandExecuteResponse<SystemMetricsResponse>
-  'command:vm-option': CommandExecuteResponse<any>; // VM 选项
-  'command:vm-option-set': CommandExecuteResponse<any>; // 设置 VM 选项
+  'command:vm-option': CommandExecuteResponse<VmOptionResponse>; // VM 选项
+  'command:vm-option-set': CommandExecuteResponse<SetVmOptionResponse>; // 设置 VM 选项
 
   // 线程相关命令
   'command:thread-list': CommandExecuteResponse<any>; // 线程列表
   'command:thread-detail': CommandExecuteResponse<any>; // 线程详情
 
   // 日志相关命令
-  'command:logger-info': CommandExecuteResponse<any>; // 日志信息
-  'command:logger-level-update': CommandExecuteResponse<any>; // 更新日志级别
+  'command:logger-info': CommandExecuteResponse<LoggerInfoResponse>; // 日志信息
+  'command:logger-level-update': CommandExecuteResponse<UpdateLoggerLevelResponse>; // 更新日志级别
 
   // 文件相关命令
   'command:file-list': CommandExecuteResponse<any>; // 文件列表
@@ -48,10 +56,10 @@ export interface GlobalEvents {
   'command:get-static': CommandExecuteResponse<any>; // 获取静态字段
 
   // 增强相关命令
-  'command:enhance-affect': CommandExecuteResponse<any>; // 增强影响
-  'command:enhance-complete': CommandExecuteResponse<any>; // 增强完成
+  'command:enhance-affect': CommandExecuteResponse<EnhanceAffect>; // 增强影响
+  'command:enhance-complete': CommandExecuteResponse<EnhanceCommandComplete>; // 增强完成
   'command:trace': CommandExecuteResponse<TraceResponse>; // 方法追踪
-  'command:stack': CommandExecuteResponse<any>; // 方法调用栈
+  'command:stack': CommandExecuteResponse<StackResponse>; // 方法调用栈
   'command:retransform': CommandExecuteResponse<any>; // 重置类
 
   // 概览命令

@@ -59,10 +59,6 @@ export const useWebSocketStore = defineStore(SetupStoreId.WebSocket, () => {
       needReconnect: true,
       reconnectMaxNum: 5, // 最大重连 5 次
       reconnectGapTime: 3000, // 重连间隔 3 秒
-      heartGapTime: 30000, // 心跳间隔 30 秒
-      heartSend: 'ping',
-      heartGet: 'pong',
-      heartFailNum: 3, // 心跳失败 3 次则触发重连
 
       onOpen: async () => {
         console.log('[WebSocket] 连接成功');

@@ -1,47 +1,38 @@
 <script setup lang="ts">
-import { computed, h, ref } from 'vue';
-import {
-  NButton,
-  NCard,
-  NDataTable,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NInput,
-  NModal,
-  NSelect,
-  NTag
-} from 'naive-ui';
-import type { DataTableColumns } from 'naive-ui';
+import { computed, h, onMounted, onUnmounted, ref } from 'vue';
+import { NButton, NTag } from 'naive-ui';
+import type { DataTableColumns, PaginationProps, SelectOption } from 'naive-ui';
+import { fetchSetVmOptionCommand, fetchVmOptionCommand } from '@/service/api/instance';
+import eventBus from '@/utils/eventbus';
+import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
+import type { SetVmOptionResponse } from '@/proto/command/result/SetVmOptionResponse';
+import type { VmOptionResponse } from '@/proto/command/result/VmOptionResponse';
 
-// 统计数据
-const stats = ref({
-  total: 156,
-  configured: 42,
-  writable: 28,
-  readonly: 114
-});
+type OriginValue = string | null;
 
-// 选项分类
-const categories = ref([
-  { label: '全部', value: 'all', count: 156 },
-  { label: '内存管理', value: 'memory', count: 32 },
-  { label: '垃圾回收', value: 'gc', count: 28 },
-  { label: '性能优化', value: 'performance', count: 24 },
-  { label: '编译器', value: 'compiler', count: 18 },
-  { label: '调试诊断', value: 'debug', count: 22 },
-  { label: '其他', value: 'other', count: 32 }
-]);
+type VmOptionType = 'bool' | 'number' | 'string';
 
-const activeCategory = ref('all');
+interface Props {
+  instanceId: string;
+}
 
-// 搜索和筛选
+interface VmOptionRow {
+  name: string;
+  value: string;
+  origin: string;
+  type: VmOptionType;
+  writable: boolean;
+}
+
+const props = defineProps<Props>();
+
 const searchText = ref('');
-const selectedOrigin = ref<string | null>(null);
+const selectedOrigin = ref<OriginValue>(null);
+const vmOptions = ref<VmOptionRow[]>([]);
+const loading = ref(false);
+const submitting = ref(false);
 
-const originOptions = [
-  { label: '全部来源', value: null },
+const originOptions: SelectOption[] = [
   { label: '默认', value: 'DEFAULT' },
   { label: 'VM创建', value: 'VM_CREATION' },
   { label: '命令行', value: 'COMMAND_LINE' },
@@ -50,172 +41,6 @@ const originOptions = [
   { label: '管理接口', value: 'MANAGEMENT' }
 ];
 
-// VM 选项数据
-interface VmOption {
-  name: string;
-  value: string;
-  origin: string;
-  type: string;
-  writable: boolean;
-  category: string;
-}
-
-const vmOptions = ref<VmOption[]>([
-  {
-    name: 'MaxHeapSize',
-    value: '4294967296',
-    origin: 'COMMAND_LINE',
-    type: 'uintx',
-    writable: false,
-    category: 'memory'
-  },
-  {
-    name: 'InitialHeapSize',
-    value: '268435456',
-    origin: 'ERGONOMIC',
-    type: 'uintx',
-    writable: false,
-    category: 'memory'
-  },
-  { name: 'MinHeapSize', value: '8388608', origin: 'ERGONOMIC', type: 'uintx', writable: false, category: 'memory' },
-  {
-    name: 'MaxMetaspaceSize',
-    value: '536870912',
-    origin: 'COMMAND_LINE',
-    type: 'uintx',
-    writable: false,
-    category: 'memory'
-  },
-  {
-    name: 'MetaspaceSize',
-    value: '268435456',
-    origin: 'COMMAND_LINE',
-    type: 'uintx',
-    writable: false,
-    category: 'memory'
-  },
-  {
-    name: 'CompressedClassSpaceSize',
-    value: '1073741824',
-    origin: 'DEFAULT',
-    type: 'uintx',
-    writable: false,
-    category: 'memory'
-  },
-  { name: 'UseG1GC', value: 'true', origin: 'COMMAND_LINE', type: 'bool', writable: false, category: 'gc' },
-  { name: 'UseParallelGC', value: 'false', origin: 'DEFAULT', type: 'bool', writable: false, category: 'gc' },
-  { name: 'UseConcMarkSweepGC', value: 'false', origin: 'DEFAULT', type: 'bool', writable: false, category: 'gc' },
-  { name: 'MaxGCPauseMillis', value: '200', origin: 'COMMAND_LINE', type: 'uintx', writable: true, category: 'gc' },
-  { name: 'GCTimeRatio', value: '99', origin: 'DEFAULT', type: 'uintx', writable: true, category: 'gc' },
-  { name: 'ParallelGCThreads', value: '8', origin: 'COMMAND_LINE', type: 'uint', writable: false, category: 'gc' },
-  { name: 'ConcGCThreads', value: '2', origin: 'COMMAND_LINE', type: 'uint', writable: false, category: 'gc' },
-  {
-    name: 'InitiatingHeapOccupancyPercent',
-    value: '45',
-    origin: 'COMMAND_LINE',
-    type: 'uintx',
-    writable: true,
-    category: 'gc'
-  },
-  { name: 'G1HeapRegionSize', value: '2097152', origin: 'ERGONOMIC', type: 'uintx', writable: false, category: 'gc' },
-  { name: 'G1ReservePercent', value: '10', origin: 'DEFAULT', type: 'uintx', writable: true, category: 'gc' },
-  {
-    name: 'HeapDumpOnOutOfMemoryError',
-    value: 'true',
-    origin: 'COMMAND_LINE',
-    type: 'bool',
-    writable: true,
-    category: 'debug'
-  },
-  {
-    name: 'HeapDumpPath',
-    value: '/logs/heapdump.hprof',
-    origin: 'COMMAND_LINE',
-    type: 'ccstr',
-    writable: true,
-    category: 'debug'
-  },
-  { name: 'PrintGC', value: 'false', origin: 'DEFAULT', type: 'bool', writable: true, category: 'debug' },
-  { name: 'PrintGCDetails', value: 'true', origin: 'COMMAND_LINE', type: 'bool', writable: true, category: 'debug' },
-  { name: 'PrintGCDateStamps', value: 'true', origin: 'COMMAND_LINE', type: 'bool', writable: true, category: 'debug' },
-  { name: 'PrintGCTimeStamps', value: 'true', origin: 'DEFAULT', type: 'bool', writable: true, category: 'debug' },
-  {
-    name: 'UseCompressedOops',
-    value: 'true',
-    origin: 'ERGONOMIC',
-    type: 'bool',
-    writable: false,
-    category: 'performance'
-  },
-  {
-    name: 'UseCompressedClassPointers',
-    value: 'true',
-    origin: 'ERGONOMIC',
-    type: 'bool',
-    writable: false,
-    category: 'performance'
-  },
-  { name: 'TieredCompilation', value: 'true', origin: 'DEFAULT', type: 'bool', writable: false, category: 'compiler' },
-  { name: 'TieredStopAtLevel', value: '4', origin: 'DEFAULT', type: 'intx', writable: false, category: 'compiler' },
-  { name: 'CompileThreshold', value: '10000', origin: 'DEFAULT', type: 'intx', writable: true, category: 'compiler' },
-  {
-    name: 'CodeCacheSize',
-    value: '251658240',
-    origin: 'ERGONOMIC',
-    type: 'uintx',
-    writable: false,
-    category: 'compiler'
-  },
-  {
-    name: 'ReservedCodeCacheSize',
-    value: '251658240',
-    origin: 'DEFAULT',
-    type: 'uintx',
-    writable: false,
-    category: 'compiler'
-  },
-  {
-    name: 'InitialCodeCacheSize',
-    value: '2555904',
-    origin: 'DEFAULT',
-    type: 'uintx',
-    writable: false,
-    category: 'compiler'
-  },
-  { name: 'ThreadStackSize', value: '1024', origin: 'DEFAULT', type: 'intx', writable: false, category: 'performance' },
-  {
-    name: 'VMThreadStackSize',
-    value: '1024',
-    origin: 'DEFAULT',
-    type: 'uintx',
-    writable: false,
-    category: 'performance'
-  },
-  { name: 'SurvivorRatio', value: '8', origin: 'DEFAULT', type: 'uintx', writable: true, category: 'memory' },
-  { name: 'NewRatio', value: '2', origin: 'DEFAULT', type: 'uintx', writable: true, category: 'memory' },
-  { name: 'MaxDirectMemorySize', value: '0', origin: 'DEFAULT', type: 'uintx', writable: false, category: 'memory' },
-  { name: 'StringTableSize', value: '60013', origin: 'DEFAULT', type: 'uintx', writable: false, category: 'other' },
-  { name: 'SymbolTableSize', value: '20011', origin: 'DEFAULT', type: 'uintx', writable: false, category: 'other' },
-  {
-    name: 'UseStringDeduplication',
-    value: 'false',
-    origin: 'DEFAULT',
-    type: 'bool',
-    writable: true,
-    category: 'performance'
-  },
-  { name: 'AlwaysPreTouch', value: 'false', origin: 'DEFAULT', type: 'bool', writable: false, category: 'performance' },
-  {
-    name: 'UseLargePagesIndividualAllocation',
-    value: 'false',
-    origin: 'DEFAULT',
-    type: 'bool',
-    writable: false,
-    category: 'performance'
-  }
-]);
-
-// 编辑模态框
 const showEditModal = ref(false);
 const editForm = ref({
   name: '',
@@ -223,17 +48,14 @@ const editForm = ref({
   newValue: ''
 });
 
-// 筛选后的数据
 const filteredData = computed(() => {
-  return vmOptions.value.filter((option: VmOption) => {
-    const matchCategory = activeCategory.value === 'all' || option.category === activeCategory.value;
+  return vmOptions.value.filter((option: VmOptionRow) => {
     const matchSearch = !searchText.value || option.name.toLowerCase().includes(searchText.value.toLowerCase());
     const matchOrigin = !selectedOrigin.value || option.origin === selectedOrigin.value;
-    return matchCategory && matchSearch && matchOrigin;
+    return matchSearch && matchOrigin;
   });
 });
 
-// 来源标签颜色映射
 const getOriginTagType = (origin: string) => {
   const map: Record<string, 'default' | 'info' | 'success' | 'warning' | 'error'> = {
     DEFAULT: 'default',
@@ -246,20 +68,16 @@ const getOriginTagType = (origin: string) => {
   return map[origin] || 'default';
 };
 
-// 类型标签颜色映射
-const getTypeTagType = (type: string) => {
-  const map: Record<string, 'default' | 'info' | 'success' | 'warning' | 'error'> = {
+const getTypeTagType = (type: VmOptionType) => {
+  const map: Record<VmOptionType, 'default' | 'info' | 'success' | 'warning' | 'error'> = {
     bool: 'info',
-    intx: 'success',
-    uintx: 'warning',
-    uint: 'info',
-    ccstr: 'warning'
+    number: 'success',
+    string: 'warning'
   };
-  return map[type] || 'default';
+  return map[type];
 };
 
-// 表格列配置
-const columns: DataTableColumns<VmOption> = [
+const columns: DataTableColumns<VmOptionRow> = [
   {
     title: '名称',
     key: 'name',
@@ -267,7 +85,7 @@ const columns: DataTableColumns<VmOption> = [
     ellipsis: {
       tooltip: true
     },
-    render: (row: VmOption) => {
+    render: (row: VmOptionRow) => {
       return row.name;
     }
   },
@@ -278,7 +96,7 @@ const columns: DataTableColumns<VmOption> = [
     ellipsis: {
       tooltip: true
     },
-    render: (row: VmOption) => {
+    render: (row: VmOptionRow) => {
       return row.value;
     }
   },
@@ -286,15 +104,15 @@ const columns: DataTableColumns<VmOption> = [
     title: '来源',
     key: 'origin',
     width: 150,
-    render: (row: VmOption) => {
-      return h(NTag, { type: getOriginTagType(row.origin), size: 'small' }, { default: () => row.origin });
+    render: (row: VmOptionRow) => {
+      return h(NTag, { type: getOriginTagType(row.origin), size: 'small' }, { default: () => row.origin || '-' });
     }
   },
   {
     title: '类型',
     key: 'type',
     width: 120,
-    render: (row: VmOption) => {
+    render: (row: VmOptionRow) => {
       return h(NTag, { type: getTypeTagType(row.type), size: 'small' }, { default: () => row.type });
     }
   },
@@ -303,7 +121,7 @@ const columns: DataTableColumns<VmOption> = [
     key: 'writable',
     width: 100,
     align: 'center',
-    render: (row: VmOption) => {
+    render: (row: VmOptionRow) => {
       return h(
         NTag,
         {
@@ -319,7 +137,7 @@ const columns: DataTableColumns<VmOption> = [
     key: 'actions',
     width: 120,
     align: 'center',
-    render: (row: VmOption) => {
+    render: (row: VmOptionRow) => {
       return h(
         NButton,
         {
@@ -334,8 +152,7 @@ const columns: DataTableColumns<VmOption> = [
   }
 ];
 
-// 分页
-const pagination = ref({
+const pagination = ref<PaginationProps>({
   page: 1,
   pageSize: 50,
   showSizePicker: true,
@@ -347,50 +164,128 @@ const pagination = ref({
     pagination.value.pageSize = pageSize;
     pagination.value.page = 1;
   },
-  prefix: (info: { startIndex: number; endIndex: number; itemCount: number }) => {
-    return `显示 ${info.startIndex}-${info.endIndex} / 共 ${info.itemCount} 条`;
+  prefix: ({ startIndex, endIndex, itemCount }) => {
+    return `显示 ${startIndex}-${endIndex} / 共 ${itemCount ?? 0} 条`;
   }
 });
 
-// 处理分类切换
-const handleCategoryChange = (category: string) => {
-  activeCategory.value = category;
-};
+function detectVmOptionType(value: string): VmOptionType {
+  if (/^(true|false)$/i.test(value)) {
+    return 'bool';
+  }
 
-// 处理编辑
-const handleEdit = (option: VmOption) => {
-  editForm.value = {
+  if (/^-?\d+(\.\d+)?$/.test(value)) {
+    return 'number';
+  }
+
+  return 'string';
+}
+
+function mapVmOptionResponse(response: VmOptionResponse) {
+  vmOptions.value = (response.options || []).map(option => ({
     name: option.name,
-    currentValue: option.value,
-    newValue: ''
-  };
-  showEditModal.value = true;
-};
+    value: option.value,
+    origin: option.origin,
+    type: detectVmOptionType(option.value),
+    writable: option.writeable
+  }));
+}
 
-// 提交编辑
-const handleSubmitEdit = () => {
-  // 这里应该调用 API 提交修改
-  console.log('提交修改:', editForm.value);
+function createVmOptionCommand() {
+  loading.value = true;
+
+  fetchVmOptionCommand({
+    instanceId: props.instanceId,
+    param: {}
+  }).catch(() => {
+    loading.value = false;
+  });
+}
+
+function handleVmOption(response: CommandExecuteResponse<VmOptionResponse>) {
+  loading.value = false;
+  const data = response.data as VmOptionResponse | undefined;
+
+  if (!data || data.state === 0) {
+    if (data?.message) {
+      window.$message?.error(data.message);
+    }
+    return;
+  }
+
+  mapVmOptionResponse(data);
+}
+
+function handleVmOptionSet(response: CommandExecuteResponse<SetVmOptionResponse>) {
+  submitting.value = false;
+  const data = response.data as SetVmOptionResponse | undefined;
+
+  if (!data || data.state === 0 || !data.latestVmOption) {
+    if (data?.message) {
+      window.$message?.error(data.message);
+    }
+    return;
+  }
+
+  const nextOption = {
+    name: data.latestVmOption.name,
+    value: data.latestVmOption.value,
+    origin: data.latestVmOption.origin,
+    type: detectVmOptionType(data.latestVmOption.value),
+    writable: data.latestVmOption.writeable
+  };
+
+  vmOptions.value = vmOptions.value.map(option => (option.name === nextOption.name ? nextOption : option));
   showEditModal.value = false;
-  // 重置表单
   editForm.value = {
     name: '',
     currentValue: '',
     newValue: ''
   };
+  window.$message?.success('VM 选项更新成功');
+}
+
+const handleEdit = (option: VmOptionRow) => {
+  editForm.value = {
+    name: option.name,
+    currentValue: option.value,
+    newValue: option.value
+  };
+  showEditModal.value = true;
 };
 
-// 刷新数据
+const handleSubmitEdit = () => {
+  submitting.value = true;
+
+  fetchSetVmOptionCommand({
+    instanceId: props.instanceId,
+    param: {
+      name: editForm.value.name,
+      value: editForm.value.newValue
+    }
+  }).catch(() => {
+    submitting.value = false;
+  });
+};
+
 const handleRefresh = () => {
-  // 这里应该调用 API 刷新数据
-  console.log('刷新 VM 选项数据');
+  createVmOptionCommand();
 };
 
-// 导出数据
 const handleExport = () => {
-  // 这里应该实现导出功能
-  console.log('导出 VM 选项数据');
+  window.$message?.info('导出能力后续补充，当前保留现有页面样式');
 };
+
+onMounted(() => {
+  createVmOptionCommand();
+  eventBus.on('command:vm-option', handleVmOption);
+  eventBus.on('command:vm-option-set', handleVmOptionSet);
+});
+
+onUnmounted(() => {
+  eventBus.off('command:vm-option', handleVmOption);
+  eventBus.off('command:vm-option-set', handleVmOptionSet);
+});
 </script>
 
 <template>
@@ -429,7 +324,7 @@ const handleExport = () => {
             </NButton>
 
             <!-- 刷新 -->
-            <NButton type="primary" @click="handleRefresh">
+            <NButton type="primary" :loading="loading" @click="handleRefresh">
               <template #icon>
                 <div class="i-carbon-renew" />
               </template>
@@ -445,6 +340,7 @@ const handleExport = () => {
         :pagination="pagination"
         :bordered="false"
         :single-line="false"
+        :loading="loading"
         class="vm-option-table"
       />
     </NCard>
@@ -469,7 +365,7 @@ const handleExport = () => {
       <template #footer>
         <div class="modal-footer">
           <NButton @click="showEditModal = false">取消</NButton>
-          <NButton type="primary" @click="handleSubmitEdit">确认修改</NButton>
+          <NButton type="primary" :loading="submitting" @click="handleSubmitEdit">确认修改</NButton>
         </div>
       </template>
     </NModal>

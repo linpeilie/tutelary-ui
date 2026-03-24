@@ -1,9 +1,14 @@
 import { request } from '@/service/request';
 import CommandCreateRequest = Api.Instance.Command.CommandCreateRequest;
 import type { DecompileRequest } from '@/proto/command/param/DecompileRequest';
+import type { LoggerInfoRequest } from '@/proto/command/param/LoggerInfoRequest';
+import type { SetVmOptionRequest } from '@/proto/command/param/SetVmOptionRequest';
+import type { StackRequest } from '@/proto/command/param/StackRequest';
 import type { ThreadDetailRequest } from '@/proto/command/param/ThreadDetailRequest';
 import type { ThreadListRequest } from '@/proto/command/param/ThreadListRequest';
-import { TraceRequest } from '@/proto/command/param/TraceRequest';
+import type { TraceRequest } from '@/proto/command/param/TraceRequest';
+import type { UpdateLoggerLevelRequest } from '@/proto/command/param/UpdateLoggerLevelRequest';
+import type { VmOptionRequest } from '@/proto/command/param/VmOptionRequest';
 
 export function fetchInstanceDetail(instanceId: string) {
   return request<Api.Instance.InstanceInfo>({
@@ -63,9 +68,57 @@ export function fetchDecompileCommand(data: CommandCreateRequest<DecompileReques
   });
 }
 
+export function fetchJvmMemoryCommand(data: CommandCreateRequest<Record<string, never>>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/jvmMemory`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchVmOptionCommand(data: CommandCreateRequest<VmOptionRequest>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/getVmOption`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchSetVmOptionCommand(data: CommandCreateRequest<SetVmOptionRequest>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/setVmOption`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchLoggerInfoCommand(data: CommandCreateRequest<LoggerInfoRequest>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/loggerInfo`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchUpdateLoggerLevelCommand(data: CommandCreateRequest<UpdateLoggerLevelRequest>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/updateLoggerLevel`,
+    method: 'post',
+    data
+  });
+}
+
 export function fetchTraceCommand(data: CommandCreateRequest<TraceRequest>) {
   return request<Api.Instance.Command.CommandTaskResponse>({
     url: `/command/creation/traceMethod`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchStackCommand(data: CommandCreateRequest<StackRequest>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/stackMethod`,
     method: 'post',
     data
   });

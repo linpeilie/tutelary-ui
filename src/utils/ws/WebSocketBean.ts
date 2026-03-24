@@ -110,8 +110,14 @@ export default class WebSocketBean implements IWebSocketBean {
     // 绑定连接关闭时间
     this.websocket.onclose = this.onError;
 
-    // 创建心跳
-    this.heart = new WebSocketHeart(this);
+    const hasHeartbeatConfig =
+      currentParam.heartSend !== undefined
+      || currentParam.heartGet !== undefined
+      || currentParam.heartGapTime !== undefined
+      || currentParam.heartFailNum !== undefined;
+
+    // 仅在显式配置心跳时创建心跳
+    this.heart = hasHeartbeatConfig ? new WebSocketHeart(this) : null;
 
     // 创建重连，如果存在则跳过
     if (this.reconnect === null) this.reconnect = new WebSocketReconnect(this);
