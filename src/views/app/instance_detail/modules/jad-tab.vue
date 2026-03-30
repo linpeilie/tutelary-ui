@@ -6,9 +6,11 @@ import { Codemirror } from 'vue-codemirror';
 import { java } from '@codemirror/lang-java';
 // 引入One Dark主题
 import { oneDark } from '@codemirror/theme-one-dark';
-import { fetchDecompileCommand } from '@/service/api/instance';
+import { fetchDecompileCommand, fetchRetransformCommand } from '@/service/api/instance';
 import eventbus from '@/utils/eventbus';
 import type { DecompileResponse } from '@/proto/command/result/DecompileResponse';
+import type { RetransformResponse } from '@/proto/command/result/RetransformResponse';
+import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 
 interface Props {
   instanceId: string;
@@ -46,6 +48,8 @@ const hasUnsavedChanges = ref(false);
 
 const originalCode = ref('');
 
+const isHotSwapping = ref(false);
+
 // 反编译历史
 interface HistoryItem {
   className: string;
@@ -61,6 +65,7 @@ interface HotswapRecord {
   operation: string;
   time: string;
   status: 'success' | 'failed';
+  message?: string;
 }
 
 const hotswapHistory = ref<HotswapRecord[]>([]);
@@ -178,29 +183,45 @@ function cancelEdit() {
   }
 }
 
+// 编辑器内容变化
+function onCodeChange(value: string) {
+  decompileResult.value = value;
+  if (isEditMode.value) {
+    hasUnsavedChanges.value = value !== originalCode.value;
+  }
+}
+
 // 执行热更新
 function performHotSwap() {
+  if (!decompileClassName.value) {
+    window.$message?.warning('没有可热更新的类');
+    return;
+  }
+
   window.$dialog?.warning({
     title: '确认热更新',
     content: '确定要将修改后的代码热更新到运行中的JVM吗?\n\n注意:热更新可能会影响应用运行,请谨慎操作。',
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: () => {
-      const loadingMessage = window.$message?.loading('正在执行热更新...', { duration: 0 });
+      isHotSwapping.value = true;
 
-      setTimeout(() => {
-        loadingMessage?.destroy();
-
-        // 添加到热更新历史
+      fetchRetransformCommand({
+        instanceId: props.instanceId,
+        param: {
+          qualifiedClassName: decompileClassName.value,
+          javaSource: decompileResult.value
+        }
+      }).catch(() => {
+        isHotSwapping.value = false;
         hotswapHistory.value.unshift({
           className: decompileClassName.value,
           operation: '代码热更新',
-          time: '刚刚',
-          status: 'success'
+          time: new Date().toLocaleTimeString('zh-CN'),
+          status: 'failed',
+          message: '请求发送失败'
         });
-
-        window.$message?.success('热更新成功');
-      }, 2000);
+      });
     }
   });
 }
@@ -238,30 +259,68 @@ function clearHotswapHistory() {
   });
 }
 
+// 处理反编译结果
+function handleDecompileResult(data: any) {
+  const decompile = data.data as DecompileResponse;
+  let source = decompile.source;
+  if (source === 'null') {
+    source = '';
+  }
+
+  decompileResult.value = source;
+  originalCode.value = source;
+
+  decompileClassName.value = decompile.qualifiedClassName;
+  decompileMethod.value = decompile.methodName;
+
+  isLoading.value = false;
+  hasResult.value = true;
+
+  addToHistory(formData.value.className, formData.value.methodName);
+}
+
+// 处理热更新结果
+function handleRetransformResult(response: CommandExecuteResponse<RetransformResponse>) {
+  isHotSwapping.value = false;
+  const data = response.data as RetransformResponse | undefined;
+
+  if (data && data.state !== 0) {
+    // 热更新成功
+    originalCode.value = decompileResult.value;
+    hasUnsavedChanges.value = false;
+
+    hotswapHistory.value.unshift({
+      className: decompileClassName.value,
+      operation: '代码热更新',
+      time: new Date().toLocaleTimeString('zh-CN'),
+      status: 'success'
+    });
+
+    window.$message?.success('热更新成功');
+  } else {
+    // 热更新失败
+    const errorMsg = data?.message || '热更新失败';
+
+    hotswapHistory.value.unshift({
+      className: decompileClassName.value,
+      operation: '代码热更新',
+      time: new Date().toLocaleTimeString('zh-CN'),
+      status: 'failed',
+      message: errorMsg
+    });
+
+    window.$message?.error(errorMsg);
+  }
+}
+
 onMounted(() => {
-  eventbus.on('command:decompile', data => {
-    console.log('data', data);
-    const decompile = data.data as DecompileResponse;
-    let source = decompile.source;
-    if (source === 'null') {
-      source = '';
-    }
-
-    decompileResult.value = source;
-    originalCode.value = source;
-
-    decompileClassName.value = decompile.qualifiedClassName;
-    decompileMethod.value = decompile.methodName;
-
-    isLoading.value = false;
-    hasResult.value = true;
-
-    addToHistory(formData.value.className, formData.value.methodName);
-  });
+  eventbus.on('command:decompile', handleDecompileResult);
+  eventbus.on('command:retransform', handleRetransformResult);
 });
 
 onUnmounted(() => {
-  eventbus.off('command:decompile');
+  eventbus.off('command:decompile', handleDecompileResult);
+  eventbus.off('command:retransform', handleRetransformResult);
 });
 </script>
 
@@ -394,7 +453,10 @@ onUnmounted(() => {
             />
             <div>
               <div class="text-sm font-medium">{{ record.className }}</div>
-              <div class="text-xs text-gray-400">{{ record.operation }} · {{ record.time }}</div>
+              <div class="text-xs text-gray-400">
+                {{ record.operation }} · {{ record.time }}
+                <span v-if="record.message" class="text-error"> · {{ record.message }}</span>
+              </div>
             </div>
           </div>
           <NTag :type="record.status === 'success' ? 'success' : 'error'" size="small">
@@ -455,6 +517,7 @@ onUnmounted(() => {
               v-if="hasResult && !isEditMode && decompileResult !== originalCode"
               size="small"
               type="info"
+              :loading="isHotSwapping"
               @click="performHotSwap"
             >
               <template #icon>
@@ -499,6 +562,7 @@ onUnmounted(() => {
           :model-value="decompileResult"
           :extensions="[java(), oneDark]"
           :style="{ height: 'auto' }"
+          @update:model-value="onCodeChange"
         />
       </div>
     </NCard>

@@ -211,3 +211,11 @@ export function fetchJfrStopCommand(data: CommandCreateRequest<any>) {
     data
   });
 }
+
+export function fetchRetransformCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/retransform`,
+    method: 'post',
+    data
+  });
+}
