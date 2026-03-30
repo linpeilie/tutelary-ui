@@ -1,13 +1,22 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { NButton, NCard, NCheckbox, NForm, NFormItem, NGrid, NGridItem, NInput, NTag } from 'naive-ui';
 import SvgIcon from '@/components/custom/svg-icon.vue';
+import { fetchSearchClassCommand, fetchSearchMethodCommand, fetchClassLoaderTreeCommand } from '@/service/api/instance';
+import eventBus from '@/utils/eventbus';
+import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
+import type { SearchClassResponse } from '@/proto/command/result/SearchClassResponse';
+import type { SearchMethodResponse } from '@/proto/command/result/SearchMethodResponse';
+import type { ClassLoaderTreeResponse } from '@/proto/command/result/ClassLoaderTreeResponse';
+import type { ClassInfo } from '@/proto/command/domain/ClassInfo';
+import type { MethodInfo } from '@/proto/command/domain/MethodInfo';
+import type { ClassLoaderNode } from '@/proto/command/domain/ClassLoaderNode';
 
 interface Props {
   instanceId: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 // Class Explorer 模式
 type ExplorerMode = 'sc' | 'sm' | 'classloader';
@@ -56,27 +65,7 @@ const smConfig = ref<SearchMethodConfig>({
   useRegex: false
 });
 
-// 方法搜索结果
-interface MethodInfo {
-  name: string;
-  modifiers: string;
-  returnType: string;
-  parameters: string;
-  exceptions: string[];
-}
-
 const smResults = ref<MethodInfo[]>([]);
-
-// ClassLoader 树形数据
-interface ClassLoaderNode {
-  id: string;
-  name: string;
-  type: string;
-  classCount: number;
-  children?: ClassLoaderNode[];
-  classes?: string[];
-  expanded?: boolean;
-}
 
 const classLoaderTree = ref<ClassLoaderNode[]>([]);
 const selectedClassLoader = ref<ClassLoaderNode | null>(null);
@@ -96,6 +85,8 @@ const modeTips = computed(() => {
   return tips[currentMode.value];
 });
 
+const scLoading = ref(false);
+
 // SC - 搜索类
 const searchClass = () => {
   if (!scConfig.value.pattern.trim()) {
@@ -103,57 +94,20 @@ const searchClass = () => {
     return;
   }
 
-  // 生成模拟数据
-  const mockClasses: ClassInfo[] = [
-    {
-      name: 'com.example.service.UserService',
-      classLoader: 'AppClassLoader',
-      superClass: 'java.lang.Object',
-      interfaces: ['com.example.service.IUserService'],
-      fields: 5,
-      methods: 12,
-      modifiers: 'public'
-    },
-    {
-      name: 'com.example.service.OrderService',
-      classLoader: 'AppClassLoader',
-      superClass: 'com.example.service.BaseService',
-      interfaces: [],
-      fields: 8,
-      methods: 15,
-      modifiers: 'public'
-    },
-    {
-      name: 'com.example.controller.UserController',
-      classLoader: 'AppClassLoader',
-      superClass: 'java.lang.Object',
-      interfaces: [],
-      fields: 3,
-      methods: 8,
-      modifiers: 'public'
-    },
-    {
-      name: 'com.example.model.User',
-      classLoader: 'AppClassLoader',
-      superClass: 'java.lang.Object',
-      interfaces: ['java.io.Serializable'],
-      fields: 10,
-      methods: 20,
-      modifiers: 'public'
-    },
-    {
-      name: 'com.example.util.StringUtils',
-      classLoader: 'AppClassLoader',
-      superClass: 'java.lang.Object',
-      interfaces: [],
-      fields: 0,
-      methods: 25,
-      modifiers: 'public final'
-    }
-  ];
+  scLoading.value = true;
+  scResults.value = [];
 
-  scResults.value = mockClasses;
-  window.$message?.success(`找到 ${mockClasses.length} 个类`);
+  fetchSearchClassCommand({
+    instanceId: props.instanceId,
+    param: {
+      pattern: scConfig.value.pattern,
+      showDetail: scConfig.value.showDetail,
+      showField: scConfig.value.showField,
+      useRegex: scConfig.value.useRegex
+    }
+  }).catch(() => {
+    scLoading.value = false;
+  });
 };
 
 // 加载 SC 示例
@@ -178,6 +132,8 @@ const resetSC = () => {
   scResults.value = [];
 };
 
+const smLoading = ref(false);
+
 // SM - 搜索方法
 const searchMethod = () => {
   if (!smConfig.value.className.trim()) {
@@ -185,68 +141,20 @@ const searchMethod = () => {
     return;
   }
 
-  // 生成模拟数据
-  const mockMethods: MethodInfo[] = [
-    {
-      name: 'getUserById',
-      modifiers: 'public',
-      returnType: 'User',
-      parameters: 'Long id',
-      exceptions: []
-    },
-    {
-      name: 'getUserByName',
-      modifiers: 'public',
-      returnType: 'User',
-      parameters: 'String name',
-      exceptions: ['UserNotFoundException']
-    },
-    {
-      name: 'createUser',
-      modifiers: 'public',
-      returnType: 'void',
-      parameters: 'User user',
-      exceptions: ['ValidationException']
-    },
-    {
-      name: 'updateUser',
-      modifiers: 'public',
-      returnType: 'boolean',
-      parameters: 'Long id, User user',
-      exceptions: []
-    },
-    {
-      name: 'deleteUser',
-      modifiers: 'public',
-      returnType: 'void',
-      parameters: 'Long id',
-      exceptions: []
-    },
-    {
-      name: 'getAllUsers',
-      modifiers: 'public',
-      returnType: 'List<User>',
-      parameters: '',
-      exceptions: []
-    },
-    {
-      name: 'findUsersByAge',
-      modifiers: 'public',
-      returnType: 'List<User>',
-      parameters: 'int minAge, int maxAge',
-      exceptions: []
-    },
-    {
-      name: 'validateUser',
-      modifiers: 'private',
-      returnType: 'boolean',
-      parameters: 'User user',
-      exceptions: []
-    }
-  ];
+  smLoading.value = true;
+  smResults.value = [];
 
-  smResults.value = mockMethods;
-  window.$message?.success(`找到 ${mockMethods.length} 个方法`);
+  fetchSearchMethodCommand({
+    instanceId: props.instanceId,
+    param: {
+      qualifiedClassName: smConfig.value.className,
+      methodPattern: smConfig.value.methodPattern,
+      showDetail: smConfig.value.showDetail,
+      useRegex: smConfig.value.useRegex
+    }
+  }).catch(() => {
+    smLoading.value = false;
+  });
 };
 
 // 加载 SM 示例
@@ -271,65 +179,19 @@ const resetSM = () => {
   smResults.value = [];
 };
 
+const clLoading = ref(false);
+
 // 加载 ClassLoader 树
 const loadClassLoaderTree = () => {
-  const mockTree: ClassLoaderNode[] = [
-    {
-      id: 'bootstrap',
-      name: 'Bootstrap ClassLoader',
-      type: 'bootstrap',
-      classCount: 156,
-      expanded: false,
-      children: [],
-      classes: ['java.lang.Object', 'java.lang.String', 'java.lang.Integer', 'java.util.ArrayList', 'java.util.HashMap']
-    },
-    {
-      id: 'extension',
-      name: 'Extension ClassLoader',
-      type: 'extension',
-      classCount: 42,
-      expanded: false,
-      children: [],
-      classes: ['javax.crypto.Cipher', 'javax.net.ssl.SSLContext', 'sun.security.provider.SHA']
-    },
-    {
-      id: 'application',
-      name: 'Application ClassLoader',
-      type: 'application',
-      classCount: 328,
-      expanded: false,
-      children: [
-        {
-          id: 'spring',
-          name: 'Spring ClassLoader',
-          type: 'custom',
-          classCount: 156,
-          expanded: false,
-          classes: [
-            'org.springframework.context.ApplicationContext',
-            'org.springframework.beans.factory.BeanFactory',
-            'org.springframework.boot.SpringApplication'
-          ]
-        },
-        {
-          id: 'tomcat',
-          name: 'Tomcat ClassLoader',
-          type: 'custom',
-          classCount: 89,
-          expanded: false,
-          classes: [
-            'org.apache.catalina.startup.Tomcat',
-            'org.apache.coyote.http11.Http11Processor',
-            'org.apache.tomcat.util.threads.ThreadPoolExecutor'
-          ]
-        }
-      ],
-      classes: ['com.example.Application', 'com.example.service.UserService', 'com.example.controller.UserController']
-    }
-  ];
+  clLoading.value = true;
+  classLoaderTree.value = [];
 
-  classLoaderTree.value = mockTree;
-  window.$message?.success('ClassLoader 树加载成功');
+  fetchClassLoaderTreeCommand({
+    instanceId: props.instanceId,
+    param: {}
+  }).catch(() => {
+    clLoading.value = false;
+  });
 };
 
 // 切换 ClassLoader 节点展开状态
@@ -394,6 +256,52 @@ const getModifierColor = (modifiers: string) => {
   if (modifiers.includes('protected')) return 'warning';
   return 'success';
 };
+
+// eventBus 回调
+function handleSearchClass(response: CommandExecuteResponse<SearchClassResponse>) {
+  scLoading.value = false;
+  const data = response.data as SearchClassResponse | undefined;
+  if (!data || data.state === 0) {
+    if (data?.message) window.$message?.error(data.message);
+    return;
+  }
+  scResults.value = data.classes || [];
+  window.$message?.success(`找到 ${scResults.value.length} 个类`);
+}
+
+function handleSearchMethod(response: CommandExecuteResponse<SearchMethodResponse>) {
+  smLoading.value = false;
+  const data = response.data as SearchMethodResponse | undefined;
+  if (!data || data.state === 0) {
+    if (data?.message) window.$message?.error(data.message);
+    return;
+  }
+  smResults.value = data.methods || [];
+  window.$message?.success(`找到 ${smResults.value.length} 个方法`);
+}
+
+function handleClassLoaderTree(response: CommandExecuteResponse<ClassLoaderTreeResponse>) {
+  clLoading.value = false;
+  const data = response.data as ClassLoaderTreeResponse | undefined;
+  if (!data || data.state === 0) {
+    if (data?.message) window.$message?.error(data.message);
+    return;
+  }
+  classLoaderTree.value = data.classLoaders || [];
+  window.$message?.success('ClassLoader 树加载成功');
+}
+
+onMounted(() => {
+  eventBus.on('command:search-class', handleSearchClass);
+  eventBus.on('command:search-method', handleSearchMethod);
+  eventBus.on('command:class-loader-tree', handleClassLoaderTree);
+});
+
+onUnmounted(() => {
+  eventBus.off('command:search-class', handleSearchClass);
+  eventBus.off('command:search-method', handleSearchMethod);
+  eventBus.off('command:class-loader-tree', handleClassLoaderTree);
+});
 </script>
 
 <template>
@@ -578,7 +486,7 @@ const getModifierColor = (modifiers: string) => {
                     <div v-if="scConfig.showDetail" class="ml-24px text-12px text-gray space-y-4px">
                       <div class="flex-y-center gap-8px">
                         <span class="text-gray/60">ClassLoader:</span>
-                        <span class="text-info">{{ cls.classLoader }}</span>
+                        <span class="text-info">{{ cls.classLoaderName }}</span>
                       </div>
                       <div class="flex-y-center gap-8px">
                         <span class="text-gray/60">Super Class:</span>
@@ -595,11 +503,11 @@ const getModifierColor = (modifiers: string) => {
                         </span>
                         <span>
                           <span class="text-gray/60">Fields:</span>
-                          <span>{{ cls.fields }}</span>
+                          <span>{{ cls.fieldCount }}</span>
                         </span>
                         <span>
                           <span class="text-gray/60">Methods:</span>
-                          <span>{{ cls.methods }}</span>
+                          <span>{{ cls.methodCount }}</span>
                         </span>
                       </div>
                     </div>

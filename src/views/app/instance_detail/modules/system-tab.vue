@@ -110,45 +110,13 @@ const jvmInfoDescriptions: Array<TDescriptionItemProps<JvmInfo>> = [
   { label: '进程ID', value: val => val.pid }
 ];
 
-// JVM参数
-const jvmArgs = ref([
-  '-Xms4096m',
-  '-Xmx4096m',
-  '-XX:MetaspaceSize=256m',
-  '-XX:MaxMetaspaceSize=512m',
-  '-XX:+UseG1GC',
-  '-XX:MaxGCPauseMillis=200',
-  '-XX:ParallelGCThreads=8',
-  '-XX:ConcGCThreads=2',
-  '-XX:InitiatingHeapOccupancyPercent=45',
-  '-XX:+HeapDumpOnOutOfMemoryError',
-  '-XX:HeapDumpPath=/logs/heapdump.hprof',
-  '-XX:+PrintGCDetails',
-  '-XX:+PrintGCDateStamps',
-  '-Xloggc:/logs/gc.log',
-  '-Dspring.profiles.active=prod',
-  '-Dserver.port=8080'
-]);
-
 // 环境变量
 interface EnvVar {
   name: string;
   value: string;
 }
 
-const envVars = ref<EnvVar[]>([
-  { name: 'JAVA_HOME', value: '/usr/lib/jvm/java-11-openjdk-amd64' },
-  {
-    name: 'PATH',
-    value: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-  },
-  { name: 'SPRING_PROFILES_ACTIVE', value: 'prod' },
-  { name: 'SERVER_PORT', value: '8080' },
-  { name: 'DATABASE_URL', value: 'jdbc:mysql://mysql-server:3306/mydb' },
-  { name: 'REDIS_HOST', value: 'redis-server' },
-  { name: 'LOG_LEVEL', value: 'INFO' },
-  { name: 'TZ', value: 'Asia/Shanghai' }
-]);
+const envVars = ref<EnvVar[]>([]);
 
 const envSearch = ref('');
 
@@ -171,8 +139,13 @@ function getDiskProgressColor(percent: number) {
 }
 
 function copyJvmArgs() {
-  navigator.clipboard.writeText(jvmArgs.value.join('\n'));
-  window.$message?.success('已复制到剪贴板');
+  const args = jvmInfo.value?.inputArguments;
+  if (args && args.length > 0) {
+    navigator.clipboard.writeText(args.join('\n'));
+    window.$message?.success('已复制到剪贴板');
+  } else {
+    window.$message?.warning('暂无JVM参数数据');
+  }
 }
 
 function createSystemInfoCommand() {
@@ -218,7 +191,7 @@ onMounted(() => {
     if (systemInfo.jvm?.environmentProperties) {
       envVars.value = Object.entries(systemInfo.jvm.environmentProperties).map(([key, value]) => ({
         name: key,
-        value
+        value: String(value)
       }));
     }
   });

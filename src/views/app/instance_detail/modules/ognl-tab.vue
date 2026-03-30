@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { NButton, NCard, NInput, NInputNumber, NModal, NStatistic } from 'naive-ui';
 import SvgIcon from '@/components/custom/svg-icon.vue';
+import { fetchOgnlCommand } from '@/service/api/instance';
+import eventBus from '@/utils/eventbus';
+import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
+import type { OgnlResponse } from '@/proto/command/result/OgnlResponse';
 
 interface Props {
   instanceId: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 // OGNL 配置
 interface OGNLConfig {
@@ -140,6 +144,8 @@ const loadTemplate = (template: Template) => {
   window.$message?.success(`已加载模板: ${template.title}`);
 };
 
+const isExecuting = ref(false);
+
 // 执行 OGNL 表达式
 const executeOGNL = () => {
   if (!ognlConfig.value.expression.trim()) {
@@ -147,46 +153,18 @@ const executeOGNL = () => {
     return;
   }
 
-  // 模拟执行
-  const executionTime = Math.floor(Math.random() * 100) + 10;
-  const success = Math.random() > 0.2; // 80% 成功率
+  isExecuting.value = true;
 
-  const record: OGNLHistory = {
-    id: historyIdCounter,
-    expression: ognlConfig.value.expression,
-    classLoader: ognlConfig.value.classLoader,
-    timeout: ognlConfig.value.timeout,
-    timestamp: new Date(),
-    success,
-    executionTime,
-    result: success
-      ? {
-          type: 'java.lang.String',
-          value: `Example result for: ${ognlConfig.value.expression}`,
-          hashCode: `0x${Math.floor(Math.random() * 0xffffffff).toString(16)}`
-        }
-      : undefined,
-    error: success ? undefined : 'ognl.OgnlException: Could not evaluate expression',
-    stackTrace: success
-      ? undefined
-      : [
-          'at ognl.OgnlRuntime.evaluateExpression(OgnlRuntime.java:234)',
-          'at ognl.Ognl.getValue(Ognl.java:333)',
-          'at com.example.OgnlExecutor.execute(OgnlExecutor.java:45)',
-          'at com.example.Controller.executeOgnl(Controller.java:78)'
-        ]
-  };
-
-  historyIdCounter += 1;
-
-  historyRecords.value.unshift(record);
-  currentResult.value = record;
-
-  if (success) {
-    window.$message?.success(`执行成功 (${executionTime}ms)`);
-  } else {
-    window.$message?.error(`执行失败 (${executionTime}ms)`);
-  }
+  fetchOgnlCommand({
+    instanceId: props.instanceId,
+    param: {
+      expression: ognlConfig.value.expression,
+      classLoaderHashCode: ognlConfig.value.classLoader,
+      timeout: ognlConfig.value.timeout
+    }
+  }).catch(() => {
+    isExecuting.value = false;
+  });
 };
 
 // 查看历史详情
@@ -286,6 +264,49 @@ const copyResult = () => {
 const showHelp = () => {
   window.$message?.info('OGNL 表达式帮助文档 (功能开发中)');
 };
+
+// eventBus 回调
+function handleOgnlResult(response: CommandExecuteResponse<OgnlResponse>) {
+  isExecuting.value = false;
+  const data = response.data as OgnlResponse | undefined;
+  if (!data || data.state === 0) {
+    if (data?.message) window.$message?.error(data.message);
+    return;
+  }
+
+  const record: OGNLHistory = {
+    id: historyIdCounter,
+    expression: ognlConfig.value.expression,
+    classLoader: ognlConfig.value.classLoader,
+    timeout: ognlConfig.value.timeout,
+    timestamp: new Date(),
+    success: data.success,
+    executionTime: 0,
+    result: data.success
+      ? { type: data.resultType, value: data.resultValue, hashCode: '' }
+      : undefined,
+    error: data.success ? undefined : data.error,
+    stackTrace: data.success ? undefined : data.stackTrace
+  };
+
+  historyIdCounter += 1;
+  historyRecords.value.unshift(record);
+  currentResult.value = record;
+
+  if (data.success) {
+    window.$message?.success('执行成功');
+  } else {
+    window.$message?.error('执行失败');
+  }
+}
+
+onMounted(() => {
+  eventBus.on('command:ognl', handleOgnlResult);
+});
+
+onUnmounted(() => {
+  eventBus.off('command:ognl', handleOgnlResult);
+});
 
 // 格式化完整时间
 const formatFullTime = (date: Date) => {

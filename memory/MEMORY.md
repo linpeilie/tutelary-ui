@@ -1,0 +1,1 @@
+- [same-day notes](./short-term.md) — Active frontend integration notes and current validation baseline.

@@ -137,6 +137,71 @@ export const commandRouterConfig: CommandEventMapping[] = [
     code: commandEnum.OVERVIEW.value as number,
     eventName: 'command:overview',
     description: '概览'
+  },
+
+  // ClassExplorer 命令
+  {
+    code: commandEnum.SEARCH_CLASS.value as number,
+    eventName: 'command:search-class',
+    description: '搜索类'
+  },
+  {
+    code: commandEnum.SEARCH_METHOD.value as number,
+    eventName: 'command:search-method',
+    description: '搜索方法'
+  },
+  {
+    code: commandEnum.CLASS_LOADER_TREE.value as number,
+    eventName: 'command:class-loader-tree',
+    description: '类加载器树'
+  },
+
+  // OGNL 命令
+  {
+    code: commandEnum.OGNL.value as number,
+    eventName: 'command:ognl',
+    description: 'OGNL 表达式执行'
+  },
+
+  // 增强类命令 (Watch/Monitor/TimeTunnel)
+  {
+    code: commandEnum.WATCH_METHOD.value as number,
+    eventName: 'command:watch',
+    description: '方法观察'
+  },
+  {
+    code: commandEnum.MONITOR_METHOD.value as number,
+    eventName: 'command:monitor',
+    description: '方法监控'
+  },
+  {
+    code: commandEnum.TIME_TUNNEL.value as number,
+    eventName: 'command:time-tunnel',
+    description: '时空隧道'
+  },
+
+  // Profiler 命令
+  {
+    code: commandEnum.PROFILER_START.value as number,
+    eventName: 'command:profiler-start',
+    description: '启动性能分析'
+  },
+  {
+    code: commandEnum.PROFILER_STOP.value as number,
+    eventName: 'command:profiler-stop',
+    description: '停止性能分析'
+  },
+
+  // JFR 命令
+  {
+    code: commandEnum.JFR_START.value as number,
+    eventName: 'command:jfr-start',
+    description: '启动JFR录制'
+  },
+  {
+    code: commandEnum.JFR_STOP.value as number,
+    eventName: 'command:jfr-stop',
+    description: '停止JFR录制'
   }
 ];
 

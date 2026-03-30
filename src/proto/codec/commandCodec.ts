@@ -18,6 +18,17 @@ import { VmOptionResponse } from '@/proto/command/result/VmOptionResponse'
 import { JvmMemoryResponse } from '@/proto/command/result/JvmMemoryResponse'
 import { SystemInfoResponse } from '@/proto/command/result/SystemInfoResponse'
 import { SystemMetricsResponse } from '@/proto/command/result/SystemMetricsResponse';
+import { SearchClassResponse } from '@/proto/command/result/SearchClassResponse';
+import { SearchMethodResponse } from '@/proto/command/result/SearchMethodResponse';
+import { ClassLoaderTreeResponse } from '@/proto/command/result/ClassLoaderTreeResponse';
+import { OgnlResponse } from '@/proto/command/result/OgnlResponse';
+import { WatchResponse } from '@/proto/command/result/WatchResponse';
+import { MonitorResponse } from '@/proto/command/result/MonitorResponse';
+import { TimeTunnelResponse } from '@/proto/command/result/TimeTunnelResponse';
+import { ProfilerStartResponse } from '@/proto/command/result/ProfilerStartResponse';
+import { ProfilerStopResponse } from '@/proto/command/result/ProfilerStopResponse';
+import { JfrStartResponse } from '@/proto/command/result/JfrStartResponse';
+import { JfrStopResponse } from '@/proto/command/result/JfrStopResponse';
 
 export default {
   decode: (command: number, unit8Array: Uint8Array) => {
@@ -91,6 +102,39 @@ export default {
 
     if (command === commandEnum.SYSTEM_METRICS.value)
       return SystemMetricsResponse.decode(unit8Array)
+
+    if (command === commandEnum.SEARCH_CLASS.value)
+      return SearchClassResponse.decode(unit8Array)
+
+    if (command === commandEnum.SEARCH_METHOD.value)
+      return SearchMethodResponse.decode(unit8Array)
+
+    if (command === commandEnum.CLASS_LOADER_TREE.value)
+      return ClassLoaderTreeResponse.decode(unit8Array)
+
+    if (command === commandEnum.OGNL.value)
+      return OgnlResponse.decode(unit8Array)
+
+    if (command === commandEnum.WATCH_METHOD.value)
+      return WatchResponse.decode(unit8Array)
+
+    if (command === commandEnum.MONITOR_METHOD.value)
+      return MonitorResponse.decode(unit8Array)
+
+    if (command === commandEnum.TIME_TUNNEL.value)
+      return TimeTunnelResponse.decode(unit8Array)
+
+    if (command === commandEnum.PROFILER_START.value)
+      return ProfilerStartResponse.decode(unit8Array)
+
+    if (command === commandEnum.PROFILER_STOP.value)
+      return ProfilerStopResponse.decode(unit8Array)
+
+    if (command === commandEnum.JFR_START.value)
+      return JfrStartResponse.decode(unit8Array)
+
+    if (command === commandEnum.JFR_STOP.value)
+      return JfrStopResponse.decode(unit8Array)
 
     return undefined
   },

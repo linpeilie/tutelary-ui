@@ -16,10 +16,22 @@ export const commandEnum = Object.freeze({
   JVM_MEMORY: EnumItem.of(200022, 'JvmMemory'),
   SYSTEM_INFO: EnumItem.of(200023, 'System Info'),
   SYSTEM_METRICS: EnumItem.of(200024, 'System Metrics'),
+  SEARCH_CLASS: EnumItem.of(200025, 'SearchClass'),
+  SEARCH_METHOD: EnumItem.of(200026, 'SearchMethod'),
+  CLASS_LOADER_TREE: EnumItem.of(200027, 'ClassLoaderTree'),
+  OGNL: EnumItem.of(200028, 'OGNL'),
+  PROFILER_START: EnumItem.of(200029, 'ProfilerStart'),
+  PROFILER_STOP: EnumItem.of(200030, 'ProfilerStop'),
+  JFR_START: EnumItem.of(200031, 'JfrStart'),
+  JFR_STOP: EnumItem.of(200032, 'JfrStop'),
+  JFR_DUMP: EnumItem.of(200033, 'JfrDump'),
 
   ENHANCE_AFFECT: EnumItem.of(210001, 'EnhanceAffect'),
   ENHANCE_COMPLETE: EnumItem.of(210002, 'EnhanceComplete'),
   TRACE_METHOD: EnumItem.of(210011, 'TraceMethod'),
   STACK_METHOD: EnumItem.of(210012, 'StackMethod'),
-  RETRANSFORM: EnumItem.of(210013, 'Retransform')
+  RETRANSFORM: EnumItem.of(210013, 'Retransform'),
+  WATCH_METHOD: EnumItem.of(210014, 'WatchMethod'),
+  MONITOR_METHOD: EnumItem.of(210015, 'MonitorMethod'),
+  TIME_TUNNEL: EnumItem.of(210016, 'TimeTunnel')
 } as const);

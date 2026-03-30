@@ -14,6 +14,17 @@ import { StackResponse } from '@/proto/command/result/StackResponse';
 import { TraceResponse } from '@/proto/command/result/TraceResponse';
 import { UpdateLoggerLevelResponse } from '@/proto/command/result/UpdateLoggerLevelResponse';
 import { VmOptionResponse } from '@/proto/command/result/VmOptionResponse';
+import { SearchClassResponse } from '@/proto/command/result/SearchClassResponse';
+import { SearchMethodResponse } from '@/proto/command/result/SearchMethodResponse';
+import { ClassLoaderTreeResponse } from '@/proto/command/result/ClassLoaderTreeResponse';
+import { OgnlResponse } from '@/proto/command/result/OgnlResponse';
+import { WatchResponse } from '@/proto/command/result/WatchResponse';
+import { MonitorResponse } from '@/proto/command/result/MonitorResponse';
+import { TimeTunnelResponse } from '@/proto/command/result/TimeTunnelResponse';
+import { ProfilerStartResponse } from '@/proto/command/result/ProfilerStartResponse';
+import { ProfilerStopResponse } from '@/proto/command/result/ProfilerStopResponse';
+import { JfrStartResponse } from '@/proto/command/result/JfrStartResponse';
+import { JfrStopResponse } from '@/proto/command/result/JfrStopResponse';
 
 /**
  * 全局事件总线事件类型定义
@@ -64,6 +75,27 @@ export interface GlobalEvents {
 
   // 概览命令
   'command:overview': CommandExecuteResponse<Overview>; // 概览
+
+  // ClassExplorer 命令
+  'command:search-class': CommandExecuteResponse<SearchClassResponse>; // 搜索类
+  'command:search-method': CommandExecuteResponse<SearchMethodResponse>; // 搜索方法
+  'command:class-loader-tree': CommandExecuteResponse<ClassLoaderTreeResponse>; // 类加载器树
+
+  // OGNL 命令
+  'command:ognl': CommandExecuteResponse<OgnlResponse>; // OGNL 表达式
+
+  // Watch/Monitor/TimeTunnel 命令
+  'command:watch': CommandExecuteResponse<WatchResponse>; // 方法观察
+  'command:monitor': CommandExecuteResponse<MonitorResponse>; // 方法监控
+  'command:time-tunnel': CommandExecuteResponse<TimeTunnelResponse>; // 时空隧道
+
+  // Profiler 命令
+  'command:profiler-start': CommandExecuteResponse<ProfilerStartResponse>; // 启动性能分析
+  'command:profiler-stop': CommandExecuteResponse<ProfilerStopResponse>; // 停止性能分析
+
+  // JFR 命令
+  'command:jfr-start': CommandExecuteResponse<JfrStartResponse>; // 启动JFR录制
+  'command:jfr-stop': CommandExecuteResponse<JfrStopResponse>; // 停止JFR录制
 
   // 兼容旧的事件
   'command:other': CommandExecuteResponse<any>; // 其他命令响应

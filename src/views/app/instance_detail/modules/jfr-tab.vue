@@ -1,19 +1,24 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { NButton, NCard, NInput, NInputNumber, NSelect, NStatistic } from 'naive-ui';
 import SvgIcon from '@/components/custom/svg-icon.vue';
+import { fetchJfrStartCommand, fetchJfrStopCommand } from '@/service/api/instance';
+import eventBus from '@/utils/eventbus';
+import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
+import type { JfrStartResponse } from '@/proto/command/result/JfrStartResponse';
+import type { JfrStopResponse } from '@/proto/command/result/JfrStopResponse';
 
 interface Props {
   instanceId: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 // JFR 录制配置
 interface JFRConfig {
   name: string;
   duration: number;
-  template: 'default' | 'profile' | 'continuous' | 'custom';
+  template: string;
   maxSize: number;
   maxAge: number;
   disk: boolean;
@@ -33,12 +38,12 @@ const jfrConfig = ref<JFRConfig>({
 // 录制记录
 interface JFRRecording {
   id: number;
+  recordingId: string;
   name: string;
-  status: 'RUNNING' | 'STOPPED' | 'CLOSED';
+  status: string;
   template: string;
   startTime: Date;
   duration: number;
-  size: number;
   endTime?: Date;
 }
 
@@ -119,46 +124,33 @@ const eventTypes: EventType[] = [
 
 // 统计数据
 const stats = computed(() => {
-  const activeCount = recordings.value.filter((r: JFRRecording) => r.status === 'RUNNING').length;
+  const activeCount = recordings.value.filter(r => r.status === 'RUNNING').length;
   const totalCount = recordings.value.length;
-  const totalSize = recordings.value.reduce((sum: number, r: JFRRecording) => sum + (r.size || 0), 0);
-
-  return { activeCount, totalCount, totalSize };
+  return { activeCount, totalCount };
 });
 
 // JFR 状态
 const jfrStatus = computed(() => {
-  const running = recordings.value.some((r: JFRRecording) => r.status === 'RUNNING');
+  const running = recordings.value.some(r => r.status === 'RUNNING');
   return running ? '录制中' : '就绪';
 });
 
 // 开始快速录制
 const startQuickRecording = (action: QuickAction) => {
-  const recording: JFRRecording = {
-    id: recordingIdCounter,
-    name: `${action.name}-${new Date().toLocaleTimeString('zh-CN')}`,
-    status: 'RUNNING',
-    template: action.type,
-    startTime: new Date(),
-    duration: action.duration,
-    size: 0
-  };
+  const name = `${action.name}-${new Date().toLocaleTimeString('zh-CN')}`;
 
-  recordingIdCounter += 1;
-  recordings.value.unshift(recording);
-
-  window.$message?.success(`${recording.name} 录制已开始`);
-
-  // 模拟录制完成
-  setTimeout(() => {
-    const rec = recordings.value.find((r: JFRRecording) => r.id === recording.id);
-    if (rec && rec.status === 'RUNNING') {
-      rec.status = 'STOPPED';
-      rec.endTime = new Date();
-      rec.size = Math.floor(Math.random() * 50 * 1024 * 1024); // 随机大小
-      window.$message?.info(`${rec.name} 录制已完成，可以下载分析`);
+  fetchJfrStartCommand({
+    instanceId: props.instanceId,
+    param: {
+      name,
+      duration: action.duration,
+      template: action.type,
+      maxSize: 100,
+      maxAge: 3600,
+      disk: true,
+      dumpOnExit: false
     }
-  }, action.duration * 1000);
+  });
 };
 
 // 开始自定义录制
@@ -168,75 +160,87 @@ const startCustomRecording = () => {
     return;
   }
 
+  fetchJfrStartCommand({
+    instanceId: props.instanceId,
+    param: {
+      name: jfrConfig.value.name,
+      duration: jfrConfig.value.duration,
+      template: jfrConfig.value.template,
+      maxSize: jfrConfig.value.maxSize,
+      maxAge: jfrConfig.value.maxAge,
+      disk: jfrConfig.value.disk,
+      dumpOnExit: jfrConfig.value.dumpOnExit
+    }
+  });
+};
+
+// 停止录制
+const stopRecording = (recording: JFRRecording) => {
+  fetchJfrStopCommand({
+    instanceId: props.instanceId,
+    param: {
+      recordingId: recording.recordingId
+    }
+  });
+};
+
+// eventBus 回调 - JFR 启动
+function handleJfrStart(response: CommandExecuteResponse<JfrStartResponse>) {
+  const data = response.data as JfrStartResponse | undefined;
+  if (!data || data.state === 0) {
+    if (data?.message) window.$message?.error(data.message);
+    return;
+  }
+
   const recording: JFRRecording = {
     id: recordingIdCounter,
-    name: jfrConfig.value.name,
-    status: 'RUNNING',
+    recordingId: data.recordingId,
+    name: jfrConfig.value.name || `录制-${recordingIdCounter}`,
+    status: data.status || 'RUNNING',
     template: jfrConfig.value.template,
     startTime: new Date(),
-    duration: jfrConfig.value.duration,
-    size: 0
+    duration: jfrConfig.value.duration
   };
 
   recordingIdCounter += 1;
   recordings.value.unshift(recording);
+  window.$message?.success(`${recording.name} 录制已开始`);
+}
 
-  window.$message?.success(`${recording.name} 自定义录制已开始`);
+// eventBus 回调 - JFR 停止
+function handleJfrStop(response: CommandExecuteResponse<JfrStopResponse>) {
+  const data = response.data as JfrStopResponse | undefined;
+  if (!data || data.state === 0) {
+    if (data?.message) window.$message?.error(data.message);
+    return;
+  }
 
-  // 模拟录制完成
-  setTimeout(() => {
-    const rec = recordings.value.find((r: JFRRecording) => r.id === recording.id);
-    if (rec && rec.status === 'RUNNING') {
-      rec.status = 'STOPPED';
-      rec.endTime = new Date();
-      rec.size = Math.floor(Math.random() * 100 * 1024 * 1024);
-      window.$message?.info(`${rec.name} 录制已完成`);
-    }
-  }, jfrConfig.value.duration * 1000);
-};
-
-// 停止录制
-const stopRecording = (id: number) => {
-  const recording = recordings.value.find((r: JFRRecording) => r.id === id);
-  if (recording && recording.status === 'RUNNING') {
-    recording.status = 'STOPPED';
+  const recording = recordings.value.find(r => r.recordingId === data.recordingId);
+  if (recording) {
+    recording.status = data.status || 'STOPPED';
     recording.endTime = new Date();
-    recording.size = Math.floor(Math.random() * 50 * 1024 * 1024);
     window.$message?.info(`${recording.name} 已停止录制`);
   }
-};
+}
 
-// 下载录制文件
-const downloadRecording = (recording: JFRRecording) => {
-  window.$message?.success(`正在下载 ${recording.name}.jfr`);
+onMounted(() => {
+  eventBus.on('command:jfr-start', handleJfrStart);
+  eventBus.on('command:jfr-stop', handleJfrStop);
+});
 
-  setTimeout(() => {
-    window.$message?.success(`${recording.name}.jfr 下载完成`);
-  }, 1500);
-};
-
-// 查看录制详情
-const selectedRecording = ref<JFRRecording | null>(null);
-const showDetailModal = ref(false);
-
-const viewRecording = (recording: JFRRecording) => {
-  selectedRecording.value = recording;
-  showDetailModal.value = true;
-};
+onUnmounted(() => {
+  eventBus.off('command:jfr-start', handleJfrStart);
+  eventBus.off('command:jfr-stop', handleJfrStop);
+});
 
 // 删除录制
 const deleteRecording = (id: number) => {
-  const index = recordings.value.findIndex((r: JFRRecording) => r.id === id);
+  const index = recordings.value.findIndex(r => r.id === id);
   if (index !== -1) {
     const recording = recordings.value[index];
     recordings.value.splice(index, 1);
     window.$message?.success(`已删除录制: ${recording.name}`);
   }
-};
-
-// 刷新录制列表
-const refreshRecordings = () => {
-  window.$message?.success('已刷新录制列表');
 };
 
 // 清空所有录制
@@ -260,7 +264,6 @@ const exportRecordings = () => {
   a.download = `jfr-recordings-${Date.now()}.json`;
   a.click();
   URL.revokeObjectURL(url);
-
   window.$message?.success('导出成功');
 };
 
@@ -292,66 +295,22 @@ const getStatusIcon = (status: string) => {
   return icons[status] || 'lucide:circle';
 };
 
-// 格式化大小
-const formatSize = (bytes: number) => {
-  return (bytes / 1024 / 1024).toFixed(2);
-};
-
 // 格式化时间
 const formatTime = (date: Date) => {
   return date.toLocaleString('zh-CN');
-};
-
-// 计算录制持续时间
-const getRecordingDuration = (recording: JFRRecording) => {
-  if (recording.status === 'RUNNING') {
-    return Math.floor((Date.now() - recording.startTime.getTime()) / 1000);
-  }
-  return recording.duration;
-};
-
-// 加载示例数据
-const loadSampleData = () => {
-  const sampleRecordings: JFRRecording[] = [
-    {
-      id: recordingIdCounter,
-      name: '性能分析-14:30:25',
-      status: 'STOPPED',
-      template: 'profile',
-      startTime: new Date(Date.now() - 300000),
-      endTime: new Date(Date.now() - 240000),
-      duration: 60,
-      size: 35 * 1024 * 1024
-    },
-    {
-      id: recordingIdCounter + 1,
-      name: 'GC分析-14:25:10',
-      status: 'STOPPED',
-      template: 'gc',
-      startTime: new Date(Date.now() - 600000),
-      endTime: new Date(Date.now() - 480000),
-      duration: 120,
-      size: 48 * 1024 * 1024
-    }
-  ];
-
-  recordingIdCounter += 2;
-  recordings.value.unshift(...sampleRecordings);
-  window.$message?.success('已加载示例数据');
 };
 </script>
 
 <template>
   <div class="h-full flex flex-col gap-16px">
     <!-- 状态卡片 -->
-    <div class="grid grid-cols-1 gap-16px lg:grid-cols-4">
+    <div class="grid grid-cols-1 gap-16px lg:grid-cols-3">
       <NCard size="small">
         <NStatistic label="JFR状态" :value="jfrStatus">
           <template #prefix>
             <SvgIcon icon="lucide:radio" class="text-info" />
           </template>
         </NStatistic>
-        <div class="mt-4px text-12px text-gray">Java Flight Recorder</div>
       </NCard>
 
       <NCard size="small">
@@ -360,7 +319,6 @@ const loadSampleData = () => {
             <SvgIcon icon="lucide:play-circle" class="text-success" />
           </template>
         </NStatistic>
-        <div class="mt-4px text-12px text-gray">正在进行的录制</div>
       </NCard>
 
       <NCard size="small">
@@ -369,19 +327,6 @@ const loadSampleData = () => {
             <SvgIcon icon="lucide:database" class="text-purple" />
           </template>
         </NStatistic>
-        <div class="mt-4px text-12px text-gray">累计录制数量</div>
-      </NCard>
-
-      <NCard size="small">
-        <NStatistic label="数据大小" :value="formatSize(stats.totalSize)">
-          <template #prefix>
-            <SvgIcon icon="lucide:hard-drive" class="text-warning" />
-          </template>
-          <template #suffix>
-            <span class="ml-4px text-14px">MB</span>
-          </template>
-        </NStatistic>
-        <div class="mt-4px text-12px text-gray">录制文件总大小</div>
       </NCard>
     </div>
 
@@ -429,7 +374,6 @@ const loadSampleData = () => {
 
       <div class="space-y-16px">
         <div class="grid grid-cols-1 gap-16px md:grid-cols-3">
-          <!-- 录制名称 -->
           <div>
             <label class="mb-8px block text-14px font-medium">
               录制名称
@@ -437,8 +381,6 @@ const loadSampleData = () => {
             </label>
             <NInput v-model:value="jfrConfig.name" placeholder="例如: my-recording" />
           </div>
-
-          <!-- 持续时间 -->
           <div>
             <label class="mb-8px block text-14px font-medium">
               持续时间 (秒)
@@ -446,8 +388,6 @@ const loadSampleData = () => {
             </label>
             <NInputNumber v-model:value="jfrConfig.duration" :min="1" placeholder="例如: 60" class="w-full" />
           </div>
-
-          <!-- 配置模板 -->
           <div>
             <label class="mb-8px block text-14px font-medium">配置模板</label>
             <NSelect v-model:value="jfrConfig.template" :options="templateOptions" />
@@ -455,13 +395,10 @@ const loadSampleData = () => {
         </div>
 
         <div class="grid grid-cols-1 gap-16px md:grid-cols-2">
-          <!-- 最大文件大小 -->
           <div>
             <label class="mb-8px block text-14px font-medium">最大文件大小 (MB)</label>
             <NInputNumber v-model:value="jfrConfig.maxSize" :min="1" placeholder="例如: 100" class="w-full" />
           </div>
-
-          <!-- 最大年龄 -->
           <div>
             <label class="mb-8px block text-14px font-medium">最大年龄 (秒)</label>
             <NInputNumber v-model:value="jfrConfig.maxAge" :min="1" placeholder="例如: 3600" class="w-full" />
@@ -487,12 +424,6 @@ const loadSampleData = () => {
             开始录制
           </NButton>
           <NButton @click="resetForm">重置</NButton>
-          <NButton @click="loadSampleData">
-            <template #icon>
-              <SvgIcon icon="lucide:file-code" />
-            </template>
-            加载示例
-          </NButton>
         </div>
       </div>
     </NCard>
@@ -507,12 +438,6 @@ const loadSampleData = () => {
             <span v-if="recordings.length > 0" class="text-12px text-gray">({{ recordings.length }} 个录制)</span>
           </div>
           <div class="flex-y-center gap-8px">
-            <NButton size="small" @click="refreshRecordings">
-              <template #icon>
-                <SvgIcon icon="lucide:refresh-cw" />
-              </template>
-              刷新
-            </NButton>
             <NButton size="small" @click="exportRecordings">
               <template #icon>
                 <SvgIcon icon="lucide:download" />
@@ -547,7 +472,6 @@ const loadSampleData = () => {
               <th class="px-12px py-8px text-left text-12px text-gray font-medium">配置</th>
               <th class="px-12px py-8px text-left text-12px text-gray font-medium">开始时间</th>
               <th class="px-12px py-8px text-left text-12px text-gray font-medium">持续时间</th>
-              <th class="px-12px py-8px text-left text-12px text-gray font-medium">数据大小</th>
               <th class="px-12px py-8px text-left text-12px text-gray font-medium">操作</th>
             </tr>
           </thead>
@@ -563,37 +487,19 @@ const loadSampleData = () => {
               </td>
               <td class="px-12px py-12px text-12px text-gray">{{ recording.template }}</td>
               <td class="px-12px py-12px text-12px text-gray font-mono">{{ formatTime(recording.startTime) }}</td>
-              <td class="px-12px py-12px text-12px text-gray">{{ getRecordingDuration(recording) }}s</td>
-              <td class="px-12px py-12px text-12px text-gray">{{ formatSize(recording.size) }} MB</td>
+              <td class="px-12px py-12px text-12px text-gray">{{ recording.duration }}s</td>
               <td class="px-12px py-12px text-12px">
                 <div class="flex-y-center gap-8px">
                   <NButton
                     v-if="recording.status === 'RUNNING'"
                     size="tiny"
                     type="warning"
-                    @click="stopRecording(recording.id)"
+                    @click="stopRecording(recording)"
                   >
                     <template #icon>
                       <SvgIcon icon="lucide:square" />
                     </template>
                     停止
-                  </NButton>
-                  <NButton
-                    v-if="recording.status === 'STOPPED'"
-                    size="tiny"
-                    type="info"
-                    @click="downloadRecording(recording)"
-                  >
-                    <template #icon>
-                      <SvgIcon icon="lucide:download" />
-                    </template>
-                    下载
-                  </NButton>
-                  <NButton size="tiny" type="success" @click="viewRecording(recording)">
-                    <template #icon>
-                      <SvgIcon icon="lucide:eye" />
-                    </template>
-                    详情
                   </NButton>
                   <NButton size="tiny" type="error" @click="deleteRecording(recording.id)">
                     <template #icon>
@@ -640,89 +546,6 @@ const loadSampleData = () => {
         </div>
       </div>
     </NCard>
-
-    <!-- 录制详情模态框 -->
-    <div
-      v-if="showDetailModal && selectedRecording"
-      class="fixed inset-0 z-1000 flex items-center justify-center bg-black/60 p-16px backdrop-blur-sm"
-      @click.self="showDetailModal = false"
-    >
-      <div class="max-w-4xl w-full overflow-hidden border border-gray/20 rounded-12px bg-container shadow-2xl">
-        <div
-          class="flex-y-center justify-between border-b border-gray/20 from-info/10 to-transparent bg-gradient-to-r px-24px py-16px"
-        >
-          <div class="flex-y-center gap-12px">
-            <div class="h-40px w-40px flex items-center justify-center rounded-8px bg-info/20">
-              <SvgIcon icon="lucide:radio" class="text-20px text-info" />
-            </div>
-            <div>
-              <h3 class="text-16px font-semibold">JFR 录制详情</h3>
-              <p class="text-12px text-gray">{{ selectedRecording.name }}</p>
-            </div>
-          </div>
-          <NButton text @click="showDetailModal = false">
-            <template #icon>
-              <SvgIcon icon="lucide:x" class="text-20px" />
-            </template>
-          </NButton>
-        </div>
-
-        <div class="max-h-[calc(90vh-200px)] overflow-y-auto p-24px space-y-16px">
-          <div class="grid grid-cols-2 gap-16px">
-            <div class="border border-gray/20 rounded-8px bg-container/50 p-16px">
-              <div class="mb-4px text-12px text-gray">录制ID</div>
-              <div class="text-14px font-mono">{{ selectedRecording.id }}</div>
-            </div>
-            <div class="border border-gray/20 rounded-8px bg-container/50 p-16px">
-              <div class="mb-4px text-12px text-gray">状态</div>
-              <div class="text-14px">{{ selectedRecording.status }}</div>
-            </div>
-            <div class="border border-gray/20 rounded-8px bg-container/50 p-16px">
-              <div class="mb-4px text-12px text-gray">配置模板</div>
-              <div class="text-14px">{{ selectedRecording.template }}</div>
-            </div>
-            <div class="border border-gray/20 rounded-8px bg-container/50 p-16px">
-              <div class="mb-4px text-12px text-gray">数据大小</div>
-              <div class="text-14px">{{ formatSize(selectedRecording.size) }} MB</div>
-            </div>
-            <div class="border border-gray/20 rounded-8px bg-container/50 p-16px">
-              <div class="mb-4px text-12px text-gray">开始时间</div>
-              <div class="text-12px font-mono">{{ formatTime(selectedRecording.startTime) }}</div>
-            </div>
-            <div class="border border-gray/20 rounded-8px bg-container/50 p-16px">
-              <div class="mb-4px text-12px text-gray">持续时间</div>
-              <div class="text-14px">{{ selectedRecording.duration }}秒</div>
-            </div>
-          </div>
-
-          <div class="border border-info/30 rounded-8px bg-info/10 p-16px">
-            <div class="mb-8px text-12px text-info font-semibold">💡 分析提示</div>
-            <div class="text-12px text-gray-300 space-y-4px">
-              <div>• 下载 .jfr 文件后可使用 JDK Mission Control (JMC) 打开分析</div>
-              <div>• 支持分析 CPU 使用、内存分配、GC 行为、I/O 操作等</div>
-              <div>• 可查看方法执行热点、线程状态、锁竞争等详细信息</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex-y-center justify-end gap-12px border-t border-gray/20 bg-container/50 px-24px py-16px">
-          <NButton
-            v-if="selectedRecording.status === 'STOPPED'"
-            type="info"
-            @click="
-              downloadRecording(selectedRecording);
-              showDetailModal = false;
-            "
-          >
-            <template #icon>
-              <SvgIcon icon="lucide:download" />
-            </template>
-            下载文件
-          </NButton>
-          <NButton @click="showDetailModal = false">关闭</NButton>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 

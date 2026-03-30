@@ -123,3 +123,91 @@ export function fetchStackCommand(data: CommandCreateRequest<StackRequest>) {
     data
   });
 }
+
+export function fetchSearchClassCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/searchClass`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchSearchMethodCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/searchMethod`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchClassLoaderTreeCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/classLoaderTree`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchOgnlCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/ognl`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchWatchCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/watchMethod`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchMonitorCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/monitorMethod`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchTimeTunnelCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/timeTunnel`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchProfilerStartCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/profilerStart`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchProfilerStopCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/profilerStop`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchJfrStartCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/jfrStart`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchJfrStopCommand(data: CommandCreateRequest<any>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/jfrStop`,
+    method: 'post',
+    data
+  });
+}

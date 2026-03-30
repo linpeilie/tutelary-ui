@@ -1,25 +1,31 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { NButton, NCard, NForm, NFormItem, NInput, NInputNumber, NSelect, NStatistic, NTag } from 'naive-ui';
 import SvgIcon from '@/components/custom/svg-icon.vue';
+import { fetchTimeTunnelCommand } from '@/service/api/instance';
+import eventBus from '@/utils/eventbus';
+import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
+import type { TimeTunnelResponse } from '@/proto/command/result/TimeTunnelResponse';
 
 interface Props {
   instanceId: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 // TimeTunnel 配置
 interface TTConfig {
-  method: string;
-  condition: 'all' | 'exception' | 'success';
+  qualifiedClassName: string;
+  methodName: string;
+  condition: string;
   maxCount: number;
   costThreshold: number | null;
 }
 
 const ttConfig = ref<TTConfig>({
-  method: '',
-  condition: 'all',
+  qualifiedClassName: '',
+  methodName: '',
+  condition: '',
   maxCount: 100,
   costThreshold: null
 });
@@ -27,45 +33,26 @@ const ttConfig = ref<TTConfig>({
 // 快照记录
 interface TTSnapshot {
   index: number;
-  timestamp: Date;
+  finishTime: string;
   className: string;
   methodName: string;
-  fullName: string;
   cost: number;
   hasException: boolean;
-  parameters: Array<{ type: string; value: any }>;
-  target: {
-    className: string;
-    hashCode: string;
-  };
-  returnValue: {
-    type: string;
-    value: any;
-  } | null;
-  exception: {
-    type: string;
-    message: string;
-    stackTrace: string[];
-  } | null;
+  params: string;
+  targetClassName: string;
+  targetHashCode: string;
+  returnType: string;
+  returnValue: string;
+  exceptionType: string;
+  exceptionMessage: string;
+  exceptionStackTrace: string[];
 }
 
 const ttRecords = ref<TTSnapshot[]>([]);
 const isRecording = ref(false);
-const recordedCount = ref(0);
-const exceptionCount = ref(0);
 const currentFilter = ref<'all' | 'success' | 'exception'>('all');
 const selectedSnapshot = ref<TTSnapshot | null>(null);
 const showDetailModal = ref(false);
-
-let recordingInterval: number | null = null;
-let snapshotIdCounter = 1;
-
-// 条件选项
-const conditionOptions = [
-  { label: '所有调用', value: 'all' },
-  { label: '仅异常', value: 'exception' },
-  { label: '仅成功', value: 'success' }
-];
 
 // 筛选选项
 const filterOptions = [
@@ -91,125 +78,96 @@ const filteredRecords = computed(() => {
   return ttRecords.value.filter(r => r.hasException);
 });
 
+// 开始记录
+const startRecording = () => {
+  if (!ttConfig.value.qualifiedClassName.trim()) {
+    window.$message?.warning('请填写类名');
+    return;
+  }
+  if (!ttConfig.value.methodName.trim()) {
+    window.$message?.warning('请填写方法名');
+    return;
+  }
+
+  isRecording.value = true;
+  ttRecords.value = [];
+
+  fetchTimeTunnelCommand({
+    instanceId: props.instanceId,
+    param: {
+      qualifiedClassName: ttConfig.value.qualifiedClassName,
+      methodName: ttConfig.value.methodName,
+      condition: ttConfig.value.condition,
+      maxCount: ttConfig.value.maxCount,
+      costThreshold: ttConfig.value.costThreshold || 0
+    }
+  }).catch(() => {
+    isRecording.value = false;
+  });
+
+  window.$message?.success('开始记录方法调用快照');
+};
+
 // 停止记录
 const stopRecording = () => {
-  if (recordingInterval) {
-    clearInterval(recordingInterval);
-    recordingInterval = null;
-  }
   isRecording.value = false;
   window.$message?.info('TimeTunnel 记录已停止');
 };
 
-// 捕获快照
-const captureSnapshot = () => {
-  const lastDotIndex = ttConfig.value.method.lastIndexOf('.');
-  const className = ttConfig.value.method.substring(0, lastDotIndex);
-  const methodName = ttConfig.value.method.substring(lastDotIndex + 1);
-
-  // 生成模拟快照数据
-  const hasException = Math.random() < 0.15; // 15% 概率异常
-  const cost = Math.floor(Math.random() * 500) + 20;
-
-  // 检查条件
-  if (ttConfig.value.condition === 'exception' && !hasException) return;
-  if (ttConfig.value.condition === 'success' && hasException) return;
-  if (ttConfig.value.costThreshold && cost < ttConfig.value.costThreshold) return;
+// eventBus 回调
+function handleTimeTunnelResult(response: CommandExecuteResponse<TimeTunnelResponse>) {
+  const data = response.data as TimeTunnelResponse | undefined;
+  if (!data || data.state === 0) {
+    if (data?.message) window.$message?.error(data.message);
+    isRecording.value = false;
+    return;
+  }
 
   const snapshot: TTSnapshot = {
-    index: snapshotIdCounter,
-    timestamp: new Date(),
-    className,
-    methodName,
-    fullName: ttConfig.value.method,
-    cost,
-    hasException,
-    parameters: hasException
-      ? [{ type: 'Long', value: null }]
-      : [{ type: 'Long', value: Math.floor(Math.random() * 1000) + 1 }],
-    target: {
-      className,
-      hashCode: `0x${Math.floor(Math.random() * 0xffffffff).toString(16)}`
-    },
-    returnValue: hasException
-      ? null
-      : {
-          type: 'User',
-          value: {
-            id: Math.floor(Math.random() * 1000) + 1,
-            name: `User${Math.floor(Math.random() * 100)}`,
-            email: 'user@example.com',
-            age: Math.floor(Math.random() * 50) + 20
-          }
-        },
-    exception: hasException
-      ? {
-          type: 'UserNotFoundException',
-          message: `User not found with id: ${Math.floor(Math.random() * 1000)}`,
-          stackTrace: [
-            'com.example.service.UserService.getUserById(UserService.java:45)',
-            'com.example.controller.UserController.getUser(UserController.java:28)',
-            'sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)',
-            'sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)'
-          ]
-        }
-      : null
+    index: data.index,
+    finishTime: data.finishTime,
+    className: data.className,
+    methodName: data.methodName,
+    cost: data.cost,
+    hasException: data.hasException,
+    params: data.params,
+    targetClassName: data.targetClassName,
+    targetHashCode: data.targetHashCode,
+    returnType: data.returnType,
+    returnValue: data.returnValue,
+    exceptionType: data.exceptionType,
+    exceptionMessage: data.exceptionMessage,
+    exceptionStackTrace: data.exceptionStackTrace || []
   };
-
-  snapshotIdCounter += 1;
 
   ttRecords.value.unshift(snapshot);
   if (ttRecords.value.length > ttConfig.value.maxCount) {
     ttRecords.value.pop();
   }
 
-  recordedCount.value += 1;
-  if (hasException) exceptionCount.value += 1;
-};
-
-// 开始记录
-const startRecording = () => {
-  if (!ttConfig.value.method.trim()) {
-    window.$message?.warning('请填写监控方法');
-    return;
+  if (ttConfig.value.maxCount > 0 && ttRecords.value.length >= ttConfig.value.maxCount) {
+    isRecording.value = false;
+    window.$message?.success(`记录完成,共捕获 ${ttRecords.value.length} 个快照`);
   }
+}
 
-  // 解析方法
-  const lastDotIndex = ttConfig.value.method.lastIndexOf('.');
-  if (lastDotIndex === -1) {
-    window.$message?.error(`方法格式错误: "${ttConfig.value.method}"。正确格式：类名.方法名`);
-    return;
-  }
+onMounted(() => {
+  eventBus.on('command:time-tunnel', handleTimeTunnelResult);
+});
 
-  isRecording.value = true;
-  recordedCount.value = 0;
-  exceptionCount.value = 0;
-
-  // 模拟记录过程
-  recordingInterval = window.setInterval(
-    () => {
-      if (recordedCount.value >= ttConfig.value.maxCount) {
-        stopRecording();
-        return;
-      }
-
-      captureSnapshot();
-    },
-    1000 + Math.random() * 2000
-  ); // 随机1-3秒记录一次
-
-  window.$message?.success('开始记录方法调用快照');
-};
+onUnmounted(() => {
+  eventBus.off('command:time-tunnel', handleTimeTunnelResult);
+});
 
 // 加载示例
 const loadSample = () => {
   ttConfig.value = {
-    method: 'com.example.service.UserService.getUserById',
-    condition: 'all',
+    qualifiedClassName: 'com.example.service.UserService',
+    methodName: 'getUserById',
+    condition: '',
     maxCount: 100,
     costThreshold: null
   };
-  startRecording();
 };
 
 // 重置配置
@@ -218,14 +176,13 @@ const resetConfig = () => {
     stopRecording();
   }
   ttConfig.value = {
-    method: '',
-    condition: 'all',
+    qualifiedClassName: '',
+    methodName: '',
+    condition: '',
     maxCount: 100,
     costThreshold: null
   };
   ttRecords.value = [];
-  recordedCount.value = 0;
-  exceptionCount.value = 0;
 };
 
 // 导出记录
@@ -244,8 +201,6 @@ const exportRecords = () => {
 // 清空记录
 const clearRecords = () => {
   ttRecords.value = [];
-  recordedCount.value = 0;
-  exceptionCount.value = 0;
   window.$message?.success('已清空所有快照');
 };
 
@@ -261,11 +216,6 @@ const closeDetail = () => {
   selectedSnapshot.value = null;
 };
 
-// 回放快照
-const replaySnapshot = (snapshot: TTSnapshot) => {
-  window.$message?.info(`回放快照 #${snapshot.index} (功能开发中)`);
-};
-
 // 复制快照数据
 const copySnapshot = () => {
   if (!selectedSnapshot.value) return;
@@ -277,13 +227,8 @@ const copySnapshot = () => {
 };
 
 // 格式化时间
-const formatTime = (date: Date) => {
-  return date.toLocaleTimeString('zh-CN', { hour12: false });
-};
-
-// 格式化完整时间
-const formatFullTime = (date: Date) => {
-  return date.toLocaleString('zh-CN');
+const formatTime = (finishTime: string) => {
+  return finishTime || '-';
 };
 
 // 获取耗时颜色
@@ -306,29 +251,49 @@ const getCostColor = (cost: number) => {
       </template>
 
       <NForm label-placement="top" label-width="auto">
-        <NFormItem label="监控方法" required>
+        <NFormItem label="类名" required>
           <template #label>
             <span>
-              监控方法
+              类名
               <span class="text-error">*</span>
             </span>
-            <span class="ml-8px text-12px text-gray font-normal">(格式: 类名.方法名)</span>
+            <span class="ml-8px text-12px text-gray font-normal">(完整类名)</span>
           </template>
           <NInput
-            v-model:value="ttConfig.method"
-            placeholder="例如: com.example.service.UserService.getUserById"
+            v-model:value="ttConfig.qualifiedClassName"
+            placeholder="例如: com.example.service.UserService"
+            :disabled="isRecording"
+            class="font-mono"
+          />
+        </NFormItem>
+
+        <NFormItem label="方法名" required>
+          <template #label>
+            <span>
+              方法名
+              <span class="text-error">*</span>
+            </span>
+          </template>
+          <NInput
+            v-model:value="ttConfig.methodName"
+            placeholder="例如: getUserById"
             :disabled="isRecording"
             class="font-mono"
           />
         </NFormItem>
 
         <div class="grid grid-cols-1 gap-16px md:grid-cols-3">
-          <NFormItem label="记录条件">
+          <NFormItem label="条件表达式">
             <template #label>
-              <span>记录条件</span>
+              <span>条件表达式</span>
               <span class="ml-8px text-12px text-gray font-normal">(可选)</span>
             </template>
-            <NSelect v-model:value="ttConfig.condition" :options="conditionOptions" :disabled="isRecording" />
+            <NInput
+              v-model:value="ttConfig.condition"
+              placeholder="例如: params[0] > 100"
+              :disabled="isRecording"
+              class="font-mono"
+            />
           </NFormItem>
 
           <NFormItem label="最大记录数">
@@ -395,13 +360,8 @@ const getCostColor = (cost: number) => {
           </div>
           <div class="text-14px text-gray">
             已记录:
-            <span class="text-purple font-semibold">{{ recordedCount }}</span>
-            次调用
-          </div>
-          <div class="text-14px text-gray">
-            异常:
-            <span class="text-error font-semibold">{{ exceptionCount }}</span>
-            次
+            <span class="text-purple font-semibold">{{ ttRecords.length }}</span>
+            个快照
           </div>
         </div>
       </div>
@@ -414,9 +374,6 @@ const getCostColor = (cost: number) => {
           <template #prefix>
             <SvgIcon icon="lucide:database" class="text-purple" />
           </template>
-          <template #suffix>
-            <div class="text-12px text-gray">已保存的方法调用快照</div>
-          </template>
         </NStatistic>
       </NCard>
 
@@ -425,9 +382,6 @@ const getCostColor = (cost: number) => {
           <template #prefix>
             <SvgIcon icon="lucide:check-circle" class="text-success" />
           </template>
-          <template #suffix>
-            <div class="text-12px text-gray">正常返回的调用</div>
-          </template>
         </NStatistic>
       </NCard>
 
@@ -435,9 +389,6 @@ const getCostColor = (cost: number) => {
         <NStatistic label="异常调用" :value="stats.error">
           <template #prefix>
             <SvgIcon icon="lucide:alert-circle" class="text-error" />
-          </template>
-          <template #suffix>
-            <div class="text-12px text-gray">抛出异常的调用</div>
           </template>
         </NStatistic>
       </NCard>
@@ -449,7 +400,6 @@ const getCostColor = (cost: number) => {
           </template>
           <template #suffix>
             <span class="ml-4px text-14px">ms</span>
-            <div class="text-12px text-gray">所有调用的平均时间</div>
           </template>
         </NStatistic>
       </NCard>
@@ -490,7 +440,6 @@ const getCostColor = (cost: number) => {
         <div class="mt-4px text-12px text-gray">填写配置并点击"开始记录"</div>
       </div>
 
-      <!-- 时间轴视图 -->
       <div v-else-if="filteredRecords.length === 0" class="py-32px text-center text-gray">
         <div class="text-14px">没有符合条件的快照</div>
       </div>
@@ -525,27 +474,21 @@ const getCostColor = (cost: number) => {
                 <div class="flex-1">
                   <div class="mb-4px flex-y-center gap-8px">
                     <span class="text-12px text-gray font-mono">#{{ record.index }}</span>
-                    <span class="text-12px text-gray">{{ formatTime(record.timestamp) }}</span>
+                    <span class="text-12px text-gray">{{ formatTime(record.finishTime) }}</span>
                     <NTag :type="getCostColor(record.cost)" size="small">{{ record.cost }}ms</NTag>
                   </div>
-                  <code class="text-14px text-primary">{{ record.fullName }}</code>
+                  <code class="text-14px text-primary">{{ record.className }}.{{ record.methodName }}</code>
                 </div>
-                <NButton size="small" type="info" title="回放" @click.stop="replaySnapshot(record)">
-                  <template #icon>
-                    <SvgIcon icon="lucide:play-circle" />
-                  </template>
-                  回放
-                </NButton>
               </div>
 
               <div class="text-12px text-gray">
                 <div v-if="record.hasException" class="flex-y-center gap-8px text-error">
                   <SvgIcon icon="lucide:alert-triangle" class="text-12px" />
-                  <span>{{ record.exception?.type }}: {{ record.exception?.message }}</span>
+                  <span>{{ record.exceptionType }}: {{ record.exceptionMessage }}</span>
                 </div>
                 <div v-else class="flex-y-center gap-8px text-success">
                   <SvgIcon icon="lucide:check" class="text-12px" />
-                  <span>调用成功，返回: {{ record.returnValue?.type }}</span>
+                  <span>调用成功，返回: {{ record.returnType }}</span>
                 </div>
               </div>
             </div>
@@ -589,7 +532,7 @@ const getCostColor = (cost: number) => {
               <div class="grid grid-cols-2 gap-12px text-12px">
                 <div>
                   <span class="text-gray">时间:</span>
-                  <span class="ml-8px">{{ formatFullTime(selectedSnapshot.timestamp) }}</span>
+                  <span class="ml-8px">{{ selectedSnapshot.finishTime }}</span>
                 </div>
                 <div>
                   <span class="text-gray">耗时:</span>
@@ -599,23 +542,19 @@ const getCostColor = (cost: number) => {
                 </div>
                 <div class="col-span-2">
                   <span class="text-gray">方法:</span>
-                  <code class="ml-8px text-primary">{{ selectedSnapshot.fullName }}</code>
+                  <code class="ml-8px text-primary">{{ selectedSnapshot.className }}.{{ selectedSnapshot.methodName }}</code>
                 </div>
               </div>
             </div>
 
             <!-- 参数 -->
-            <div class="border border-gray/20 rounded-8px bg-container/50 p-16px">
+            <div v-if="selectedSnapshot.params" class="border border-gray/20 rounded-8px bg-container/50 p-16px">
               <h4 class="mb-12px flex-y-center gap-8px text-14px font-semibold">
                 <SvgIcon icon="lucide:package" class="text-16px text-info" />
                 参数
               </h4>
-              <div class="space-y-8px">
-                <div v-for="(param, index) in selectedSnapshot.parameters" :key="index" class="text-12px">
-                  <span class="text-gray">params[{{ index }}]:</span>
-                  <span class="ml-8px text-warning">{{ param.type }}</span>
-                  <span class="ml-8px font-mono">{{ param.value !== null ? param.value : 'null' }}</span>
-                </div>
+              <div class="overflow-x-auto rounded-6px bg-black/20 p-12px">
+                <pre class="text-12px font-mono">{{ selectedSnapshot.params }}</pre>
               </div>
             </div>
 
@@ -628,17 +567,17 @@ const getCostColor = (cost: number) => {
               <div class="text-12px space-y-8px">
                 <div>
                   <span class="text-gray">类名:</span>
-                  <code class="ml-8px text-primary">{{ selectedSnapshot.target.className }}</code>
+                  <code class="ml-8px text-primary">{{ selectedSnapshot.targetClassName }}</code>
                 </div>
                 <div>
                   <span class="text-gray">HashCode:</span>
-                  <code class="ml-8px text-warning font-mono">{{ selectedSnapshot.target.hashCode }}</code>
+                  <code class="ml-8px text-warning font-mono">{{ selectedSnapshot.targetHashCode }}</code>
                 </div>
               </div>
             </div>
 
             <!-- 返回值 -->
-            <div v-if="selectedSnapshot.returnValue" class="border border-gray/20 rounded-8px bg-container/50 p-16px">
+            <div v-if="selectedSnapshot.returnValue && !selectedSnapshot.hasException" class="border border-gray/20 rounded-8px bg-container/50 p-16px">
               <h4 class="mb-12px flex-y-center gap-8px text-14px font-semibold">
                 <SvgIcon icon="lucide:corner-down-left" class="text-16px text-success" />
                 返回值
@@ -646,19 +585,17 @@ const getCostColor = (cost: number) => {
               <div class="text-12px space-y-8px">
                 <div>
                   <span class="text-gray">类型:</span>
-                  <span class="ml-8px text-warning">{{ selectedSnapshot.returnValue.type }}</span>
+                  <span class="ml-8px text-warning">{{ selectedSnapshot.returnType }}</span>
                 </div>
                 <div>
                   <span class="text-gray">值:</span>
-                  <pre class="ml-8px mt-8px overflow-x-auto rounded-6px bg-black/20 p-12px text-11px font-mono">{{
-                    JSON.stringify(selectedSnapshot.returnValue.value, null, 2)
-                  }}</pre>
+                  <pre class="ml-8px mt-8px overflow-x-auto rounded-6px bg-black/20 p-12px text-11px font-mono">{{ selectedSnapshot.returnValue }}</pre>
                 </div>
               </div>
             </div>
 
             <!-- 异常 -->
-            <div v-if="selectedSnapshot.exception" class="border border-error/20 rounded-8px bg-error/5 p-16px">
+            <div v-if="selectedSnapshot.hasException" class="border border-error/20 rounded-8px bg-error/5 p-16px">
               <h4 class="mb-12px flex-y-center gap-8px text-14px text-error font-semibold">
                 <SvgIcon icon="lucide:alert-triangle" class="text-16px" />
                 异常
@@ -666,17 +603,17 @@ const getCostColor = (cost: number) => {
               <div class="text-12px space-y-12px">
                 <div>
                   <span class="text-gray">类型:</span>
-                  <span class="ml-8px text-error">{{ selectedSnapshot.exception.type }}</span>
+                  <span class="ml-8px text-error">{{ selectedSnapshot.exceptionType }}</span>
                 </div>
                 <div>
                   <span class="text-gray">消息:</span>
-                  <div class="ml-8px mt-4px text-error">{{ selectedSnapshot.exception.message }}</div>
+                  <div class="ml-8px mt-4px text-error">{{ selectedSnapshot.exceptionMessage }}</div>
                 </div>
-                <div>
+                <div v-if="selectedSnapshot.exceptionStackTrace.length > 0">
                   <span class="text-gray">堆栈跟踪:</span>
                   <pre
                     class="ml-8px mt-8px overflow-x-auto rounded-6px bg-black/20 p-12px text-11px text-error font-mono"
-                    >{{ selectedSnapshot.exception.stackTrace.join('\n') }}</pre
+                    >{{ selectedSnapshot.exceptionStackTrace.join('\n') }}</pre
                   >
                 </div>
               </div>
@@ -685,13 +622,7 @@ const getCostColor = (cost: number) => {
         </div>
 
         <!-- 底部操作栏 -->
-        <div class="flex-y-center justify-between border-t border-gray/10 bg-container/50 p-24px">
-          <NButton type="info" @click="replaySnapshot(selectedSnapshot)">
-            <template #icon>
-              <SvgIcon icon="lucide:play-circle" />
-            </template>
-            回放此调用
-          </NButton>
+        <div class="flex-y-center justify-end border-t border-gray/10 bg-container/50 p-24px">
           <div class="flex-y-center gap-8px">
             <NButton @click="copySnapshot">
               <template #icon>

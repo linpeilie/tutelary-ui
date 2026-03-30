@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import {
   NButton,
   NCard,
+  NCheckbox,
   NForm,
   NFormItem,
   NGrid,
@@ -13,29 +14,21 @@ import {
   NTag,
   useMessage
 } from 'naive-ui';
-
-interface WatchConfig {
-  methods: string;
-  count: number;
-  minTime: number | null;
-  maxTime: number | null;
-}
+import { fetchWatchCommand } from '@/service/api/instance';
+import eventBus from '@/utils/eventbus';
+import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
+import type { WatchResponse } from '@/proto/command/result/WatchResponse';
 
 interface WatchResult {
   id: number;
   className: string;
   methodName: string;
-  fullName: string;
-  timestamp: Date;
-  duration: number;
-  params: any[];
-  target: any;
-  returnValue: any;
-  exception: {
-    type: string;
-    message: string;
-    stackTrace: string;
-  } | null;
+  params: string;
+  target: string;
+  returnValue: string;
+  exception: string;
+  cost: number;
+  finishTime: string;
   expanded: boolean;
 }
 
@@ -47,251 +40,120 @@ interface Props {
   instanceId: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const message = useMessage();
 
 const watchFormRef = ref();
 const isWatching = ref(false);
-const elapsedTime = ref('00:00');
 
-const watchConfig = reactive<WatchConfig>({
-  methods: '',
-  count: 50,
-  minTime: null,
-  maxTime: null
-});
-
-const watchProgress = reactive({
-  captured: 0,
-  total: 0,
-  percent: 0
+// 配置
+const watchConfig = ref({
+  qualifiedClassName: '',
+  methodNames: '',
+  times: 50,
+  cost: 0,
+  includeParams: true,
+  includeReturn: true,
+  includeException: true
 });
 
 const watchResults = ref<WatchResult[]>([]);
-let watchInterval: NodeJS.Timeout | null = null;
-let timeInterval: NodeJS.Timeout | null = null;
+let resultIdCounter = 1;
 
 const resultInfo = computed(() => {
   if (watchResults.value.length === 0) return '';
   const classes = new Set(watchResults.value.map(r => r.className));
-  const methods = new Set(watchResults.value.map(r => r.fullName));
+  const methods = new Set(watchResults.value.map(r => `${r.className}.${r.methodName}`));
   return `共 ${watchResults.value.length} 条记录,来自 ${classes.size} 个类的 ${methods.size} 个方法`;
+});
+
+const watchProgress = computed(() => {
+  if (watchConfig.value.times <= 0) return 0;
+  return Math.min(Math.round((watchResults.value.length / watchConfig.value.times) * 100), 100);
 });
 
 // 开始观察
 function startWatch() {
-  if (!watchConfig.methods.trim()) {
-    message.warning('请填写方法列表');
+  if (!watchConfig.value.qualifiedClassName.trim()) {
+    message.warning('请填写类名');
+    return;
+  }
+  if (!watchConfig.value.methodNames.trim()) {
+    message.warning('请填写方法名');
     return;
   }
 
-  // 解析方法列表
-  const methodEntries = watchConfig.methods
+  const methodNameList = watchConfig.value.methodNames
     .split(/[,\n]/)
     .map(s => s.trim())
     .filter(s => s);
 
-  const parsedMethods: Array<{ className: string; methodName: string; fullName: string }> = [];
-
-  for (const entry of methodEntries) {
-    const lastDotIndex = entry.lastIndexOf('.');
-    if (lastDotIndex === -1) {
-      message.error(`方法格式错误: "${entry}"。正确格式：类名.method名`);
-      return;
-    }
-    const className = entry.substring(0, lastDotIndex);
-    const methodName = entry.substring(lastDotIndex + 1);
-    parsedMethods.push({ className, methodName, fullName: entry });
-  }
-
   isWatching.value = true;
   watchResults.value = [];
-  watchProgress.captured = 0;
-  watchProgress.total = watchConfig.count;
-  watchProgress.percent = 0;
+  resultIdCounter = 1;
 
-  const startTime = Date.now();
-
-  // 计时器
-  timeInterval = setInterval(() => {
-    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    const minutes = Math.floor(elapsed / 60)
-      .toString()
-      .padStart(2, '0');
-    const seconds = (elapsed % 60).toString().padStart(2, '0');
-    elapsedTime.value = `${minutes}:${seconds}`;
-  }, 1000);
-
-  // 捕获数据
-  let captured = 0;
-  watchInterval = setInterval(() => {
-    if (captured >= watchConfig.count) {
-      stopWatch();
-      return;
+  fetchWatchCommand({
+    instanceId: props.instanceId,
+    param: {
+      qualifiedClassName: watchConfig.value.qualifiedClassName,
+      methodNames: methodNameList,
+      times: watchConfig.value.times,
+      cost: watchConfig.value.cost,
+      includeParams: watchConfig.value.includeParams,
+      includeReturn: watchConfig.value.includeReturn,
+      includeException: watchConfig.value.includeException
     }
-
-    captured += Math.floor(Math.random() * 3) + 1;
-    if (captured > watchConfig.count) captured = watchConfig.count;
-
-    watchProgress.captured = captured;
-    watchProgress.percent = Math.round((captured / watchConfig.count) * 100);
-
-    // 生成新结果
-    const result = generateWatchResult(captured, parsedMethods);
-    if (result) {
-      watchResults.value.push(result);
-    }
-  }, 300);
+  }).catch(() => {
+    isWatching.value = false;
+  });
 }
 
 // 停止观察
 function stopWatch() {
-  if (watchInterval) {
-    clearInterval(watchInterval);
-    watchInterval = null;
-  }
-  if (timeInterval) {
-    clearInterval(timeInterval);
-    timeInterval = null;
-  }
   isWatching.value = false;
-  message.success(`观察完成,共捕获 ${watchProgress.captured} 条记录`);
+  message.success(`观察已停止,共捕获 ${watchResults.value.length} 条记录`);
 }
 
-// 生成观察结果
-function generateWatchResult(
-  id: number,
-  parsedMethods: Array<{ className: string; methodName: string; fullName: string }>
-): WatchResult | null {
-  const methodEntry = parsedMethods[Math.floor(Math.random() * parsedMethods.length)];
-  const duration = Math.floor(Math.random() * 1000) + 10;
+// eventBus 回调
+function handleWatchResult(response: CommandExecuteResponse<WatchResponse>) {
+  const data = response.data as WatchResponse | undefined;
+  if (!data || data.state === 0) {
+    if (data?.message) message.error(data.message);
+    isWatching.value = false;
+    return;
+  }
 
-  // 应用耗时过滤
-  if (watchConfig.minTime && duration < watchConfig.minTime) return null;
-  if (watchConfig.maxTime && duration > watchConfig.maxTime) return null;
-
-  const hasException = Math.random() > 0.85; // 15% 概率有异常
-
-  return {
-    id,
-    className: methodEntry.className,
-    methodName: methodEntry.methodName,
-    fullName: methodEntry.fullName,
-    timestamp: new Date(Date.now() - Math.random() * 60000),
-    duration,
-    params: generateMockParams(methodEntry.methodName),
-    target: generateMockTarget(methodEntry.className),
-    returnValue: hasException ? null : generateMockReturn(methodEntry.methodName),
-    exception: hasException ? generateMockException() : null,
+  const result: WatchResult = {
+    id: resultIdCounter,
+    className: data.className,
+    methodName: data.methodName,
+    params: data.params,
+    target: data.target,
+    returnValue: data.returnValue,
+    exception: data.exception,
+    cost: data.cost,
+    finishTime: data.finishTime,
     expanded: false
   };
+
+  resultIdCounter += 1;
+  watchResults.value.push(result);
+
+  // 达到次数上限自动停止
+  if (watchConfig.value.times > 0 && watchResults.value.length >= watchConfig.value.times) {
+    isWatching.value = false;
+    message.success(`观察完成,共捕获 ${watchResults.value.length} 条记录`);
+  }
 }
 
-// 生成模拟参数
-function generateMockParams(methodName: string): any[] {
-  const paramSets: Record<string, any[]> = {
-    getUserById: [{ name: 'userId', type: 'Long', value: Math.floor(Math.random() * 10000) }],
-    createUser: [
-      {
-        name: 'userDTO',
-        type: 'UserDTO',
-        value: {
-          username: `user_${Math.floor(Math.random() * 1000)}`,
-          email: 'user@example.com',
-          age: Math.floor(Math.random() * 50) + 20
-        }
-      }
-    ],
-    updateUser: [
-      { name: 'userId', type: 'Long', value: Math.floor(Math.random() * 10000) },
-      { name: 'userDTO', type: 'UserDTO', value: { username: 'updated_user', email: 'updated@example.com' } }
-    ],
-    deleteUser: [{ name: 'userId', type: 'Long', value: Math.floor(Math.random() * 10000) }],
-    default: [
-      { name: 'arg0', type: 'String', value: `param_${Math.floor(Math.random() * 100)}` },
-      { name: 'arg1', type: 'int', value: Math.floor(Math.random() * 100) }
-    ]
-  };
-  return paramSets[methodName] || paramSets.default;
-}
+onMounted(() => {
+  eventBus.on('command:watch', handleWatchResult);
+});
 
-// 生成模拟 Target
-function generateMockTarget(className: string): any {
-  return {
-    '@class': className,
-    '@identity': `0x${Math.floor(Math.random() * 0xffffffff)
-      .toString(16)
-      .toUpperCase()}`,
-    '@classLoader': 'app',
-    instanceField1: `value_${Math.floor(Math.random() * 100)}`,
-    instanceField2: Math.floor(Math.random() * 1000)
-  };
-}
-
-// 生成模拟返回值
-function generateMockReturn(methodName: string): any {
-  const returnSets: Record<string, any> = {
-    getUserById: {
-      id: Math.floor(Math.random() * 10000),
-      username: `user_${Math.floor(Math.random() * 1000)}`,
-      email: 'user@example.com',
-      status: 'active'
-    },
-    createUser: { success: true, userId: Math.floor(Math.random() * 10000), message: 'User created successfully' },
-    updateUser: { success: true, message: 'User updated successfully' },
-    deleteUser: { success: true, message: 'User deleted successfully' },
-    default: { status: 'success', data: `result_${Math.floor(Math.random() * 100)}` }
-  };
-  return returnSets[methodName] || returnSets.default;
-}
-
-// 生成模拟异常
-function generateMockException(): { type: string; message: string; stackTrace: string } {
-  const exceptions = [
-    {
-      type: 'java.lang.NullPointerException',
-      message: 'Cannot invoke method on null object reference',
-      stackTrace: `java.lang.NullPointerException: Cannot invoke method on null object reference
-    at com.example.service.UserService.getUserById(UserService.java:${Math.floor(Math.random() * 200) + 50})
-    at com.example.controller.UserController.getUser(UserController.java:${Math.floor(Math.random() * 100) + 20})
-    at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-    at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-    at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-    at java.lang.reflect.Method.invoke(Method.java:498)`
-    },
-    {
-      type: 'java.sql.SQLException',
-      message: 'Connection timeout: Unable to connect to database',
-      stackTrace: `java.sql.SQLException: Connection timeout: Unable to connect to database
-    at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:${Math.floor(Math.random() * 200) + 1000})
-    at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:${Math.floor(Math.random() * 200) + 3000})
-    at com.example.dao.UserDao.findById(UserDao.java:${Math.floor(Math.random() * 100) + 40})
-    at com.example.service.UserService.getUserById(UserService.java:${Math.floor(Math.random() * 200) + 50})
-    at com.example.controller.UserController.getUser(UserController.java:${Math.floor(Math.random() * 100) + 20})`
-    },
-    {
-      type: 'java.lang.IllegalArgumentException',
-      message: 'Invalid user ID: must be positive',
-      stackTrace: `java.lang.IllegalArgumentException: Invalid user ID: must be positive
-    at com.example.service.UserService.validateUserId(UserService.java:${Math.floor(Math.random() * 50) + 10})
-    at com.example.service.UserService.getUserById(UserService.java:${Math.floor(Math.random() * 200) + 50})
-    at com.example.controller.UserController.getUser(UserController.java:${Math.floor(Math.random() * 100) + 20})
-    at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)`
-    }
-  ];
-  return exceptions[Math.floor(Math.random() * exceptions.length)];
-}
-
-// 格式化时间
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString('zh-CN');
-}
-
-// 格式化 JSON
-function formatJson(obj: any): string {
-  return JSON.stringify(obj, null, 2);
-}
+onUnmounted(() => {
+  eventBus.off('command:watch', handleWatchResult);
+});
 
 // 获取耗时标签类型
 function getDurationTagType(duration: number): 'success' | 'warning' | 'error' {
@@ -302,25 +164,27 @@ function getDurationTagType(duration: number): 'success' | 'warning' | 'error' {
 
 // 加载示例
 function loadSample() {
-  watchConfig.methods = `com.example.service.UserService.getUserById
-com.example.service.UserService.createUser
-com.example.service.UserService.updateUser
-com.example.service.UserService.deleteUser
-com.example.service.OrderService.createOrder
-com.example.service.OrderService.getOrderById
-com.example.controller.ApiController.handleRequest`;
-  watchConfig.count = 30;
-  watchConfig.minTime = 50;
-  watchConfig.maxTime = 800;
+  watchConfig.value.qualifiedClassName = 'com.example.service.UserService';
+  watchConfig.value.methodNames = 'getUserById\ncreateUser\nupdateUser';
+  watchConfig.value.times = 30;
+  watchConfig.value.cost = 0;
+  watchConfig.value.includeParams = true;
+  watchConfig.value.includeReturn = true;
+  watchConfig.value.includeException = true;
   message.success('已加载示例配置');
 }
 
 // 重置表单
 function resetForm() {
-  watchConfig.methods = '';
-  watchConfig.count = 50;
-  watchConfig.minTime = null;
-  watchConfig.maxTime = null;
+  watchConfig.value = {
+    qualifiedClassName: '',
+    methodNames: '',
+    times: 50,
+    cost: 0,
+    includeParams: true,
+    includeReturn: true,
+    includeException: true
+  };
   message.success('已重置表单');
 }
 
@@ -330,15 +194,20 @@ function exportResults() {
     message.warning('暂无数据可导出');
     return;
   }
-  message.success('导出功能开发中');
+  const blob = new Blob([JSON.stringify(watchResults.value, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'watch-results.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  message.success('导出成功');
 }
 
 // 清空结果
 function clearResults() {
   watchResults.value = [];
-  watchProgress.captured = 0;
-  watchProgress.total = 0;
-  watchProgress.percent = 0;
+  resultIdCounter = 1;
   message.success('已清空结果');
 }
 </script>
@@ -356,35 +225,56 @@ function clearResults() {
 
       <NForm ref="watchFormRef" :model="watchConfig" label-placement="top">
         <NGrid :cols="24" :x-gap="16" :y-gap="16">
-          <!-- 方法列表 -->
+          <!-- 类名 -->
           <NGridItem :span="24">
-            <NFormItem path="methods">
+            <NFormItem path="qualifiedClassName">
               <template #label>
                 <div class="flex-y-center gap-8px">
                   <SvgIcon icon="lucide:package" class="text-14px" />
-                  <span>方法列表</span>
-                  <span class="text-12px text-gray-400">(支持多行,每行一个完整方法名)</span>
+                  <span>类名</span>
+                  <span class="text-12px text-gray-400">(完整类名)</span>
                 </div>
               </template>
               <NInput
-                v-model:value="watchConfig.methods"
-                type="textarea"
-                :rows="5"
-                placeholder="例如:&#10;com.example.service.UserService.getUserById&#10;com.example.service.UserService.createUser&#10;com.example.service.OrderService.createOrder&#10;com.example.controller.ApiController.handleRequest"
+                v-model:value="watchConfig.qualifiedClassName"
+                placeholder="例如: com.example.service.UserService"
                 class="font-mono"
+                :disabled="isWatching"
+              />
+            </NFormItem>
+          </NGridItem>
+
+          <!-- 方法名列表 -->
+          <NGridItem :span="24">
+            <NFormItem path="methodNames">
+              <template #label>
+                <div class="flex-y-center gap-8px">
+                  <SvgIcon icon="lucide:list" class="text-14px" />
+                  <span>方法名列表</span>
+                  <span class="text-12px text-gray-400">(支持多行,每行一个方法名)</span>
+                </div>
+              </template>
+              <NInput
+                v-model:value="watchConfig.methodNames"
+                type="textarea"
+                :rows="4"
+                placeholder="例如:&#10;getUserById&#10;createUser&#10;updateUser"
+                class="font-mono"
+                :disabled="isWatching"
               />
             </NFormItem>
           </NGridItem>
 
           <!-- 观察次数 -->
           <NGridItem :span="8">
-            <NFormItem label="观察次数" path="count">
+            <NFormItem label="观察次数" path="times">
               <NInputNumber
-                v-model:value="watchConfig.count"
+                v-model:value="watchConfig.times"
                 :min="1"
                 :max="10000"
                 placeholder="例如: 50"
                 class="w-full"
+                :disabled="isWatching"
               >
                 <template #suffix>
                   <span class="text-12px text-gray-400">次</span>
@@ -395,14 +285,20 @@ function clearResults() {
 
           <!-- 最低耗时过滤 -->
           <NGridItem :span="8">
-            <NFormItem path="minTime">
+            <NFormItem path="cost">
               <template #label>
                 <div class="flex-y-center gap-8px">
                   <SvgIcon icon="lucide:timer" class="text-14px" />
                   <span>最低耗时 (ms)</span>
                 </div>
               </template>
-              <NInputNumber v-model:value="watchConfig.minTime" :min="0" placeholder="例如: 50" class="w-full">
+              <NInputNumber
+                v-model:value="watchConfig.cost"
+                :min="0"
+                placeholder="例如: 50"
+                class="w-full"
+                :disabled="isWatching"
+              >
                 <template #suffix>
                   <span class="text-12px text-gray-400">ms</span>
                 </template>
@@ -410,20 +306,14 @@ function clearResults() {
             </NFormItem>
           </NGridItem>
 
-          <!-- 最高耗时过滤 -->
+          <!-- 选项 -->
           <NGridItem :span="8">
-            <NFormItem path="maxTime">
-              <template #label>
-                <div class="flex-y-center gap-8px">
-                  <SvgIcon icon="lucide:timer" class="text-14px" />
-                  <span>最高耗时 (ms)</span>
-                </div>
-              </template>
-              <NInputNumber v-model:value="watchConfig.maxTime" :min="0" placeholder="例如: 1000" class="w-full">
-                <template #suffix>
-                  <span class="text-12px text-gray-400">ms</span>
-                </template>
-              </NInputNumber>
+            <NFormItem label="观察选项">
+              <div class="flex flex-col gap-8px">
+                <NCheckbox v-model:checked="watchConfig.includeParams" :disabled="isWatching">包含入参</NCheckbox>
+                <NCheckbox v-model:checked="watchConfig.includeReturn" :disabled="isWatching">包含返回值</NCheckbox>
+                <NCheckbox v-model:checked="watchConfig.includeException" :disabled="isWatching">包含异常</NCheckbox>
+              </div>
             </NFormItem>
           </NGridItem>
 
@@ -442,13 +332,13 @@ function clearResults() {
                 </template>
                 停止观察
               </NButton>
-              <NButton @click="loadSample">
+              <NButton :disabled="isWatching" @click="loadSample">
                 <template #icon>
                   <SvgIcon icon="lucide:file-text" />
                 </template>
                 加载示例
               </NButton>
-              <NButton @click="resetForm">
+              <NButton :disabled="isWatching" @click="resetForm">
                 <template #icon>
                   <SvgIcon icon="lucide:refresh-cw" />
                 </template>
@@ -470,17 +360,13 @@ function clearResults() {
           </div>
           <div class="text-14px text-gray">
             已捕获:
-            <span class="text-primary font-semibold">{{ watchProgress.captured }}</span>
+            <span class="text-primary font-semibold">{{ watchResults.length }}</span>
             /
-            <span>{{ watchProgress.total }}</span>
+            <span>{{ watchConfig.times }}</span>
           </div>
         </div>
-        <div class="flex-y-center gap-8px text-12px text-gray">
-          <SvgIcon icon="lucide:clock" class="text-12px" />
-          <span>{{ elapsedTime }}</span>
-        </div>
       </div>
-      <NProgress type="line" :percentage="watchProgress.percent" status="success" :show-indicator="false" />
+      <NProgress type="line" :percentage="watchProgress" status="success" :show-indicator="false" />
     </NCard>
 
     <!-- 观察结果 -->
@@ -539,13 +425,20 @@ function clearResults() {
             <div class="flex-y-center gap-16px text-12px">
               <div class="flex-y-center gap-6px">
                 <SvgIcon icon="lucide:clock" class="text-12px text-gray" />
-                <span class="text-gray">{{ formatTime(result.timestamp) }}</span>
+                <span class="text-gray">{{ result.finishTime }}</span>
               </div>
               <div class="flex-y-center gap-6px">
                 <SvgIcon icon="lucide:zap" class="text-12px" />
-                <NTag :type="getDurationTagType(result.duration)" size="small" :bordered="false">
-                  {{ result.duration }}ms
+                <NTag :type="getDurationTagType(result.cost)" size="small" :bordered="false">
+                  {{ result.cost }}ms
                 </NTag>
+              </div>
+              <div
+                v-if="result.exception"
+                class="flex-y-center gap-4px"
+              >
+                <SvgIcon icon="lucide:alert-circle" class="text-12px text-error" />
+                <span class="text-12px text-error">异常</span>
               </div>
               <div
                 class="flex-y-center cursor-pointer text-gray transition hover:text-primary"
@@ -559,24 +452,24 @@ function clearResults() {
           <!-- 详细内容 -->
           <div v-show="result.expanded" class="flex flex-col gap-16px p-16px">
             <!-- 入参 -->
-            <div>
+            <div v-if="result.params">
               <div class="mb-8px flex-y-center gap-6px text-12px text-gray font-semibold">
                 <SvgIcon icon="lucide:arrow-right" class="text-12px" />
                 入参 (Parameters)
               </div>
               <div class="border border-container rounded-8px bg-layout p-12px">
-                <pre class="text-12px font-mono">{{ formatJson(result.params) }}</pre>
+                <pre class="text-12px font-mono">{{ result.params }}</pre>
               </div>
             </div>
 
             <!-- Target 对象 -->
-            <div>
+            <div v-if="result.target">
               <div class="mb-8px flex-y-center gap-6px text-12px text-gray font-semibold">
                 <SvgIcon icon="lucide:target" class="text-12px" />
                 Target 对象
               </div>
               <div class="border border-container rounded-8px bg-layout p-12px">
-                <pre class="text-12px font-mono">{{ formatJson(result.target) }}</pre>
+                <pre class="text-12px font-mono">{{ result.target }}</pre>
               </div>
             </div>
 
@@ -587,23 +480,18 @@ function clearResults() {
                 异常 (Exception)
               </div>
               <div class="border border-error rounded-8px bg-error/10 p-12px">
-                <div class="mb-8px text-12px text-error font-semibold">{{ result.exception.type }}</div>
-                <div class="mb-12px text-12px text-error/80">{{ result.exception.message }}</div>
-                <div class="mb-4px text-12px text-gray font-semibold">堆栈信息:</div>
-                <pre class="max-h-200px overflow-y-auto text-12px text-gray font-mono">{{
-                  result.exception.stackTrace
-                }}</pre>
+                <pre class="max-h-200px overflow-y-auto text-12px text-error font-mono">{{ result.exception }}</pre>
               </div>
             </div>
 
             <!-- 返回值 -->
-            <div v-else>
+            <div v-if="result.returnValue && !result.exception">
               <div class="mb-8px flex-y-center gap-6px text-12px text-gray font-semibold">
                 <SvgIcon icon="lucide:arrow-left" class="text-12px" />
                 返回值 (Return Value)
               </div>
               <div class="border border-container rounded-8px bg-layout p-12px">
-                <pre class="text-12px font-mono">{{ formatJson(result.returnValue) }}</pre>
+                <pre class="text-12px font-mono">{{ result.returnValue }}</pre>
               </div>
             </div>
           </div>
