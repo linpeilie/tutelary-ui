@@ -1,0 +1,6 @@
+syntax="proto3";
+//
+message RetransformHistoryItem {
+ string qualifiedClassName=1;
+ int64 updateTime=2;
+}

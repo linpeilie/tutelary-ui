@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { NButton, NCard, NInput, NInputNumber, NModal, NStatistic } from 'naive-ui';
-import SvgIcon from '@/components/custom/svg-icon.vue';
 import { fetchOgnlCommand } from '@/service/api/instance';
 import eventBus from '@/utils/eventbus';
+import SvgIcon from '@/components/custom/svg-icon.vue';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { OgnlResponse } from '@/proto/command/result/OgnlResponse';
 
@@ -282,9 +282,7 @@ function handleOgnlResult(response: CommandExecuteResponse<OgnlResponse>) {
     timestamp: new Date(),
     success: data.success,
     executionTime: 0,
-    result: data.success
-      ? { type: data.resultType, value: data.resultValue, hashCode: '' }
-      : undefined,
+    result: data.success ? { type: data.resultType, value: data.resultValue, hashCode: '' } : undefined,
     error: data.success ? undefined : data.error,
     stackTrace: data.success ? undefined : data.stackTrace
   };

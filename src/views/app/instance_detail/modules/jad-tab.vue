@@ -1,14 +1,25 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 // 引入组件
 import { Codemirror } from 'vue-codemirror';
 // 引入JavaScript语言支持
 import { java } from '@codemirror/lang-java';
 // 引入One Dark主题
 import { oneDark } from '@codemirror/theme-one-dark';
-import { fetchDecompileCommand, fetchRetransformCommand } from '@/service/api/instance';
+// CodeMirror merge/diff extension
+import { MergeView } from '@codemirror/merge';
+import { EditorView } from '@codemirror/view';
+import { EditorState } from '@codemirror/state';
+import {
+  fetchDecompileCommand,
+  fetchRetransformCommand,
+  fetchRetransformDetailCommand,
+  fetchRetransformHistoryCommand
+} from '@/service/api/instance';
 import eventbus from '@/utils/eventbus';
 import type { DecompileResponse } from '@/proto/command/result/DecompileResponse';
+import type { RetransformHistoryResponse } from '@/proto/command/result/RetransformHistoryResponse';
+import type { RetransformDetailResponse } from '@/proto/command/result/RetransformDetailResponse';
 import type { RetransformResponse } from '@/proto/command/result/RetransformResponse';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 
@@ -49,6 +60,7 @@ const hasUnsavedChanges = ref(false);
 const originalCode = ref('');
 
 const isHotSwapping = ref(false);
+const isHistoryLoading = ref(false);
 
 // 反编译历史
 interface HistoryItem {
@@ -62,10 +74,8 @@ const decompileHistory = ref<HistoryItem[]>([]);
 // 热更新历史
 interface HotswapRecord {
   className: string;
-  operation: string;
+  updateTime: number;
   time: string;
-  status: 'success' | 'failed';
-  message?: string;
 }
 
 const hotswapHistory = ref<HotswapRecord[]>([]);
@@ -214,15 +224,24 @@ function performHotSwap() {
         }
       }).catch(() => {
         isHotSwapping.value = false;
-        hotswapHistory.value.unshift({
-          className: decompileClassName.value,
-          operation: '代码热更新',
-          time: new Date().toLocaleTimeString('zh-CN'),
-          status: 'failed',
-          message: '请求发送失败'
-        });
+        window.$message?.error('请求发送失败');
       });
     }
+  });
+}
+
+function formatHistoryTime(updateTime: number) {
+  return new Date(updateTime).toLocaleString('zh-CN');
+}
+
+function loadRetransformHistory() {
+  isHistoryLoading.value = true;
+  fetchRetransformHistoryCommand({
+    instanceId: props.instanceId,
+    param: {}
+  }).catch(() => {
+    isHistoryLoading.value = false;
+    window.$message?.error('获取热更新历史失败');
   });
 }
 
@@ -245,20 +264,6 @@ function downloadCode() {
   window.$message?.success('代码已下载');
 }
 
-// 清空热更新历史
-function clearHotswapHistory() {
-  window.$dialog?.warning({
-    title: '确认操作',
-    content: '确定要清空热更新历史记录吗?',
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: () => {
-      hotswapHistory.value = [];
-      window.$message?.success('热更新历史已清空');
-    }
-  });
-}
-
 // 处理反编译结果
 function handleDecompileResult(data: any) {
   const decompile = data.data as DecompileResponse;
@@ -279,48 +284,122 @@ function handleDecompileResult(data: any) {
   addToHistory(formData.value.className, formData.value.methodName);
 }
 
+function handleRetransformHistoryResult(response: CommandExecuteResponse<RetransformHistoryResponse>) {
+  isHistoryLoading.value = false;
+  const data = response.data as RetransformHistoryResponse | undefined;
+
+  if (!data || data.state === 0) {
+    window.$message?.error(data?.message || '获取热更新历史失败');
+    return;
+  }
+
+  hotswapHistory.value = (data.records || []).map(record => ({
+    className: record.qualifiedClassName,
+    updateTime: record.updateTime,
+    time: formatHistoryTime(record.updateTime)
+  }));
+}
+
 // 处理热更新结果
 function handleRetransformResult(response: CommandExecuteResponse<RetransformResponse>) {
   isHotSwapping.value = false;
   const data = response.data as RetransformResponse | undefined;
 
   if (data && data.state !== 0) {
-    // 热更新成功
     originalCode.value = decompileResult.value;
     hasUnsavedChanges.value = false;
-
-    hotswapHistory.value.unshift({
-      className: decompileClassName.value,
-      operation: '代码热更新',
-      time: new Date().toLocaleTimeString('zh-CN'),
-      status: 'success'
-    });
-
+    loadRetransformHistory();
     window.$message?.success('热更新成功');
   } else {
-    // 热更新失败
     const errorMsg = data?.message || '热更新失败';
-
-    hotswapHistory.value.unshift({
-      className: decompileClassName.value,
-      operation: '代码热更新',
-      time: new Date().toLocaleTimeString('zh-CN'),
-      status: 'failed',
-      message: errorMsg
-    });
-
     window.$message?.error(errorMsg);
+  }
+}
+
+// Diff 查看相关
+const showDiffModal = ref(false);
+const isDiffLoading = ref(false);
+const diffClassName = ref('');
+const diffContainerRef = ref<HTMLElement | null>(null);
+let mergeViewInstance: MergeView | null = null;
+
+function viewDiff(className: string) {
+  diffClassName.value = className;
+  isDiffLoading.value = true;
+  showDiffModal.value = true;
+
+  fetchRetransformDetailCommand({
+    instanceId: props.instanceId,
+    param: { qualifiedClassName: className }
+  }).catch(() => {
+    isDiffLoading.value = false;
+    window.$message?.error('获取热更新详情失败');
+  });
+}
+
+function handleRetransformDetailResult(response: CommandExecuteResponse<RetransformDetailResponse>) {
+  isDiffLoading.value = false;
+  const data = response.data as RetransformDetailResponse | undefined;
+
+  if (!data || data.state === 0) {
+    window.$message?.error(data?.message || '获取热更新详情失败');
+    return;
+  }
+
+  nextTick(() => {
+    createMergeView(data.originalSource || '', data.latestSource || '');
+  });
+}
+
+function createMergeView(original: string, modified: string) {
+  if (mergeViewInstance) {
+    mergeViewInstance.destroy();
+    mergeViewInstance = null;
+  }
+
+  const container = diffContainerRef.value;
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  mergeViewInstance = new MergeView({
+    a: {
+      doc: original,
+      extensions: [java(), oneDark, EditorView.editable.of(false), EditorState.readOnly.of(true)]
+    },
+    b: {
+      doc: modified,
+      extensions: [java(), oneDark, EditorView.editable.of(false), EditorState.readOnly.of(true)]
+    },
+    parent: container
+  });
+}
+
+function closeDiffModal() {
+  showDiffModal.value = false;
+  if (mergeViewInstance) {
+    mergeViewInstance.destroy();
+    mergeViewInstance = null;
   }
 }
 
 onMounted(() => {
   eventbus.on('command:decompile', handleDecompileResult);
   eventbus.on('command:retransform', handleRetransformResult);
+  eventbus.on('command:retransform-history', handleRetransformHistoryResult);
+  eventbus.on('command:retransform-detail', handleRetransformDetailResult);
+  loadRetransformHistory();
 });
 
 onUnmounted(() => {
   eventbus.off('command:decompile', handleDecompileResult);
   eventbus.off('command:retransform', handleRetransformResult);
+  eventbus.off('command:retransform-history', handleRetransformHistoryResult);
+  eventbus.off('command:retransform-detail', handleRetransformDetailResult);
+  if (mergeViewInstance) {
+    mergeViewInstance.destroy();
+    mergeViewInstance = null;
+  }
 });
 </script>
 
@@ -413,55 +492,49 @@ onUnmounted(() => {
       </NScrollbar>
     </NCard>
 
-    <!-- 修改与热更新历史 -->
+    <!-- 生效中的热更新历史 -->
     <NCard size="small" class="card mb-6">
-      <div class="mb-4 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <SvgIcon icon="mdi:git-commit" class="h-4 w-4 text-orange-500" />
-          <h4 class="text-sm font-semibold">修改与热更新历史</h4>
-          <NTag size="small" :bordered="false">{{ hotswapHistory.length }} 条记录</NTag>
-        </div>
-        <NButton size="small" text type="error" @click="clearHotswapHistory">
-          <template #icon>
-            <SvgIcon icon="mdi:delete" class="h-3 w-3" />
-          </template>
-          清空历史
-        </NButton>
+      <div class="mb-4 flex items-center gap-2">
+        <SvgIcon icon="mdi:git-commit" class="h-4 w-4 text-orange-500" />
+        <h4 class="text-sm font-semibold">生效中的热更新历史</h4>
+        <NTag size="small" :bordered="false">{{ hotswapHistory.length }} 个类</NTag>
       </div>
 
-      <!-- 空状态 -->
+      <div v-if="isHistoryLoading" class="py-8 text-center">
+        <NSpin size="small" />
+        <div class="mt-3 text-xs text-gray-400">正在获取 agent 热更新历史...</div>
+      </div>
+
       <NEmpty
-        v-if="hotswapHistory.length === 0"
-        description="暂无修改和热更新记录"
+        v-else-if="hotswapHistory.length === 0"
+        description="当前没有仍在生效中的热更新类"
         class="py-8"
         size="small"
         :show-icon="false"
       />
 
-      <!-- 历史记录列表 -->
       <div v-else class="space-y-3">
         <div
-          v-for="(record, index) in hotswapHistory"
-          :key="index"
+          v-for="record in hotswapHistory"
+          :key="record.className"
           class="history-record flex items-center justify-between border-1 border-gray rounded-lg p-3"
         >
           <div class="flex items-center gap-3">
-            <SvgIcon
-              :icon="record.status === 'success' ? 'mdi:check-circle' : 'mdi:alert-circle'"
-              :class="record.status === 'success' ? 'text-success' : 'text-error'"
-              class="h-5 w-5"
-            />
+            <SvgIcon icon="mdi:check-circle" class="h-5 w-5 text-success" />
             <div>
               <div class="text-sm font-medium">{{ record.className }}</div>
-              <div class="text-xs text-gray-400">
-                {{ record.operation }} · {{ record.time }}
-                <span v-if="record.message" class="text-error"> · {{ record.message }}</span>
-              </div>
+              <div class="text-xs text-gray-400">最近热更新时间 · {{ record.time }}</div>
             </div>
           </div>
-          <NTag :type="record.status === 'success' ? 'success' : 'error'" size="small">
-            {{ record.status === 'success' ? '成功' : '失败' }}
-          </NTag>
+          <div class="flex items-center gap-2">
+            <NButton size="small" type="info" @click="viewDiff(record.className)">
+              <template #icon>
+                <SvgIcon icon="mdi:file-compare" class="h-3 w-3" />
+              </template>
+              查看差异
+            </NButton>
+            <NTag type="success" size="small">生效中</NTag>
+          </div>
         </div>
       </div>
     </NCard>
@@ -566,6 +639,42 @@ onUnmounted(() => {
         />
       </div>
     </NCard>
+
+    <!-- 差异查看弹窗 -->
+    <NModal
+      v-model:show="showDiffModal"
+      preset="card"
+      :title="`类变更差异 — ${diffClassName}`"
+      class="max-w-90vw w-90%"
+      :segmented="{ content: true, footer: 'soft' }"
+      @after-leave="closeDiffModal"
+    >
+      <template #header-extra>
+        <div class="flex items-center gap-4 text-12px text-gray">
+          <span class="flex-y-center gap-1">
+            <span class="inline-block h-3 w-3 rounded-2px bg-[#2ea04366]"></span>
+            最新代码
+          </span>
+          <span class="flex-y-center gap-1">
+            <span class="inline-block h-3 w-3 rounded-2px bg-[#f8514966]"></span>
+            原始代码
+          </span>
+        </div>
+      </template>
+
+      <div v-if="isDiffLoading" class="py-12 text-center">
+        <NSpin size="large" />
+        <div class="mt-4 text-sm text-gray-300">正在获取类变更信息...</div>
+      </div>
+
+      <div v-else ref="diffContainerRef" class="diff-container min-h-400px overflow-auto"></div>
+
+      <template #footer>
+        <div class="flex items-center justify-end">
+          <NButton @click="showDiffModal = false">关闭</NButton>
+        </div>
+      </template>
+    </NModal>
   </div>
 </template>
 
@@ -583,6 +692,19 @@ onUnmounted(() => {
 
   &:hover {
     background-color: rgba(var(--n-color-target-rgb), 0.3);
+  }
+}
+
+.diff-container {
+  :deep(.cm-mergeView) {
+    height: 100%;
+    max-height: 60vh;
+    overflow: auto;
+  }
+
+  :deep(.cm-editor) {
+    font-size: 12px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   }
 }
 

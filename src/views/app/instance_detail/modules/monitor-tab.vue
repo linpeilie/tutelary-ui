@@ -204,9 +204,7 @@ function handleMonitorResult(response: CommandExecuteResponse<MonitorResponse>) 
   currentStats.value.avgTime = stats.avgTime;
   currentStats.value.maxTime = Math.max(currentStats.value.maxTime, stats.maxTime);
   currentStats.value.successRate =
-    currentStats.value.totalCount > 0
-      ? (currentStats.value.successCount / currentStats.value.totalCount) * 100
-      : 100;
+    currentStats.value.totalCount > 0 ? (currentStats.value.successCount / currentStats.value.totalCount) * 100 : 100;
 }
 
 onMounted(() => {

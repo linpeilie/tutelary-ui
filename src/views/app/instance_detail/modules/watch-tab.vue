@@ -429,14 +429,9 @@ function clearResults() {
               </div>
               <div class="flex-y-center gap-6px">
                 <SvgIcon icon="lucide:zap" class="text-12px" />
-                <NTag :type="getDurationTagType(result.cost)" size="small" :bordered="false">
-                  {{ result.cost }}ms
-                </NTag>
+                <NTag :type="getDurationTagType(result.cost)" size="small" :bordered="false">{{ result.cost }}ms</NTag>
               </div>
-              <div
-                v-if="result.exception"
-                class="flex-y-center gap-4px"
-              >
+              <div v-if="result.exception" class="flex-y-center gap-4px">
                 <SvgIcon icon="lucide:alert-circle" class="text-12px text-error" />
                 <span class="text-12px text-error">异常</span>
               </div>

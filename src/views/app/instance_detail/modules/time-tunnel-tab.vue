@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { NButton, NCard, NForm, NFormItem, NInput, NInputNumber, NSelect, NStatistic, NTag } from 'naive-ui';
-import SvgIcon from '@/components/custom/svg-icon.vue';
 import { fetchTimeTunnelCommand } from '@/service/api/instance';
 import eventBus from '@/utils/eventbus';
+import SvgIcon from '@/components/custom/svg-icon.vue';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { TimeTunnelResponse } from '@/proto/command/result/TimeTunnelResponse';
 
@@ -542,7 +542,9 @@ const getCostColor = (cost: number) => {
                 </div>
                 <div class="col-span-2">
                   <span class="text-gray">方法:</span>
-                  <code class="ml-8px text-primary">{{ selectedSnapshot.className }}.{{ selectedSnapshot.methodName }}</code>
+                  <code class="ml-8px text-primary">
+                    {{ selectedSnapshot.className }}.{{ selectedSnapshot.methodName }}
+                  </code>
                 </div>
               </div>
             </div>
@@ -577,7 +579,10 @@ const getCostColor = (cost: number) => {
             </div>
 
             <!-- 返回值 -->
-            <div v-if="selectedSnapshot.returnValue && !selectedSnapshot.hasException" class="border border-gray/20 rounded-8px bg-container/50 p-16px">
+            <div
+              v-if="selectedSnapshot.returnValue && !selectedSnapshot.hasException"
+              class="border border-gray/20 rounded-8px bg-container/50 p-16px"
+            >
               <h4 class="mb-12px flex-y-center gap-8px text-14px font-semibold">
                 <SvgIcon icon="lucide:corner-down-left" class="text-16px text-success" />
                 返回值
@@ -589,7 +594,9 @@ const getCostColor = (cost: number) => {
                 </div>
                 <div>
                   <span class="text-gray">值:</span>
-                  <pre class="ml-8px mt-8px overflow-x-auto rounded-6px bg-black/20 p-12px text-11px font-mono">{{ selectedSnapshot.returnValue }}</pre>
+                  <pre class="ml-8px mt-8px overflow-x-auto rounded-6px bg-black/20 p-12px text-11px font-mono">{{
+                    selectedSnapshot.returnValue
+                  }}</pre>
                 </div>
               </div>
             </div>

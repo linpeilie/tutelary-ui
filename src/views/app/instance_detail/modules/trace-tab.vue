@@ -95,15 +95,16 @@ const columns: DataTableColumns<TraceResponse> = [
     width: 200,
     render: (row: TraceResponse) => {
       if (row.node.isThrow) {
-        return h(
-          'div',
-          [
-            h('span', row.node.methodName),
-            h('span', {
+        return h('div', [
+          h('span', row.node.methodName),
+          h(
+            'span',
+            {
               class: 'text-red-600/[.40] font-semibold'
-            }, ' Throw ex'),
-          ]
-        );
+            },
+            ' Throw ex'
+          )
+        ]);
       }
       return h('div', `${row.node.methodName}`);
     }

@@ -105,7 +105,11 @@ const resultInfo = computed(() => {
 
 function formatStackTraceNode(node: StackTraceNode): string {
   const classShortName = node.declaringClass.split('.').pop() || 'Unknown';
-  const location = node.isNative ? 'Native Method' : node.lineNumber > 0 ? `${classShortName}.java:${node.lineNumber}` : 'Unknown Source';
+  const location = node.isNative
+    ? 'Native Method'
+    : node.lineNumber > 0
+      ? `${classShortName}.java:${node.lineNumber}`
+      : 'Unknown Source';
   return `at ${node.declaringClass}.${node.methodName}(${location})`;
 }
 
@@ -154,7 +158,10 @@ function resetProgress(total: number) {
 
 function updateProgress() {
   captureProgress.captured = currentRunResults.value.length;
-  captureProgress.percent = captureProgress.total === 0 ? 0 : Math.min(100, Math.round((captureProgress.captured / captureProgress.total) * 100));
+  captureProgress.percent =
+    captureProgress.total === 0
+      ? 0
+      : Math.min(100, Math.round((captureProgress.captured / captureProgress.total) * 100));
 }
 
 function finishCapture(status: 'completed' | 'failed', message?: string) {
@@ -218,7 +225,8 @@ async function startCapture() {
       }
     } as CommandCreateRequest<StackRequest>);
 
-    currentTaskId.value = typeof response === 'object' && response && 'taskId' in response ? String(response.taskId ?? '') : '';
+    currentTaskId.value =
+      typeof response === 'object' && response && 'taskId' in response ? String(response.taskId ?? '') : '';
   } catch {
     isCapturing.value = false;
     currentTaskId.value = '';
@@ -284,7 +292,12 @@ function handleEnhanceComplete(response: CommandExecuteResponse<EnhanceCommandCo
     return;
   }
 
-  finishCapture('completed', stackResults.value.length > 0 ? `堆栈捕获完成，共捕获 ${stackResults.value.length} 个执行栈快照` : '命令执行完成，暂无执行栈数据');
+  finishCapture(
+    'completed',
+    stackResults.value.length > 0
+      ? `堆栈捕获完成，共捕获 ${stackResults.value.length} 个执行栈快照`
+      : '命令执行完成，暂无执行栈数据'
+  );
 }
 
 function showDetail(result: StackResult) {
@@ -418,7 +431,9 @@ onUnmounted(() => {
                     <NCheckbox v-model:checked="stackConfig.formatJson">JSON格式化</NCheckbox>
                   </NGridItem>
                 </NGrid>
-                <div class="mt-12px text-12px text-gray-500">当前后端仅返回线程与栈帧信息，高级选项先保留页面样式。</div>
+                <div class="mt-12px text-12px text-gray-500">
+                  当前后端仅返回线程与栈帧信息，高级选项先保留页面样式。
+                </div>
               </div>
             </div>
           </NGridItem>
@@ -704,7 +719,9 @@ onUnmounted(() => {
         >
           <div class="mb-8px flex-y-center justify-between">
             <div class="flex-y-center gap-12px">
-              <div class="text-14px text-white font-semibold font-mono">{{ record.className }}.{{ record.methodName }}()</div>
+              <div class="text-14px text-white font-semibold font-mono">
+                {{ record.className }}.{{ record.methodName }}()
+              </div>
               <NTag size="small" :bordered="false" :type="record.status === 'completed' ? 'success' : 'error'">
                 {{ record.status === 'completed' ? '已完成' : '失败' }}
               </NTag>

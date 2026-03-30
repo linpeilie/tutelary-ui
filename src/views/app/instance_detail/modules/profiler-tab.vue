@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { NButton, NCard, NInput, NInputNumber, NSelect, NStatistic } from 'naive-ui';
-import SvgIcon from '@/components/custom/svg-icon.vue';
 import { fetchProfilerStartCommand, fetchProfilerStopCommand } from '@/service/api/instance';
 import eventBus from '@/utils/eventbus';
+import SvgIcon from '@/components/custom/svg-icon.vue';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { ProfilerStartResponse } from '@/proto/command/result/ProfilerStartResponse';
 import type { ProfilerStopResponse } from '@/proto/command/result/ProfilerStopResponse';
@@ -251,14 +251,26 @@ const formatTime = (date: Date) => {
               采样时长 (秒)
               <span class="text-error">*</span>
             </label>
-            <NInputNumber v-model:value="profilerConfig.duration" :min="10" :max="600" class="w-full" :disabled="activeProfiling" />
+            <NInputNumber
+              v-model:value="profilerConfig.duration"
+              :min="10"
+              :max="600"
+              class="w-full"
+              :disabled="activeProfiling"
+            />
             <p class="mt-4px text-12px text-gray">10-600秒，建议60秒以上</p>
           </div>
 
           <!-- 采样间隔 -->
           <div>
             <label class="mb-8px block text-14px font-medium">采样间隔 (ms)</label>
-            <NInputNumber v-model:value="profilerConfig.interval" :min="1" :max="100" class="w-full" :disabled="activeProfiling" />
+            <NInputNumber
+              v-model:value="profilerConfig.interval"
+              :min="1"
+              :max="100"
+              class="w-full"
+              :disabled="activeProfiling"
+            />
             <p class="mt-4px text-12px text-gray">采样间隔，越小越精确但开销越大</p>
           </div>
 
@@ -284,14 +296,24 @@ const formatTime = (date: Date) => {
                 包含的包
                 <span class="ml-4px text-12px text-gray">(可选)</span>
               </label>
-              <NInput v-model:value="profilerConfig.include" placeholder="例如: com.example.*" class="font-mono" :disabled="activeProfiling" />
+              <NInput
+                v-model:value="profilerConfig.include"
+                placeholder="例如: com.example.*"
+                class="font-mono"
+                :disabled="activeProfiling"
+              />
             </div>
             <div>
               <label class="mb-8px block text-14px font-medium">
                 排除的包
                 <span class="ml-4px text-12px text-gray">(可选)</span>
               </label>
-              <NInput v-model:value="profilerConfig.exclude" placeholder="例如: java.*,sun.*" class="font-mono" :disabled="activeProfiling" />
+              <NInput
+                v-model:value="profilerConfig.exclude"
+                placeholder="例如: java.*,sun.*"
+                class="font-mono"
+                :disabled="activeProfiling"
+              />
             </div>
           </div>
         </div>

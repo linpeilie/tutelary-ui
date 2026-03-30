@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { NButton, NCard, NCheckbox, NForm, NFormItem, NGrid, NGridItem, NInput, NTag } from 'naive-ui';
-import SvgIcon from '@/components/custom/svg-icon.vue';
-import { fetchSearchClassCommand, fetchSearchMethodCommand, fetchClassLoaderTreeCommand } from '@/service/api/instance';
+import { fetchClassLoaderTreeCommand, fetchSearchClassCommand, fetchSearchMethodCommand } from '@/service/api/instance';
 import eventBus from '@/utils/eventbus';
+import SvgIcon from '@/components/custom/svg-icon.vue';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { SearchClassResponse } from '@/proto/command/result/SearchClassResponse';
 import type { SearchMethodResponse } from '@/proto/command/result/SearchMethodResponse';

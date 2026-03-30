@@ -8,6 +8,8 @@ import { HeapDumpResponse } from '@/proto/command/result/HeapDumpResponse'
 import { LoggerInfoResponse } from '@/proto/command/result/LoggerInfoResponse'
 import { Overview } from '@/proto/command/result/Overview'
 import { RetransformResponse } from '@/proto/command/result/RetransformResponse'
+import { RetransformHistoryResponse } from '@/proto/command/result/RetransformHistoryResponse'
+import { RetransformDetailResponse } from '@/proto/command/result/RetransformDetailResponse'
 import { SetVmOptionResponse } from '@/proto/command/result/SetVmOptionResponse'
 import { StackResponse } from '@/proto/command/result/StackResponse'
 import { ThreadDetail } from '@/proto/command/result/ThreadDetail'
@@ -93,6 +95,12 @@ export default {
     // retransform
     if (command === commandEnum.RETRANSFORM.value)
       return RetransformResponse.decode(unit8Array)
+
+    if (command === commandEnum.RETRANSFORM_HISTORY.value)
+      return RetransformHistoryResponse.decode(unit8Array)
+
+    if (command === commandEnum.RETRANSFORM_DETAIL.value)
+      return RetransformDetailResponse.decode(unit8Array)
 
     if (command === commandEnum.JVM_MEMORY.value)
       return JvmMemoryResponse.decode(unit8Array)

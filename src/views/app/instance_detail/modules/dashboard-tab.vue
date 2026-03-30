@@ -212,7 +212,7 @@ onUnmounted(() => {
             <SvgIcon icon="mdi:chart-line" class="h-4 w-4 text-primary" />
             {{ $t('page.instance.threadStatistics') }}
           </h4>
-          <n-skeleton v-if="!loaded" text :repeat="7" round/>
+          <NSkeleton v-if="!loaded" text :repeat="7" round />
           <TDescriptions
             v-else
             :items="threadStatsDescriptions"
@@ -237,8 +237,8 @@ onUnmounted(() => {
           {{ $t('page.instance.top10ThreadsbyCpuUsage') }}
         </h4>
         <div class="min-h-0 flex-1 overflow-y-auto pr-2 space-y-2">
-          <n-skeleton v-if="!loaded" text :repeat="7" round/>
-          <div v-for="(thread, index) in threadTopList" :key="index" class="thread-item" v-else>
+          <NSkeleton v-if="!loaded" text :repeat="7" round />
+          <div v-for="(thread, index) in threadTopList" v-else :key="index" class="thread-item">
             <div class="mb-1.5 flex items-center justify-between">
               <span class="thread-name">{{ thread.id }}. {{ thread.name }}</span>
               <div class="flex items-center gap-2">
@@ -262,8 +262,8 @@ onUnmounted(() => {
           <SvgIcon icon="mdi:database" class="h-4 w-4 text-success" />
           {{ $t('page.instance.heapMemory') }}
         </h4>
-        <n-skeleton v-if="!loaded" text :repeat="7" round/>
-        <div class="mb-4" v-else>
+        <NSkeleton v-if="!loaded" text :repeat="7" round />
+        <div v-else class="mb-4">
           <div class="mb-2 flex items-end justify-between">
             <span class="memory-label">{{ $t('page.instance.used') }}</span>
             <div class="text-right">
@@ -301,8 +301,8 @@ onUnmounted(() => {
           <SvgIcon icon="mdi:harddisk" class="h-4 w-4 text-purple" />
           {{ $t('page.instance.nonHeapMemory') }}
         </h4>
-        <n-skeleton v-if="!loaded" text :repeat="7" round/>
-        <div class="mb-4" v-else>
+        <NSkeleton v-if="!loaded" text :repeat="7" round />
+        <div v-else class="mb-4">
           <div class="mb-2 flex items-end justify-between">
             <span class="memory-label">{{ $t('page.instance.used') }}</span>
             <div class="text-right">
@@ -340,8 +340,8 @@ onUnmounted(() => {
           <SvgIcon icon="mdi:delete-sweep" class="h-4 w-4 text-orange" />
           {{ $t('page.instance.garbageCollectionStatistics') }}
         </h4>
-        <n-skeleton v-if="!loaded" text :repeat="7" round/>
-        <div class="grid grid-cols-2 gap-4" v-else>
+        <NSkeleton v-if="!loaded" text :repeat="7" round />
+        <div v-else class="grid grid-cols-2 gap-4">
           <!-- Young GC -->
           <div v-for="gc of garbageCollectors" :key="gc.name" class="gc-card">
             <div class="gc-header">

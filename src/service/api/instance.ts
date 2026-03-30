@@ -219,3 +219,19 @@ export function fetchRetransformCommand(data: CommandCreateRequest<any>) {
     data
   });
 }
+
+export function fetchRetransformHistoryCommand(data: CommandCreateRequest<Record<string, never>>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/retransformHistory`,
+    method: 'post',
+    data
+  });
+}
+
+export function fetchRetransformDetailCommand(data: CommandCreateRequest<{ qualifiedClassName: string }>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/retransformDetail`,
+    method: 'post',
+    data
+  });
+}

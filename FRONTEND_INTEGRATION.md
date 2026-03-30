@@ -298,6 +298,9 @@ ws://{host}:{port}/api/ws?_tt={token}
 | `POST /api/command/creation/systemMetricsMonitoring` | `200024` | `NoneParamRequest` | 无 | `200024 -> SystemMetricsResponse` |
 | `POST /api/command/creation/traceMethod` | `210011` | `TraceRequest` | `qualifiedClassName`, `methodNames`, `times`, `cost` | `210001 -> EnhanceAffect`，`210011 -> TraceResponse`，`210002 -> EnhanceCommandComplete` |
 | `POST /api/command/creation/stackMethod` | `210012` | `StackRequest` | `qualifiedClassName`, `methodNames`, `times` | `210001 -> EnhanceAffect`，`210012 -> StackResponse`，`210002 -> EnhanceCommandComplete` |
+| `POST /api/command/creation/retransform` | `210013` | `RetransformRequest` | `qualifiedClassName`, `javaSource` | `210013 -> RetransformResponse` |
+| `POST /api/command/creation/retransformHistory` | `200034` | `NoneParamRequest` | 无 | `200034 -> RetransformHistoryResponse` |
+| `POST /api/command/creation/retransformDetail` | `200035` | `RetransformDetailRequest` | `qualifiedClassName` | `200035 -> RetransformDetailResponse` |
 
 补充说明：
 

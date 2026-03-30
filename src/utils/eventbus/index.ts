@@ -1,30 +1,32 @@
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { Overview } from '@/proto/command/result/Overview';
+import type { SystemMetricsResponse } from '@/proto/command/result/SystemMetricsResponse';
+import type { SystemInfoResponse } from '@/proto/command/result/SystemInfoResponse';
+import type { DecompileResponse } from '@/proto/command/result/DecompileResponse';
+import type { EnhanceAffect } from '@/proto/command/result/EnhanceAffect';
+import type { EnhanceCommandComplete } from '@/proto/command/result/EnhanceCommandComplete';
+import type { JvmMemoryResponse } from '@/proto/command/result/JvmMemoryResponse';
+import type { LoggerInfoResponse } from '@/proto/command/result/LoggerInfoResponse';
+import type { SetVmOptionResponse } from '@/proto/command/result/SetVmOptionResponse';
+import type { StackResponse } from '@/proto/command/result/StackResponse';
+import type { TraceResponse } from '@/proto/command/result/TraceResponse';
+import type { UpdateLoggerLevelResponse } from '@/proto/command/result/UpdateLoggerLevelResponse';
+import type { VmOptionResponse } from '@/proto/command/result/VmOptionResponse';
+import type { SearchClassResponse } from '@/proto/command/result/SearchClassResponse';
+import type { SearchMethodResponse } from '@/proto/command/result/SearchMethodResponse';
+import type { ClassLoaderTreeResponse } from '@/proto/command/result/ClassLoaderTreeResponse';
+import type { OgnlResponse } from '@/proto/command/result/OgnlResponse';
+import type { WatchResponse } from '@/proto/command/result/WatchResponse';
+import type { MonitorResponse } from '@/proto/command/result/MonitorResponse';
+import type { TimeTunnelResponse } from '@/proto/command/result/TimeTunnelResponse';
+import type { ProfilerStartResponse } from '@/proto/command/result/ProfilerStartResponse';
+import type { ProfilerStopResponse } from '@/proto/command/result/ProfilerStopResponse';
+import type { JfrStartResponse } from '@/proto/command/result/JfrStartResponse';
+import type { JfrStopResponse } from '@/proto/command/result/JfrStopResponse';
+import type { RetransformHistoryResponse } from '@/proto/command/result/RetransformHistoryResponse';
+import type { RetransformDetailResponse } from '@/proto/command/result/RetransformDetailResponse';
 import type { WebSocketStatusEnum } from '../ws/WebSocketStatusEnum';
 import { EventBus } from './EventBus';
-import { SystemMetricsResponse } from '@/proto/command/result/SystemMetricsResponse';
-import { SystemInfoResponse } from '@/proto/command/result/SystemInfoResponse';
-import { DecompileResponse } from '@/proto/command/result/DecompileResponse';
-import { EnhanceAffect } from '@/proto/command/result/EnhanceAffect';
-import { EnhanceCommandComplete } from '@/proto/command/result/EnhanceCommandComplete';
-import { JvmMemoryResponse } from '@/proto/command/result/JvmMemoryResponse';
-import { LoggerInfoResponse } from '@/proto/command/result/LoggerInfoResponse';
-import { SetVmOptionResponse } from '@/proto/command/result/SetVmOptionResponse';
-import { StackResponse } from '@/proto/command/result/StackResponse';
-import { TraceResponse } from '@/proto/command/result/TraceResponse';
-import { UpdateLoggerLevelResponse } from '@/proto/command/result/UpdateLoggerLevelResponse';
-import { VmOptionResponse } from '@/proto/command/result/VmOptionResponse';
-import { SearchClassResponse } from '@/proto/command/result/SearchClassResponse';
-import { SearchMethodResponse } from '@/proto/command/result/SearchMethodResponse';
-import { ClassLoaderTreeResponse } from '@/proto/command/result/ClassLoaderTreeResponse';
-import { OgnlResponse } from '@/proto/command/result/OgnlResponse';
-import { WatchResponse } from '@/proto/command/result/WatchResponse';
-import { MonitorResponse } from '@/proto/command/result/MonitorResponse';
-import { TimeTunnelResponse } from '@/proto/command/result/TimeTunnelResponse';
-import { ProfilerStartResponse } from '@/proto/command/result/ProfilerStartResponse';
-import { ProfilerStopResponse } from '@/proto/command/result/ProfilerStopResponse';
-import { JfrStartResponse } from '@/proto/command/result/JfrStartResponse';
-import { JfrStopResponse } from '@/proto/command/result/JfrStopResponse';
 
 /**
  * 全局事件总线事件类型定义
@@ -45,7 +47,7 @@ export interface GlobalEvents {
   // 系统信息类命令
   'command:jvm-memory': CommandExecuteResponse<JvmMemoryResponse>; // JVM 内存信息
   'command:system-info': CommandExecuteResponse<SystemInfoResponse>; // 系统信息
-  'command:system-metrics': CommandExecuteResponse<SystemMetricsResponse>
+  'command:system-metrics': CommandExecuteResponse<SystemMetricsResponse>;
   'command:vm-option': CommandExecuteResponse<VmOptionResponse>; // VM 选项
   'command:vm-option-set': CommandExecuteResponse<SetVmOptionResponse>; // 设置 VM 选项
 
@@ -72,6 +74,8 @@ export interface GlobalEvents {
   'command:trace': CommandExecuteResponse<TraceResponse>; // 方法追踪
   'command:stack': CommandExecuteResponse<StackResponse>; // 方法调用栈
   'command:retransform': CommandExecuteResponse<any>; // 重置类
+  'command:retransform-history': CommandExecuteResponse<RetransformHistoryResponse>; // 热更新历史
+  'command:retransform-detail': CommandExecuteResponse<RetransformDetailResponse>; // 热更新类详情
 
   // 概览命令
   'command:overview': CommandExecuteResponse<Overview>; // 概览

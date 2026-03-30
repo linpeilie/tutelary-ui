@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { NButton, NCard, NInput, NInputNumber, NSelect, NStatistic } from 'naive-ui';
-import SvgIcon from '@/components/custom/svg-icon.vue';
 import { fetchJfrStartCommand, fetchJfrStopCommand } from '@/service/api/instance';
 import eventBus from '@/utils/eventbus';
+import SvgIcon from '@/components/custom/svg-icon.vue';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { JfrStartResponse } from '@/proto/command/result/JfrStartResponse';
 import type { JfrStopResponse } from '@/proto/command/result/JfrStopResponse';

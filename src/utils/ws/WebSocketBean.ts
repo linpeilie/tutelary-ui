@@ -111,10 +111,10 @@ export default class WebSocketBean implements IWebSocketBean {
     this.websocket.onclose = this.onError;
 
     const hasHeartbeatConfig =
-      currentParam.heartSend !== undefined
-      || currentParam.heartGet !== undefined
-      || currentParam.heartGapTime !== undefined
-      || currentParam.heartFailNum !== undefined;
+      currentParam.heartSend !== undefined ||
+      currentParam.heartGet !== undefined ||
+      currentParam.heartGapTime !== undefined ||
+      currentParam.heartFailNum !== undefined;
 
     // 仅在显式配置心跳时创建心跳
     this.heart = hasHeartbeatConfig ? new WebSocketHeart(this) : null;

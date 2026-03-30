@@ -131,6 +131,16 @@ export const commandRouterConfig: CommandEventMapping[] = [
     eventName: 'command:retransform',
     description: '重置类'
   },
+  {
+    code: commandEnum.RETRANSFORM_HISTORY.value as number,
+    eventName: 'command:retransform-history',
+    description: '热更新历史'
+  },
+  {
+    code: commandEnum.RETRANSFORM_DETAIL.value as number,
+    eventName: 'command:retransform-detail',
+    description: '热更新类详情'
+  },
 
   // 概览命令
   {
