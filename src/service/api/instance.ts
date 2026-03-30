@@ -235,3 +235,11 @@ export function fetchRetransformDetailCommand(data: CommandCreateRequest<{ quali
     data
   });
 }
+
+export function fetchRetransformRevertCommand(data: CommandCreateRequest<{ qualifiedClassName: string }>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/retransformRevert`,
+    method: 'post',
+    data
+  });
+}

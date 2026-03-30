@@ -141,6 +141,11 @@ export const commandRouterConfig: CommandEventMapping[] = [
     eventName: 'command:retransform-detail',
     description: '热更新类详情'
   },
+  {
+    code: commandEnum.RETRANSFORM_REVERT.value as number,
+    eventName: 'command:retransform-revert',
+    description: '还原热更新类'
+  },
 
   // 概览命令
   {

@@ -10,6 +10,7 @@ import { Overview } from '@/proto/command/result/Overview'
 import { RetransformResponse } from '@/proto/command/result/RetransformResponse'
 import { RetransformHistoryResponse } from '@/proto/command/result/RetransformHistoryResponse'
 import { RetransformDetailResponse } from '@/proto/command/result/RetransformDetailResponse'
+import { RetransformRevertResponse } from '@/proto/command/result/RetransformRevertResponse'
 import { SetVmOptionResponse } from '@/proto/command/result/SetVmOptionResponse'
 import { StackResponse } from '@/proto/command/result/StackResponse'
 import { ThreadDetail } from '@/proto/command/result/ThreadDetail'
@@ -101,6 +102,9 @@ export default {
 
     if (command === commandEnum.RETRANSFORM_DETAIL.value)
       return RetransformDetailResponse.decode(unit8Array)
+
+    if (command === commandEnum.RETRANSFORM_REVERT.value)
+      return RetransformRevertResponse.decode(unit8Array)
 
     if (command === commandEnum.JVM_MEMORY.value)
       return JvmMemoryResponse.decode(unit8Array)

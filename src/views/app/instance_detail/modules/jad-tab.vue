@@ -14,12 +14,14 @@ import {
   fetchDecompileCommand,
   fetchRetransformCommand,
   fetchRetransformDetailCommand,
-  fetchRetransformHistoryCommand
+  fetchRetransformHistoryCommand,
+  fetchRetransformRevertCommand
 } from '@/service/api/instance';
 import eventbus from '@/utils/eventbus';
 import type { DecompileResponse } from '@/proto/command/result/DecompileResponse';
 import type { RetransformHistoryResponse } from '@/proto/command/result/RetransformHistoryResponse';
 import type { RetransformDetailResponse } from '@/proto/command/result/RetransformDetailResponse';
+import type { RetransformRevertResponse } from '@/proto/command/result/RetransformRevertResponse';
 import type { RetransformResponse } from '@/proto/command/result/RetransformResponse';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 
@@ -383,11 +385,58 @@ function closeDiffModal() {
   }
 }
 
+// 还原相关
+const isReverting = ref(false);
+const revertingClassName = ref('');
+
+function revertRetransform(className: string) {
+  window.$dialog?.warning({
+    title: '确认还原',
+    content: `确定要还原类 ${className} 到热更新前的原始状态吗？`,
+    positiveText: '确定还原',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      isReverting.value = true;
+      revertingClassName.value = className;
+
+      fetchRetransformRevertCommand({
+        instanceId: props.instanceId,
+        param: { qualifiedClassName: className }
+      }).catch(() => {
+        isReverting.value = false;
+        revertingClassName.value = '';
+        window.$message?.error('还原请求发送失败');
+      });
+    }
+  });
+}
+
+function handleRetransformRevertResult(response: CommandExecuteResponse<RetransformRevertResponse>) {
+  isReverting.value = false;
+  const revertedClass = revertingClassName.value;
+  revertingClassName.value = '';
+  const data = response.data as RetransformRevertResponse | undefined;
+
+  if (data && data.state !== 0) {
+    window.$message?.success(`类 ${revertedClass} 已还原到原始状态`);
+    showDiffModal.value = false;
+    if (mergeViewInstance) {
+      mergeViewInstance.destroy();
+      mergeViewInstance = null;
+    }
+    loadRetransformHistory();
+  } else {
+    const errorMsg = data?.message || '还原失败';
+    window.$message?.error(errorMsg);
+  }
+}
+
 onMounted(() => {
   eventbus.on('command:decompile', handleDecompileResult);
   eventbus.on('command:retransform', handleRetransformResult);
   eventbus.on('command:retransform-history', handleRetransformHistoryResult);
   eventbus.on('command:retransform-detail', handleRetransformDetailResult);
+  eventbus.on('command:retransform-revert', handleRetransformRevertResult);
   loadRetransformHistory();
 });
 
@@ -396,6 +445,7 @@ onUnmounted(() => {
   eventbus.off('command:retransform', handleRetransformResult);
   eventbus.off('command:retransform-history', handleRetransformHistoryResult);
   eventbus.off('command:retransform-detail', handleRetransformDetailResult);
+  eventbus.off('command:retransform-revert', handleRetransformRevertResult);
   if (mergeViewInstance) {
     mergeViewInstance.destroy();
     mergeViewInstance = null;
@@ -532,6 +582,17 @@ onUnmounted(() => {
                 <SvgIcon icon="mdi:file-compare" class="h-3 w-3" />
               </template>
               查看差异
+            </NButton>
+            <NButton
+              size="small"
+              type="warning"
+              :loading="isReverting && revertingClassName === record.className"
+              @click="revertRetransform(record.className)"
+            >
+              <template #icon>
+                <SvgIcon icon="mdi:undo" class="h-3 w-3" />
+              </template>
+              还原
             </NButton>
             <NTag type="success" size="small">生效中</NTag>
           </div>
@@ -670,7 +731,17 @@ onUnmounted(() => {
       <div v-else ref="diffContainerRef" class="diff-container min-h-400px overflow-auto"></div>
 
       <template #footer>
-        <div class="flex items-center justify-end">
+        <div class="flex items-center justify-end gap-12px">
+          <NButton
+            type="warning"
+            :loading="isReverting && revertingClassName === diffClassName"
+            @click="revertRetransform(diffClassName)"
+          >
+            <template #icon>
+              <SvgIcon icon="mdi:undo" />
+            </template>
+            还原到原始代码
+          </NButton>
           <NButton @click="showDiffModal = false">关闭</NButton>
         </div>
       </template>

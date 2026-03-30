@@ -27,6 +27,7 @@ export const commandEnum = Object.freeze({
   JFR_DUMP: EnumItem.of(200033, 'JfrDump'),
   RETRANSFORM_HISTORY: EnumItem.of(200034, 'RetransformHistory'),
   RETRANSFORM_DETAIL: EnumItem.of(200035, 'RetransformDetail'),
+  RETRANSFORM_REVERT: EnumItem.of(200036, 'RetransformRevert'),
 
   ENHANCE_AFFECT: EnumItem.of(210001, 'EnhanceAffect'),
   ENHANCE_COMPLETE: EnumItem.of(210002, 'EnhanceComplete'),
