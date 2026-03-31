@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
-import { NButton, NCard, NInput, NInputNumber, NSelect, NStatistic } from 'naive-ui';
+import { NButton, NCard, NInput, NInputNumber, NModal, NSelect, NStatistic } from 'naive-ui';
 import { fetchProfilerStartCommand, fetchProfilerStopCommand } from '@/service/api/instance';
 import eventBus from '@/utils/eventbus';
 import SvgIcon from '@/components/custom/svg-icon.vue';
@@ -179,6 +179,38 @@ onUnmounted(() => {
   eventBus.off('command:profiler-start', handleProfilerStart);
   eventBus.off('command:profiler-stop', handleProfilerStop);
 });
+
+// 结果查看
+const showResultModal = ref(false);
+const selectedSession = ref<ProfilerSession | null>(null);
+
+const viewResult = (session: ProfilerSession) => {
+  selectedSession.value = session;
+  showResultModal.value = true;
+};
+
+const downloadResult = (session: ProfilerSession) => {
+  if (!session.resultData) return;
+
+  const mimeTypes: Record<string, string> = {
+    html: 'text/html',
+    svg: 'image/svg+xml'
+  };
+  const extensions: Record<string, string> = {
+    html: 'html',
+    svg: 'svg'
+  };
+
+  const mime = mimeTypes[session.format] || 'application/octet-stream';
+  const ext = extensions[session.format] || session.format;
+  const blob = new Blob([session.resultData], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `profiler-${session.mode}-${session.sessionId}.${ext}`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
 
 // 重置表单
 const resetForm = () => {
@@ -460,10 +492,54 @@ const formatTime = (date: Date) => {
                 </div>
               </div>
             </div>
+            <div v-if="session.status === 'STOPPED' && session.resultData" class="flex-y-center gap-8px">
+              <NButton size="small" type="info" @click="viewResult(session)">
+                <template #icon>
+                  <SvgIcon icon="lucide:eye" />
+                </template>
+                查看
+              </NButton>
+              <NButton size="small" type="success" @click="downloadResult(session)">
+                <template #icon>
+                  <SvgIcon icon="lucide:download" />
+                </template>
+                下载
+              </NButton>
+            </div>
           </div>
         </div>
       </div>
     </NCard>
+
+    <!-- 结果渲染 Modal -->
+    <NModal
+      v-model:show="showResultModal"
+      preset="card"
+      :title="`采样结果 - ${selectedSession ? getModeLabel(selectedSession.mode) : ''}`"
+      style="width: 95vw; height: 90vh"
+      :body-style="{ padding: 0, height: 'calc(90vh - 60px)' }"
+    >
+      <template #header-extra>
+        <NButton
+          v-if="selectedSession"
+          size="small"
+          type="success"
+          class="mr-8px"
+          @click="downloadResult(selectedSession)"
+        >
+          <template #icon>
+            <SvgIcon icon="lucide:download" />
+          </template>
+          下载
+        </NButton>
+      </template>
+      <iframe
+        v-if="selectedSession?.resultData"
+        :srcdoc="selectedSession.resultData"
+        sandbox="allow-scripts allow-same-origin"
+        class="size-full border-none"
+      />
+    </NModal>
   </div>
 </template>
 

@@ -37,9 +37,6 @@ const selectedThreadDetail = ref<ThreadDetailResult | null>(null);
 const showThreadDrawer = ref(false);
 
 const totalThreads = computed(() => threadStatistic.value?.threadCount || threads.value.length);
-const activeThreads = computed(() => threadStatistic.value?.activeThreadCount || 0);
-const waitingThreads = computed(() => threadStatistic.value?.waitingThreadCount || 0);
-const blockedThreads = computed(() => threadStatistic.value?.blockedThreadCount || 0);
 
 const threadStates = computed<ThreadStateItem[]>(() => {
   const counts = new Map<string, number>();
@@ -98,7 +95,7 @@ const columns = computed<DataTableColumns<BaseThreadInfo>>(() => [
     title: '状态',
     key: 'state',
     width: 140,
-    render: (row: BaseThreadInfo) => h('span', { class: ['state-tag', getStateTagClass(row.state)] }, row.state)
+    render: (row: BaseThreadInfo) => h('span', { class: ['id-state-tag', getStateTagClass(row.state)] }, row.state)
   },
   {
     title: 'CPU %',
@@ -269,18 +266,18 @@ onUnmounted(() => {
       <span
         v-for="item in threadStates"
         :key="item.state"
-        class="state-filter-tag"
-        :class="[getStateTagClass(item.state), selectedState === item.state ? 'state-filter-tag-active' : '']"
+        class="id-state-filter-tag"
+        :class="[getStateTagClass(item.state), selectedState === item.state ? 'id-state-filter-tag-active' : '']"
         @click="toggleStateFilter(item.state)"
       >
         {{ item.state }} ({{ item.count }})
       </span>
     </div>
 
-    <NCard size="small" class="card">
+    <NCard size="small" class="id-card">
       <NSpace justify="space-between" align="center">
         <div class="flex items-center gap-2">
-          <h4 class="card-title" style="margin-bottom: 0">
+          <h4 class="id-card-title-lg" style="margin-bottom: 0">
             <SvgIcon icon="mdi:format-list-bulleted" class="h-4 w-4 text-primary" />
             线程列表
           </h4>
@@ -299,63 +296,63 @@ onUnmounted(() => {
     <NDrawer v-model:show="showThreadDrawer" :width="600" placement="right">
       <NDrawerContent v-if="selectedThreadBase" :title="`线程详情 - ${selectedThreadBase.name}`">
         <div class="space-y-4">
-          <div class="detail-section">
-            <h5 class="detail-section-title">基本信息</h5>
+          <div class="id-detail-section">
+            <h5 class="id-detail-section-title">基本信息</h5>
             <div class="grid grid-cols-2 gap-3">
-              <div class="detail-item">
-                <span class="detail-label">线程ID</span>
-                <span class="detail-value font-mono">{{ selectedThreadBase.id }}</span>
+              <div class="id-detail-item">
+                <span class="id-detail-label">线程ID</span>
+                <span class="id-detail-value font-mono">{{ selectedThreadBase.id }}</span>
               </div>
-              <div class="detail-item">
-                <span class="detail-label">线程名称</span>
-                <span class="detail-value font-mono">{{ selectedThreadBase.name }}</span>
+              <div class="id-detail-item">
+                <span class="id-detail-label">线程名称</span>
+                <span class="id-detail-value font-mono">{{ selectedThreadBase.name }}</span>
               </div>
-              <div class="detail-item">
-                <span class="detail-label">线程状态</span>
-                <span class="state-tag" :class="getStateTagClass(selectedThreadState)">
+              <div class="id-detail-item">
+                <span class="id-detail-label">线程状态</span>
+                <span class="id-state-tag" :class="getStateTagClass(selectedThreadState)">
                   {{ selectedThreadState }}
                 </span>
               </div>
-              <div class="detail-item">
-                <span class="detail-label">线程组</span>
-                <span class="detail-value">{{ selectedThreadBase.group || '-' }}</span>
+              <div class="id-detail-item">
+                <span class="id-detail-label">线程组</span>
+                <span class="id-detail-value">{{ selectedThreadBase.group || '-' }}</span>
               </div>
-              <div class="detail-item">
-                <span class="detail-label">优先级</span>
-                <span class="detail-value">{{ selectedThreadBase.priority }}</span>
+              <div class="id-detail-item">
+                <span class="id-detail-label">优先级</span>
+                <span class="id-detail-value">{{ selectedThreadBase.priority }}</span>
               </div>
-              <div class="detail-item">
-                <span class="detail-label">守护线程</span>
-                <span class="detail-value" :class="selectedThreadBase.daemon ? 'text-info' : 'text-gray'">
+              <div class="id-detail-item">
+                <span class="id-detail-label">守护线程</span>
+                <span class="id-detail-value" :class="selectedThreadBase.daemon ? 'text-info' : 'text-gray'">
                   {{ selectedThreadBase.daemon ? '是' : '否' }}
                 </span>
               </div>
-              <div class="detail-item">
-                <span class="detail-label">CPU占用</span>
-                <span class="detail-value text-primary font-bold">{{ selectedThreadBase.cpu }}%</span>
+              <div class="id-detail-item">
+                <span class="id-detail-label">CPU占用</span>
+                <span class="id-detail-value text-primary font-bold">{{ selectedThreadBase.cpu }}%</span>
               </div>
             </div>
           </div>
 
-          <div v-if="hasLockInfo || detailLoading" class="detail-section">
-            <h5 class="detail-section-title">锁信息</h5>
+          <div v-if="hasLockInfo || detailLoading" class="id-detail-section">
+            <h5 class="id-detail-section-title">锁信息</h5>
             <NSpin :show="detailLoading">
               <div class="grid grid-cols-2 gap-3">
-                <div class="detail-item">
-                  <span class="detail-label">锁名称</span>
-                  <span class="detail-value">{{ selectedThreadDetail?.lockName || '-' }}</span>
+                <div class="id-detail-item">
+                  <span class="id-detail-label">锁名称</span>
+                  <span class="id-detail-value">{{ selectedThreadDetail?.lockName || '-' }}</span>
                 </div>
-                <div class="detail-item">
-                  <span class="detail-label">锁拥有者</span>
-                  <span class="detail-value">{{ selectedThreadDetail?.lockOwnerName || '-' }}</span>
+                <div class="id-detail-item">
+                  <span class="id-detail-label">锁拥有者</span>
+                  <span class="id-detail-value">{{ selectedThreadDetail?.lockOwnerName || '-' }}</span>
                 </div>
-                <div class="detail-item">
-                  <span class="detail-label">锁拥有者ID</span>
-                  <span class="detail-value">{{ selectedThreadDetail?.lockOwnerId || '-' }}</span>
+                <div class="id-detail-item">
+                  <span class="id-detail-label">锁拥有者ID</span>
+                  <span class="id-detail-value">{{ selectedThreadDetail?.lockOwnerId || '-' }}</span>
                 </div>
-                <div class="detail-item">
-                  <span class="detail-label">锁对象</span>
-                  <span class="detail-value font-mono">
+                <div class="id-detail-item">
+                  <span class="id-detail-label">锁对象</span>
+                  <span class="id-detail-value font-mono">
                     {{ selectedThreadDetail?.lock?.className || '-' }}
                     <template v-if="selectedThreadDetail?.lock?.identityHashCode">
                       #{{ selectedThreadDetail.lock.identityHashCode }}
@@ -366,11 +363,11 @@ onUnmounted(() => {
             </NSpin>
           </div>
 
-          <div class="detail-section">
-            <h5 class="detail-section-title">堆栈跟踪</h5>
+          <div class="id-detail-section">
+            <h5 class="id-detail-section-title">堆栈跟踪</h5>
             <NSpin :show="detailLoading">
-              <div v-if="selectedThreadStackTrace.length > 0" class="stack-trace">
-                <div v-for="(line, index) in selectedThreadStackTrace" :key="index" class="stack-line">
+              <div v-if="selectedThreadStackTrace.length > 0" class="id-stack-trace">
+                <div v-for="(line, index) in selectedThreadStackTrace" :key="index" class="id-stack-line">
                   {{ line }}
                 </div>
               </div>
@@ -383,110 +380,12 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .thread-tab {
   padding: 0;
 }
 
-.card {
-  border-radius: 12px;
-}
-
-.card-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--n-text-color);
-  margin-bottom: 16px;
-}
-
-.summary-tag {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 500;
-  background-color: var(--n-color-target);
-}
-
-.state-tag {
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.state-filter-tag {
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
-  border: 1.5px solid transparent;
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-}
-
-.state-filter-tag-active {
-  border-color: currentColor;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  font-weight: 600;
-}
-
-.detail-section {
-  padding: 16px;
-  background-color: var(--n-color-target);
-  border-radius: 8px;
-  border: 1px solid var(--n-border-color);
-}
-
-.detail-section-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--n-text-color);
-  margin-bottom: 12px;
-}
-
-.detail-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.detail-label {
-  font-size: 11px;
-  color: var(--n-text-color-disabled);
-}
-
-.detail-value {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--n-text-color);
-}
-
-.stack-trace {
-  padding: 12px;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
-  font-family: 'Consolas', 'Monaco', monospace;
-  font-size: 11px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.stack-line {
-  color: var(--n-text-color);
-  padding: 2px 0;
-  word-break: break-all;
+.space-y-4 > * + * {
+  margin-top: 16px;
 }
 </style>

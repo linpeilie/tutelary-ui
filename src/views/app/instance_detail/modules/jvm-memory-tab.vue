@@ -223,73 +223,73 @@ onUnmounted(() => {
     <!-- 垃圾回收统计概览 -->
     <div class="grid grid-cols-1 mb-4 gap-4 lg:grid-cols-2">
       <!-- Young GC 统计 -->
-      <NCard size="small" class="card gc-card">
+      <NCard size="small" class="id-card">
         <div class="mb-3 flex items-center justify-between">
-          <h4 class="card-title mb-0">
+          <h4 class="id-card-title-lg mb-0">
             <SvgIcon icon="mdi:lightning-bolt" class="h-4 w-4 text-warning" />
             Young GC 统计
           </h4>
           <NTag type="warning" size="small">新生代</NTag>
         </div>
-        <div class="gc-stats-grid">
-          <div class="gc-stat-item">
-            <span class="gc-stat-label">回收次数</span>
-            <span class="gc-stat-value text-warning">{{ gcStats.youngGc.count.toLocaleString() }}</span>
+        <div class="id-gc-stats-grid">
+          <div class="id-gc-stats-item">
+            <span class="id-gc-stats-label">回收次数</span>
+            <span class="id-gc-stats-value text-warning">{{ gcStats.youngGc.count.toLocaleString() }}</span>
           </div>
-          <div class="gc-stat-item">
-            <span class="gc-stat-label">总时间</span>
-            <span class="gc-stat-value">{{ formatMetric(gcStats.youngGc.totalTime, 's') }}</span>
+          <div class="id-gc-stats-item">
+            <span class="id-gc-stats-label">总时间</span>
+            <span class="id-gc-stats-value">{{ formatMetric(gcStats.youngGc.totalTime, 's') }}</span>
           </div>
-          <div class="gc-stat-item">
-            <span class="gc-stat-label">平均时间</span>
-            <span class="gc-stat-value">{{ formatMetric(gcStats.youngGc.avgTime, 'ms') }}</span>
+          <div class="id-gc-stats-item">
+            <span class="id-gc-stats-label">平均时间</span>
+            <span class="id-gc-stats-value">{{ formatMetric(gcStats.youngGc.avgTime, 'ms') }}</span>
           </div>
-          <div class="gc-stat-item">
-            <span class="gc-stat-label">最大时间</span>
-            <span class="gc-stat-value">{{ formatMetric(gcStats.youngGc.maxTime, 'ms') }}</span>
+          <div class="id-gc-stats-item">
+            <span class="id-gc-stats-label">最大时间</span>
+            <span class="id-gc-stats-value">{{ formatMetric(gcStats.youngGc.maxTime, 'ms') }}</span>
           </div>
         </div>
-        <div class="gc-last-time">
+        <div class="id-gc-last-time">
           <span class="text-xs text-gray-400">上次GC: {{ gcStats.youngGc.lastGc }}</span>
         </div>
       </NCard>
 
       <!-- Old GC 统计 -->
-      <NCard size="small" class="card gc-card">
+      <NCard size="small" class="id-card">
         <div class="mb-3 flex items-center justify-between">
-          <h4 class="card-title mb-0">
+          <h4 class="id-card-title-lg mb-0">
             <SvgIcon icon="mdi:chart-line" class="h-4 w-4 text-error" />
             Old GC 统计
           </h4>
           <NTag type="error" size="small">老年代</NTag>
         </div>
-        <div class="gc-stats-grid">
-          <div class="gc-stat-item">
-            <span class="gc-stat-label">回收次数</span>
-            <span class="gc-stat-value text-error">{{ gcStats.oldGc.count }}</span>
+        <div class="id-gc-stats-grid">
+          <div class="id-gc-stats-item">
+            <span class="id-gc-stats-label">回收次数</span>
+            <span class="id-gc-stats-value text-error">{{ gcStats.oldGc.count }}</span>
           </div>
-          <div class="gc-stat-item">
-            <span class="gc-stat-label">总时间</span>
-            <span class="gc-stat-value">{{ formatMetric(gcStats.oldGc.totalTime, 's') }}</span>
+          <div class="id-gc-stats-item">
+            <span class="id-gc-stats-label">总时间</span>
+            <span class="id-gc-stats-value">{{ formatMetric(gcStats.oldGc.totalTime, 's') }}</span>
           </div>
-          <div class="gc-stat-item">
-            <span class="gc-stat-label">平均时间</span>
-            <span class="gc-stat-value">{{ formatMetric(gcStats.oldGc.avgTime, 'ms') }}</span>
+          <div class="id-gc-stats-item">
+            <span class="id-gc-stats-label">平均时间</span>
+            <span class="id-gc-stats-value">{{ formatMetric(gcStats.oldGc.avgTime, 'ms') }}</span>
           </div>
-          <div class="gc-stat-item">
-            <span class="gc-stat-label">最大时间</span>
-            <span class="gc-stat-value">{{ formatMetric(gcStats.oldGc.maxTime, 'ms') }}</span>
+          <div class="id-gc-stats-item">
+            <span class="id-gc-stats-label">最大时间</span>
+            <span class="id-gc-stats-value">{{ formatMetric(gcStats.oldGc.maxTime, 'ms') }}</span>
           </div>
         </div>
-        <div class="gc-last-time">
+        <div class="id-gc-last-time">
           <span class="text-xs text-gray-400">上次GC: {{ gcStats.oldGc.lastGc }}</span>
         </div>
       </NCard>
     </div>
 
     <!-- 内存池详细信息 -->
-    <NCard size="small" class="card mb-6">
-      <h3 class="card-title">
+    <NCard size="small" class="id-card mb-6">
+      <h3 class="id-card-title-lg">
         <SvgIcon icon="mdi:layers" class="h-5 w-5 text-primary" />
         内存池详细信息
       </h3>
@@ -340,9 +340,9 @@ onUnmounted(() => {
     </NCard>
 
     <!-- GC日志 -->
-    <NCard size="small" class="card">
+    <NCard size="small" class="id-card">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="card-title mb-0">
+        <h3 class="id-card-title-lg mb-0">
           <SvgIcon icon="mdi:text-box" class="h-5 w-5 text-gray-400" />
           最近GC日志
         </h3>
@@ -350,9 +350,9 @@ onUnmounted(() => {
           清空日志
         </NButton>
       </div>
-      <NScrollbar class="gc-log-container">
+      <NScrollbar class="id-gc-log-container">
         <div v-if="gcLogs.length > 0" class="text-xs font-mono space-y-2">
-          <div v-for="(log, index) in gcLogs" :key="index" class="gc-log-item">
+          <div v-for="(log, index) in gcLogs" :key="index" class="id-gc-log-item">
             <span class="text-gray-500">{{ log.time }}</span>
             <NTag :type="log.type.includes('Young') ? 'warning' : 'error'" size="small">{{ log.type }}</NTag>
             <span class="text-gray-400">
@@ -371,105 +371,8 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .jvm-memory-tab {
   padding: 0;
-}
-
-.card {
-  border-radius: 12px;
-}
-
-.card-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--n-text-color);
-  margin-bottom: 16px;
-}
-
-.gc-card {
-  border-radius: 12px;
-}
-
-.gc-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.gc-stat-item {
-  padding: 8px 12px;
-  background-color: rgba(var(--n-color-target-rgb), 0.3);
-  border-radius: 6px;
-  border: 1px solid var(--n-border-color);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.gc-stat-label {
-  font-size: 11px;
-  color: var(--n-text-color-disabled);
-  line-height: 1;
-}
-
-.gc-stat-value {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--n-text-color);
-  font-family: 'Consolas', 'Monaco', monospace;
-}
-
-.gc-last-time {
-  padding-top: 8px;
-  border-top: 1px solid var(--n-border-color);
-  text-align: center;
-}
-
-.gc-progress {
-  width: 100%;
-  height: 12px;
-  background-color: var(--n-border-color);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.gc-progress-fill {
-  height: 100%;
-  transition: width 0.5s ease;
-  border-radius: 6px;
-}
-
-.gc-progress-young {
-  background: linear-gradient(90deg, #eab308 0%, #facc15 100%);
-}
-
-.gc-progress-old {
-  background: linear-gradient(90deg, #f97316 0%, #fb923c 100%);
-}
-
-.memory-region {
-  padding: 12px;
-  background-color: rgba(var(--n-color-target-rgb), 0.3);
-  border-radius: 8px;
-  border: 1px solid var(--n-border-color);
-}
-
-.gc-log-container {
-  max-height: 400px;
-  padding: 16px;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-}
-
-.gc-log-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 4px 0;
 }
 </style>

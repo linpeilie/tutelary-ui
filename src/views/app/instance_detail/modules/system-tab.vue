@@ -6,7 +6,7 @@ import { fetchSystemInfoCommand, fetchSystemMetricsCommand } from '@/service/api
 import eventBus from '@/utils/eventbus';
 import { div, mul, sub } from '@/utils/math';
 import { formatMemory } from '@/utils/common';
-import { formatTimeDifference, getTimeDifferenceDetails } from '@/utils/time';
+import { formatTimeDifference } from '@/utils/time';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { SystemInfoResponse } from '@/proto/command/result/SystemInfoResponse';
 import type { SystemMetricsResponse } from '@/proto/command/result/SystemMetricsResponse';
@@ -221,8 +221,8 @@ onMounted(() => {
 <template>
   <div class="system-tab">
     <!-- 主机信息 -->
-    <NCard size="small" class="card mb-4">
-      <h4 class="card-title">
+    <NCard size="small" class="id-card mb-4">
+      <h4 class="id-card-title-lg">
         <SvgIcon icon="mdi:server" class="h-4 w-4 text-primary" />
         主机信息
       </h4>
@@ -230,75 +230,75 @@ onMounted(() => {
         :column="4"
         :items="hostInfoDescriptions"
         :val="hostInfo"
-        label-class="info-label"
-        content-class="info-value font-mono"
+        label-class="id-info-label"
+        content-class="id-info-value font-mono"
       />
     </NCard>
 
     <!-- 主机资源 -->
     <div class="grid grid-cols-1 mb-4 gap-4 lg:grid-cols-2">
       <!-- CPU使用情况 -->
-      <NCard size="small" class="card">
-        <h4 class="card-title">
+      <NCard size="small" class="id-card">
+        <h4 class="id-card-title-lg">
           <SvgIcon icon="mdi:cpu-64-bit" class="h-4 w-4 text-primary" />
           CPU 使用情况
         </h4>
         <div class="space-y-4">
           <div>
             <div class="mb-2 flex items-center justify-between">
-              <span class="resource-label">系统CPU</span>
-              <span class="resource-value text-primary">{{ cpuMetrics.cpuLoad }}%</span>
+              <span class="id-resource-label">系统CPU</span>
+              <span class="id-resource-value text-primary">{{ cpuMetrics.cpuLoad }}%</span>
             </div>
-            <div class="resource-progress">
+            <div class="id-progress">
               <div
-                class="resource-progress-fill from-primary to-primary/80 bg-gradient-to-r"
+                class="id-progress-fill from-primary to-primary/80 bg-gradient-to-r"
                 :style="{ width: `${cpuMetrics.cpuLoad}%` }"
               />
             </div>
           </div>
           <div>
             <div class="mb-2 flex items-center justify-between">
-              <span class="resource-label">进程CPU</span>
-              <span class="resource-value text-success">{{ cpuMetrics.processCpuLoad }}%</span>
+              <span class="id-resource-label">进程CPU</span>
+              <span class="id-resource-value text-success">{{ cpuMetrics.processCpuLoad }}%</span>
             </div>
-            <div class="resource-progress">
+            <div class="id-progress">
               <div
-                class="resource-progress-fill from-success to-success/80 bg-gradient-to-r"
+                class="id-progress-fill from-success to-success/80 bg-gradient-to-r"
                 :style="{ width: `${cpuMetrics.processCpuLoad}%` }"
               />
             </div>
           </div>
-          <div class="divider-line" />
+          <div class="id-divider" />
           <TDescriptions
             :items="cpuMetricsDescriptions"
             :val="cpuMetrics"
             :columns="2"
-            label-class="info-label"
-            content-class="info-value font-mono"
+            label-class="id-info-label"
+            content-class="id-info-value font-mono"
           />
         </div>
       </NCard>
 
       <!-- 内存使用情况 -->
-      <NCard size="small" class="card">
-        <h4 class="card-title">
+      <NCard size="small" class="id-card">
+        <h4 class="id-card-title-lg">
           <SvgIcon icon="mdi:memory" class="h-4 w-4 text-purple" />
           内存 使用情况
         </h4>
         <div class="space-y-4">
           <div v-if="memoryMetrics">
             <div class="mb-2 flex items-center justify-between">
-              <span class="resource-label">物理内存（已使用）</span>
+              <span class="id-resource-label">物理内存（已使用）</span>
               <div class="text-right">
-                <span class="resource-value text-purple">
+                <span class="id-resource-value text-purple">
                   {{ formatMemory(memoryMetrics.totalPhysicalMemorySize - memoryMetrics.freePhysicalMemorySize) }}
                 </span>
-                <span class="resource-max">/ {{ formatMemory(memoryMetrics.totalPhysicalMemorySize) }}</span>
+                <span class="id-resource-max">/ {{ formatMemory(memoryMetrics.totalPhysicalMemorySize) }}</span>
               </div>
             </div>
-            <div class="resource-progress">
+            <div class="id-progress">
               <div
-                class="resource-progress-fill from-purple to-purple/80 bg-gradient-to-r"
+                class="id-progress-fill from-purple to-purple/80 bg-gradient-to-r"
                 :style="{
                   width: `${100 - mul(memoryMetrics.freePhysicalMemorySize / memoryMetrics.totalPhysicalMemorySize, 100)}%`
                 }"
@@ -307,56 +307,56 @@ onMounted(() => {
           </div>
           <div v-if="memoryMetrics">
             <div class="mb-2 flex items-center justify-between">
-              <span class="resource-label">Swap内存（已使用）</span>
+              <span class="id-resource-label">Swap内存（已使用）</span>
               <div class="text-right">
-                <span class="resource-value text-success">
+                <span class="id-resource-value text-success">
                   {{ formatMemory(memoryMetrics.totalSwapSpaceSize - memoryMetrics.freeSwapSpaceSize) }}
                 </span>
-                <span class="resource-max">/ {{ formatMemory(memoryMetrics.totalSwapSpaceSize) }}</span>
+                <span class="id-resource-max">/ {{ formatMemory(memoryMetrics.totalSwapSpaceSize) }}</span>
               </div>
             </div>
-            <div class="resource-progress">
+            <div class="id-progress">
               <div
-                class="resource-progress-fill from-success to-purple/80 bg-gradient-to-r"
+                class="id-progress-fill from-success to-purple/80 bg-gradient-to-r"
                 :style="{
                   width: `${100 - mul(memoryMetrics.freeSwapSpaceSize / memoryMetrics.totalSwapSpaceSize, 100)}%`
                 }"
               />
             </div>
           </div>
-          <div class="divider-line" />
+          <div class="id-divider" />
           <TDescriptions
             :items="memoryMetricsDescriptions"
             :val="memoryMetrics"
-            label-class="info-label"
-            content-class="info-value font-mono"
+            label-class="id-info-label"
+            content-class="id-info-value font-mono"
           />
         </div>
       </NCard>
 
       <!-- 磁盘使用情况 -->
-      <NCard size="small" class="card">
-        <h4 class="card-title">
+      <NCard size="small" class="id-card">
+        <h4 class="id-card-title-lg">
           <SvgIcon icon="mdi:harddisk" class="h-4 w-4 text-orange" />
           磁盘 使用情况
         </h4>
         <div class="space-y-3">
-          <div v-for="disk in disks" :key="disk.mount" class="disk-item">
+          <div v-for="disk in disks" :key="disk.mount" class="id-disk-item">
             <div class="mb-2 flex items-center justify-between">
               <NSpace justify="center">
-                <span class="disk-name">{{ disk.mount }}</span>
+                <span class="id-disk-name">{{ disk.mount }}</span>
                 <NTag size="small" :bordered="false">{{ disk.type }}</NTag>
               </NSpace>
               <div class="text-right">
-                <span class="disk-value" :class="getDiskColor(disk.useRatio)">
+                <span class="id-disk-value" :class="getDiskColor(disk.useRatio)">
                   {{ formatMemory(disk.usedSpace) }}
                 </span>
-                <span class="disk-max">/ {{ formatMemory(disk.totalSpace) }}</span>
+                <span class="id-disk-max">/ {{ formatMemory(disk.totalSpace) }}</span>
               </div>
             </div>
-            <div class="disk-progress">
+            <div class="id-progress id-progress-sm">
               <div
-                class="disk-progress-fill bg-gradient-to-r"
+                class="id-progress-fill bg-gradient-to-r"
                 :class="getDiskProgressColor(disk.useRatio)"
                 :style="{ width: `${disk.useRatio}%` }"
               />
@@ -370,8 +370,8 @@ onMounted(() => {
       </NCard>
 
       <!-- 网络统计 -->
-      <NCard size="small" class="card">
-        <h4 class="card-title">
+      <NCard size="small" class="id-card">
+        <h4 class="id-card-title-lg">
           <SvgIcon icon="mdi:network" class="h-4 w-4 text-cyan" />
           网络 统计
         </h4>
@@ -379,32 +379,32 @@ onMounted(() => {
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <SvgIcon icon="mdi:arrow-down" class="h-3 w-3 text-success" />
-              <span class="resource-label">接收速率</span>
+              <span class="id-resource-label">接收速率</span>
             </div>
-            <span class="resource-value text-success">{{ formatMemory(networkMetrics?.recvSpeed) }}/s</span>
+            <span class="id-resource-value text-success">{{ formatMemory(networkMetrics?.recvSpeed) }}/s</span>
           </div>
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <SvgIcon icon="mdi:arrow-up" class="h-3 w-3 text-primary" />
-              <span class="resource-label">发送速率</span>
+              <span class="id-resource-label">发送速率</span>
             </div>
-            <span class="resource-value text-primary">{{ formatMemory(networkMetrics?.sendSpeed) }}/s</span>
+            <span class="id-resource-value text-primary">{{ formatMemory(networkMetrics?.sendSpeed) }}/s</span>
           </div>
-          <div class="divider-line" />
+          <div class="id-divider" />
           <TDescriptions
             :items="networkMetricsDescriptions"
             :val="networkMetrics"
             :columns="2"
-            label-class="stat-labal"
-            content-class="stat-value"
+            label-class="id-label"
+            content-class="id-value"
           />
         </div>
       </NCard>
     </div>
 
     <!-- JVM信息 -->
-    <NCard size="small" class="card mb-4">
-      <h4 class="card-title">
+    <NCard size="small" class="id-card mb-4">
+      <h4 class="id-card-title-lg">
         <SvgIcon icon="mdi:language-java" class="h-4 w-4 text-orange" />
         JVM 信息
       </h4>
@@ -412,15 +412,15 @@ onMounted(() => {
         :items="jvmInfoDescriptions"
         :val="jvmInfo"
         :columns="3"
-        label-class="info-label"
-        content-class="info-value font-mono"
+        label-class="id-info-label"
+        content-class="id-info-value font-mono"
       />
     </NCard>
 
     <!-- JVM参数 -->
-    <NCard size="small" class="card mb-4">
+    <NCard size="small" class="id-card mb-4">
       <div class="mb-4 flex items-center justify-between">
-        <h4 class="card-title mb-0">
+        <h4 class="id-card-title-lg mb-0">
           <SvgIcon icon="mdi:console" class="h-4 w-4 text-success" />
           JVM 启动参数
         </h4>
@@ -432,19 +432,19 @@ onMounted(() => {
         </NButton>
       </div>
       <NScrollbar style="max-height: 400px">
-        <div class="jvm-args-container">
-          <div v-for="(arg, i) in jvmInfo?.inputArguments" :key="i" class="jvm-arg-line">
-            <span class="jvm-arg-number">{{ i + 1 }}</span>
-            <span class="jvm-arg-content">{{ arg }}</span>
+        <div class="id-jvm-args-container">
+          <div v-for="(arg, i) in jvmInfo?.inputArguments" :key="i" class="id-jvm-arg-line">
+            <span class="id-jvm-arg-number">{{ i + 1 }}</span>
+            <span class="id-jvm-arg-content">{{ arg }}</span>
           </div>
         </div>
       </NScrollbar>
     </NCard>
 
     <!-- 环境变量 -->
-    <NCard size="small" class="card">
+    <NCard size="small" class="id-card">
       <div class="mb-4 flex items-center justify-between">
-        <h4 class="card-title mb-0">
+        <h4 class="id-card-title-lg mb-0">
           <SvgIcon icon="mdi:cog" class="h-4 w-4 text-purple" />
           环境变量
         </h4>
@@ -479,185 +479,11 @@ onMounted(() => {
   padding: 0;
 }
 
-.card {
-  border-radius: 12px;
-}
-
-.card-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--n-text-color);
-  margin-bottom: 16px;
-}
-
 .space-y-4 > * + * {
   margin-top: 16px;
 }
 
 .space-y-3 > * + * {
   margin-top: 12px;
-}
-
-.info-box {
-  padding: 16px;
-  background-color: rgba(var(--n-color-target-rgb), 0.3);
-  border-radius: 8px;
-  border: 1px solid var(--n-border-color);
-}
-
-.info-label {
-  font-size: 12px;
-  color: var(--n-text-color-disabled);
-  margin-bottom: 4px;
-}
-
-.info-value {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--n-text-color);
-}
-
-.resource-label {
-  font-size: 12px;
-  color: var(--n-text-color-disabled);
-}
-
-.resource-value {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.resource-max {
-  font-size: 12px;
-  color: var(--n-text-color-disabled);
-  margin-left: 4px;
-}
-
-.resource-progress {
-  width: 100%;
-  height: 8px;
-  background-color: var(--n-border-color);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.resource-progress-fill {
-  height: 100%;
-  transition: width 0.5s ease;
-}
-
-.divider-line {
-  height: 1px;
-  background-color: var(--n-border-color);
-  margin: 12px 0;
-}
-
-.stat-item {
-  text-align: left;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: var(--n-text-color-disabled);
-  margin-bottom: 4px;
-}
-
-.stat-value {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--n-text-color);
-}
-
-.disk-item {
-  padding: 12px;
-  background-color: rgba(var(--n-color-target-rgb), 0.3);
-  border-radius: 8px;
-  border: 1px solid var(--n-border-color);
-}
-
-.disk-name {
-  font-size: 14px;
-  font-family: 'Consolas', 'Monaco', monospace;
-  color: var(--n-text-color);
-}
-
-.disk-value {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.disk-max {
-  font-size: 12px;
-  color: var(--n-text-color-disabled);
-  margin-left: 4px;
-}
-
-.disk-progress {
-  width: 100%;
-  height: 6px;
-  background-color: var(--n-border-color);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.disk-progress-fill {
-  height: 100%;
-  transition: width 0.5s ease;
-}
-
-.network-progress {
-  width: 100%;
-  height: 6px;
-  background-color: var(--n-border-color);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.network-progress-fill {
-  height: 100%;
-  transition: width 0.5s ease;
-}
-
-.jvm-args-container {
-  background-color: rgba(var(--n-color-target-rgb), 0.15);
-  border-radius: 8px;
-  border: 1px solid var(--n-border-color);
-  padding: 8px 0;
-}
-
-.jvm-arg-line {
-  display: flex;
-  align-items: flex-start;
-  padding: 4px 12px;
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background-color: rgba(var(--n-color-target-rgb), 0.2);
-  }
-}
-
-.jvm-arg-number {
-  flex-shrink: 0;
-  width: 32px;
-  font-family: 'Consolas', 'Monaco', monospace;
-  font-size: 11px;
-  color: var(--n-text-color-disabled);
-  text-align: right;
-  padding-right: 12px;
-  user-select: none;
-  line-height: 1.6;
-}
-
-.jvm-arg-content {
-  flex: 1;
-  font-family: 'Consolas', 'Monaco', monospace;
-  font-size: 12px;
-  color: var(--n-text-color);
-  word-break: break-all;
-  white-space: pre-wrap;
-  line-height: 1.6;
 }
 </style>

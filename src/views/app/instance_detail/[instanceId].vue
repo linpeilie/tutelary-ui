@@ -22,66 +22,158 @@ import OgnlTab from '@/views/app/instance_detail/modules/ognl-tab.vue';
 import ProfilerTab from '@/views/app/instance_detail/modules/profiler-tab.vue';
 import JfrTab from '@/views/app/instance_detail/modules/jfr-tab.vue';
 import ChangeRecordsTab from '@/views/app/instance_detail/modules/change-records-tab.vue';
-import type { OptionsType } from '@/components/custom/types/t-segmented';
-import TSegmented from '@/components/custom/t-segmented.vue';
 
 const route = useRoute();
 const instanceDetail: Ref<Api.Instance.InstanceInfo | undefined> = ref();
 const activeTab = ref('dashboard');
+const infoCollapsed = ref(false);
 
-const tabs: OptionsType[] = [
-  { label: '面板', value: 'dashboard' },
-  { label: '系统', value: 'system' },
-  { label: '线程', value: 'thread' },
-  { label: 'JvmMemory', value: 'jvmMemory' },
-  { label: '反编译', value: 'jad' },
-  { label: 'VmOption', value: 'vmOption' },
-  { label: '日志', value: 'logger' },
-  { label: 'Trace', value: 'trace' },
-  { label: 'Stack', value: 'stack' },
-  { label: 'Watch', value: 'watch' },
-  { label: 'Monitor', value: 'monitor' },
-  { label: 'Class Explorer', value: 'classExplorer' },
-  { label: 'TimeTunnel', value: 'timeTunnel' },
-  { label: 'OGNL', value: 'ognl' },
-  { label: 'Profiler', value: 'profiler' },
-  { label: 'JFR', value: 'jfr' },
-  { label: '变更记录', value: 'record' }
+interface TabItem {
+  label: string;
+  value: string;
+  icon: string;
+}
+
+interface TabGroup {
+  label: string;
+  tabs: TabItem[];
+}
+
+const tabGroups: TabGroup[] = [
+  {
+    label: '概览',
+    tabs: [
+      { label: '面板', value: 'dashboard', icon: 'lucide:layout-dashboard' },
+      { label: '系统', value: 'system', icon: 'lucide:server' }
+    ]
+  },
+  {
+    label: '线程与内存',
+    tabs: [
+      { label: '线程', value: 'thread', icon: 'lucide:layers' },
+      { label: 'JVM内存', value: 'jvmMemory', icon: 'lucide:database' }
+    ]
+  },
+  {
+    label: '代码与类',
+    tabs: [
+      { label: '反编译', value: 'jad', icon: 'lucide:file-code' },
+      { label: 'Class Explorer', value: 'classExplorer', icon: 'lucide:search-code' },
+      { label: 'OGNL', value: 'ognl', icon: 'lucide:terminal' }
+    ]
+  },
+  {
+    label: '追踪与调试',
+    tabs: [
+      { label: 'Trace', value: 'trace', icon: 'lucide:git-branch' },
+      { label: 'Stack', value: 'stack', icon: 'lucide:list-tree' },
+      { label: 'Watch', value: 'watch', icon: 'lucide:eye' },
+      { label: 'Monitor', value: 'monitor', icon: 'lucide:bar-chart-2' },
+      { label: 'TimeTunnel', value: 'timeTunnel', icon: 'lucide:clock' }
+    ]
+  },
+  {
+    label: '配置',
+    tabs: [
+      { label: 'VmOption', value: 'vmOption', icon: 'lucide:sliders-horizontal' },
+      { label: '日志', value: 'logger', icon: 'lucide:file-text' }
+    ]
+  },
+  {
+    label: '性能分析',
+    tabs: [
+      { label: 'Profiler', value: 'profiler', icon: 'lucide:flame' },
+      { label: 'JFR', value: 'jfr', icon: 'lucide:radio' }
+    ]
+  },
+  {
+    label: '变更',
+    tabs: [{ label: '变更记录', value: 'record', icon: 'lucide:history' }]
+  }
 ];
 
-onMounted(() => {
+function refreshInstance() {
   fetchInstanceDetail(route.params.instanceId as string).then(res => {
     if (res.data) {
       instanceDetail.value = res.data;
     }
   });
+}
+
+onMounted(() => {
+  refreshInstance();
 });
 </script>
 
 <template>
   <AppPage>
     <template #header>
-      <div class="font-bold">
-        <span class="text-gray">{{ instanceDetail?.appName }}</span>
-        <span>/</span>
-        <span>{{ instanceDetail?.instanceId }}</span>
+      <div class="flex-y-center gap-12px">
+        <span class="text-14px text-gray-400">{{ instanceDetail?.appName }}</span>
+        <span class="text-14px text-gray-500">/</span>
+        <span class="text-18px font-bold">{{ instanceDetail?.instanceId }}</span>
+        <NTag v-if="instanceDetail" :type="instanceDetail.state === 1 ? 'success' : 'error'" size="small" round>
+          {{ instanceDetail.state === 1 ? '在线' : '离线' }}
+        </NTag>
       </div>
     </template>
-    <NCard size="small">
-      <template #header>
-        <NSpace align="center">
-          <SvgIcon icon="ri:information-2-fill" />
-          {{ $t('page.instance.instanceInfo') }}
-        </NSpace>
-      </template>
-      <InstanceInfoCard v-if="instanceDetail" :instance="instanceDetail" />
-    </NCard>
-    <NCard size="small" class="mt-3">
-      <NScrollbar x-scrollable>
-        <TSegmented v-model="activeTab" :options="tabs" />
-      </NScrollbar>
-    </NCard>
-    <div class="mt-3">
+    <template #action>
+      <NButton size="small" @click="refreshInstance">
+        <template #icon>
+          <SvgIcon icon="lucide:refresh-cw" />
+        </template>
+        刷新
+      </NButton>
+    </template>
+
+    <div class="flex flex-col gap-16px">
+      <!-- 实例信息 -->
+      <NCard size="small" class="id-card">
+        <template #header>
+          <div class="flex-y-center justify-between">
+            <div class="flex-y-center gap-8px">
+              <SvgIcon icon="lucide:info" class="text-16px text-primary" />
+              <span class="text-13px font-600">{{ $t('page.instance.instanceInfo') }}</span>
+            </div>
+            <NButton quaternary size="tiny" @click="infoCollapsed = !infoCollapsed">
+              <template #icon>
+                <SvgIcon :icon="infoCollapsed ? 'lucide:chevron-down' : 'lucide:chevron-up'" />
+              </template>
+            </NButton>
+          </div>
+        </template>
+        <div v-show="!infoCollapsed">
+          <InstanceInfoCard v-if="instanceDetail" :instance="instanceDetail" />
+        </div>
+      </NCard>
+
+      <!-- Tab 分组导航 -->
+      <NCard size="small" class="id-card" :content-style="{ padding: '12px 16px' }">
+        <NScrollbar x-scrollable>
+          <div class="tab-nav">
+            <template v-for="(group, gi) in tabGroups" :key="group.label">
+              <div v-if="gi > 0" class="tab-nav-separator" />
+              <div class="tab-nav-group">
+                <span class="tab-nav-group-label">{{ group.label }}</span>
+                <div class="tab-nav-items">
+                  <button
+                    v-for="tab in group.tabs"
+                    :key="tab.value"
+                    class="tab-nav-item"
+                    :class="{ 'tab-nav-item-active': activeTab === tab.value }"
+                    @click="activeTab = tab.value"
+                  >
+                    <SvgIcon :icon="tab.icon" class="text-14px" />
+                    <span>{{ tab.label }}</span>
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </NScrollbar>
+      </NCard>
+
+      <!-- Tab 内容 -->
       <DashboardTab v-if="activeTab === 'dashboard' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <SystemTab v-else-if="activeTab === 'system' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <ThreadTab v-else-if="activeTab === 'thread' && instanceDetail" :instance-id="instanceDetail.instanceId" />
@@ -105,10 +197,10 @@ onMounted(() => {
       <ProfilerTab v-else-if="activeTab === 'profiler' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <JfrTab v-else-if="activeTab === 'jfr' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <ChangeRecordsTab v-else-if="activeTab === 'record' && instanceDetail" :instance-id="instanceDetail.instanceId" />
-      <NCard v-else size="small">
+      <NCard v-else size="small" class="id-card">
         <NEmpty description="功能开发中...">
           <template #icon>
-            <SvgIcon icon="mdi:tools" class="text-4xl" />
+            <SvgIcon icon="lucide:construction" class="text-4xl" />
           </template>
         </NEmpty>
       </NCard>
@@ -116,4 +208,85 @@ onMounted(() => {
   </AppPage>
 </template>
 
-<style scoped></style>
+<style lang="scss">
+@use '../instance_detail/styles/instance-detail.scss';
+
+.tab-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.tab-nav-separator {
+  width: 1px;
+  height: 24px;
+  background-color: var(--n-border-color);
+  margin: 0 8px;
+  flex-shrink: 0;
+}
+
+.tab-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tab-nav-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--n-text-color-disabled);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-left: 8px;
+}
+
+.tab-nav-items {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tab-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--n-text-color-disabled);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: none;
+  outline: none;
+  position: relative;
+
+  &:hover {
+    color: var(--n-text-color);
+    background-color: var(--n-color-target);
+  }
+}
+
+.tab-nav-item-active {
+  color: rgb(var(--primary-color));
+  background-color: rgba(var(--primary-color), 0.08);
+  font-weight: 600;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    border-radius: 1px;
+    background-color: rgb(var(--primary-color));
+  }
+
+  &:hover {
+    background-color: rgba(var(--primary-color), 0.12);
+  }
+}
+</style>
