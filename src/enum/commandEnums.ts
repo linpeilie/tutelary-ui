@@ -28,6 +28,7 @@ export const commandEnum = Object.freeze({
   RETRANSFORM_HISTORY: EnumItem.of(200034, 'RetransformHistory'),
   RETRANSFORM_DETAIL: EnumItem.of(200035, 'RetransformDetail'),
   RETRANSFORM_REVERT: EnumItem.of(200036, 'RetransformRevert'),
+  TRACE_TASK_LIST: EnumItem.of(200037, 'TraceTaskList'),
 
   ENHANCE_AFFECT: EnumItem.of(210001, 'EnhanceAffect'),
   ENHANCE_COMPLETE: EnumItem.of(210002, 'EnhanceComplete'),

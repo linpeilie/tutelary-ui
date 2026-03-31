@@ -243,3 +243,11 @@ export function fetchRetransformRevertCommand(data: CommandCreateRequest<{ quali
     data
   });
 }
+
+export function fetchTraceTaskListCommand(data: CommandCreateRequest<Record<string, never>>) {
+  return request<Api.Instance.Command.CommandTaskResponse>({
+    url: `/command/creation/traceTaskList`,
+    method: 'post',
+    data
+  });
+}

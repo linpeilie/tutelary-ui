@@ -146,6 +146,11 @@ export const commandRouterConfig: CommandEventMapping[] = [
     eventName: 'command:retransform-revert',
     description: '还原热更新类'
   },
+  {
+    code: commandEnum.TRACE_TASK_LIST.value as number,
+    eventName: 'command:trace-task-list',
+    description: 'Trace 任务列表'
+  },
 
   // 概览命令
   {

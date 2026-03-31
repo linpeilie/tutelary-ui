@@ -16,13 +16,15 @@ import {
   NTag
 } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
-import { fetchTraceCommand } from '@/service/api/instance';
+import { fetchTraceCommand, fetchTraceTaskListCommand } from '@/service/api/instance';
 import eventbus from '@/utils/eventbus';
 import { div4Round } from '@/utils/math';
 import { commandEnum } from '@/enum/commandEnums';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { TraceResponse } from '@/proto/command/result/TraceResponse';
 import type { TraceNode } from '@/proto/command/domain/TraceNode';
+import type { TraceTaskRecord } from '@/proto/command/domain/TraceTaskRecord';
+import type { TraceTaskListResponse } from '@/proto/command/result/TraceTaskListResponse';
 import type { EnhanceCommandComplete } from '@/proto/command/result/EnhanceCommandComplete';
 import type { TraceRequest } from '@/proto/command/param/TraceRequest';
 import CommandCreateRequest = Api.Instance.Command.CommandCreateRequest;
@@ -177,6 +179,14 @@ function handleTraceResult(data: CommandExecuteResponse<TraceResponse>) {
     const traceResponse = data.data as TraceResponse;
     traceResults.value.push(traceResponse);
     capturedCount.value = traceResponse.currentTimes || traceResults.value.length;
+
+    // 实时更新 running tasks 中的 currentTimes
+    if (data.taskId) {
+      const task = runningTasks.value.find(t => t.taskId === data.taskId);
+      if (task) {
+        task.currentTimes = traceResponse.currentTimes || task.currentTimes + 1;
+      }
+    }
   }
 }
 
@@ -194,17 +204,21 @@ function handleEnhanceComplete(data: CommandExecuteResponse<EnhanceCommandComple
   if (isTraceComplete) {
     isTracing.value = false;
     window.$message?.success(`追踪完成! 已捕获 ${capturedCount.value} 条调用记录`);
+    loadTraceTaskList();
   }
 }
 
 onMounted(() => {
   eventbus.on('command:trace', handleTraceResult);
   eventbus.on('command:enhance-complete', handleEnhanceComplete);
+  eventbus.on('command:trace-task-list', handleTraceTaskListResult);
+  loadTraceTaskList();
 });
 
 onUnmounted(() => {
   eventbus.off('command:trace', handleTraceResult);
   eventbus.off('command:enhance-complete', handleEnhanceComplete);
+  eventbus.off('command:trace-task-list', handleTraceTaskListResult);
 });
 
 // 开始追踪
@@ -278,6 +292,39 @@ const handleClear = () => {
   capturedCount.value = 0;
   window.$message?.success('已清空追踪结果');
 };
+
+// ========== Trace 任务记录 ==========
+const runningTasks = ref<TraceTaskRecord[]>([]);
+const recentTasks = ref<TraceTaskRecord[]>([]);
+const isTaskListLoading = ref(false);
+
+function loadTraceTaskList() {
+  isTaskListLoading.value = true;
+  fetchTraceTaskListCommand({
+    instanceId: props.instanceId,
+    param: {}
+  }).catch(() => {
+    isTaskListLoading.value = false;
+  });
+}
+
+function handleTraceTaskListResult(data: CommandExecuteResponse<TraceTaskListResponse>) {
+  isTaskListLoading.value = false;
+  const resp = data.data as TraceTaskListResponse | undefined;
+  if (!resp || resp.state === 0) return;
+  runningTasks.value = resp.runningTasks || [];
+  recentTasks.value = resp.recentTasks || [];
+}
+
+function formatTaskTime(timestamp: number) {
+  if (!timestamp) return '-';
+  return new Date(timestamp).toLocaleString('zh-CN');
+}
+
+function taskProgress(task: TraceTaskRecord) {
+  if (task.times === 0) return 0;
+  return Math.round((task.currentTimes / task.times) * 100);
+}
 </script>
 
 <template>
@@ -357,6 +404,90 @@ const handleClear = () => {
         </div>
       </NForm>
     </NCard>
+
+    <!-- Trace 任务记录 -->
+    <div v-if="runningTasks.length > 0 || recentTasks.length > 0" class="grid grid-cols-1 mb-6 gap-16px lg:grid-cols-2">
+      <!-- 进行中的任务 -->
+      <NCard size="small" class="task-card task-card--running">
+        <div class="mb-12px flex items-center gap-8px">
+          <div class="status-dot" />
+          <span class="text-13px font-semibold">进行中的追踪</span>
+          <NTag size="small" type="success" :bordered="false">{{ runningTasks.length }}</NTag>
+        </div>
+
+        <NEmpty
+          v-if="runningTasks.length === 0"
+          description="当前没有进行中的追踪任务"
+          size="small"
+          class="py-16px"
+          :show-icon="false"
+        />
+
+        <div v-else class="space-y-8px">
+          <div v-for="task in runningTasks" :key="task.taskId" class="task-item task-item--running">
+            <div class="flex items-center justify-between">
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-13px font-medium">
+                  {{ task.qualifiedClassName }}
+                </div>
+                <div class="mt-2px text-11px text-gray-400">
+                  {{ task.methodNames.join(', ') }}() · {{ formatTaskTime(task.createTime) }}
+                </div>
+              </div>
+              <div class="ml-12px flex flex-shrink-0 items-center gap-8px">
+                <span class="text-12px font-mono">
+                  <span class="text-success font-semibold">{{ task.currentTimes }}</span>
+                  <span class="text-gray-500">/{{ task.times }}</span>
+                </span>
+              </div>
+            </div>
+            <NProgress
+              type="line"
+              :percentage="taskProgress(task)"
+              :show-indicator="false"
+              status="success"
+              class="mt-6px"
+              :height="3"
+            />
+          </div>
+        </div>
+      </NCard>
+
+      <!-- 最近完成的任务 -->
+      <NCard size="small" class="task-card task-card--recent">
+        <div class="mb-12px flex items-center gap-8px">
+          <div class="i-carbon-checkmark-filled text-14px text-gray-400" />
+          <span class="text-13px font-semibold">最近完成</span>
+          <NTag size="small" :bordered="false">{{ recentTasks.length }}</NTag>
+        </div>
+
+        <NEmpty
+          v-if="recentTasks.length === 0"
+          description="暂无最近完成的追踪任务"
+          size="small"
+          class="py-16px"
+          :show-icon="false"
+        />
+
+        <div v-else class="space-y-8px">
+          <div v-for="task in recentTasks" :key="task.taskId" class="task-item task-item--recent">
+            <div class="flex items-center justify-between">
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-13px text-gray-300">
+                  {{ task.qualifiedClassName }}
+                </div>
+                <div class="mt-2px text-11px text-gray-500">
+                  {{ task.methodNames.join(', ') }}() · {{ formatTaskTime(task.createTime) }}
+                </div>
+              </div>
+              <div class="ml-12px flex flex-shrink-0 items-center gap-8px">
+                <NTag size="tiny" :bordered="false">{{ task.currentTimes }}/{{ task.times }}</NTag>
+              </div>
+            </div>
+          </div>
+        </div>
+      </NCard>
+    </div>
 
     <!-- 追踪状态 -->
     <NCard v-if="isTracing" class="status-card mb-6">
@@ -818,5 +949,38 @@ const handleClear = () => {
 
 .node-time {
   font-weight: 600;
+}
+
+.task-card {
+  border-radius: 12px;
+}
+
+.task-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border-left: 3px solid transparent;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+}
+
+.task-item--running {
+  border-left-color: rgb(34, 197, 94);
+  background-color: rgba(34, 197, 94, 0.04);
+
+  &:hover {
+    background-color: rgba(34, 197, 94, 0.08);
+  }
+}
+
+.task-item--recent {
+  border-left-color: rgba(156, 163, 175, 0.4);
+  background-color: rgba(255, 255, 255, 0.02);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+  }
 }
 </style>
