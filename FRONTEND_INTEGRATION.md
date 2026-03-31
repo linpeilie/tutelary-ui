@@ -423,6 +423,7 @@ ws://{host}:{port}/api/ws?_tt={token}
 - `node: TraceNode`
 - `thread`
 - `tccl`
+- `currentTimes` — 当前执行次数（第几次捕获）
 
 ### 方法堆栈 `StackResponse`
 

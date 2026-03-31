@@ -11,13 +11,14 @@ export interface TraceResponse {
   node: TraceNode;
   thread: BaseThreadInfo;
   tccl: string;
+  currentTimes: number;
   jobId: number;
   state: number;
   message: string;
 }
 
 function createBaseTraceResponse(): TraceResponse {
-  return { finishTime: "", node: undefined, thread: undefined, tccl: "", jobId: 0, state: 0, message: "" };
+  return { finishTime: "", node: undefined as any, thread: undefined as any, tccl: "", currentTimes: 0, jobId: 0, state: 0, message: "" };
 }
 
 export const TraceResponse = {
@@ -34,14 +35,17 @@ export const TraceResponse = {
     if (message.tccl !== "") {
       writer.uint32(34).string(message.tccl);
     }
+    if (message.currentTimes !== 0) {
+      writer.uint32(40).int32(message.currentTimes);
+    }
     if (message.jobId !== 0) {
-      writer.uint32(40).int32(message.jobId);
+      writer.uint32(48).int32(message.jobId);
     }
     if (message.state !== 0) {
-      writer.uint32(48).int32(message.state);
+      writer.uint32(56).int32(message.state);
     }
     if (message.message !== "") {
-      writer.uint32(58).string(message.message);
+      writer.uint32(66).string(message.message);
     }
     return writer;
   },
@@ -86,17 +90,24 @@ export const TraceResponse = {
             break;
           }
 
-          message.jobId = reader.int32();
+          message.currentTimes = reader.int32();
           continue;
         case 6:
           if (tag !== 48) {
             break;
           }
 
-          message.state = reader.int32();
+          message.jobId = reader.int32();
           continue;
         case 7:
-          if (tag !== 58) {
+          if (tag !== 56) {
+            break;
+          }
+
+          message.state = reader.int32();
+          continue;
+        case 8:
+          if (tag !== 66) {
             break;
           }
 

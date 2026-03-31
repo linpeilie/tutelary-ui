@@ -18,11 +18,14 @@ import {
 import type { DataTableColumns } from 'naive-ui';
 import { fetchTraceCommand } from '@/service/api/instance';
 import eventbus from '@/utils/eventbus';
+import { div4Round } from '@/utils/math';
+import { commandEnum } from '@/enum/commandEnums';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { TraceResponse } from '@/proto/command/result/TraceResponse';
+import type { TraceNode } from '@/proto/command/domain/TraceNode';
+import type { EnhanceCommandComplete } from '@/proto/command/result/EnhanceCommandComplete';
 import type { TraceRequest } from '@/proto/command/param/TraceRequest';
 import CommandCreateRequest = Api.Instance.Command.CommandCreateRequest;
-import { div4Round } from '@/utils/math';
 
 // Props
 interface Props {
@@ -46,33 +49,19 @@ const formData = ref({
 const isTracing = ref(false);
 const capturedCount = ref(0);
 const totalCount = ref(10);
+const currentTaskId = ref('');
 const progress = computed(() => {
   if (totalCount.value === 0) return 0;
   return Math.round((capturedCount.value / totalCount.value) * 100);
 });
 
 // 追踪结果
-interface TraceResult {
-  index: number;
-  time: string;
-  duration: number;
-  depth: number;
-  className: string;
-  methodName: string;
-  traceTree: Array<{
-    name: string;
-    time: number;
-    depth: number;
-    color: string;
-  }>;
-}
-
 const traceResults = ref<TraceResponse[]>([]);
 const hasResults = computed(() => traceResults.value.length > 0);
 
 // 详情模态框
 const showDetailModal = ref(false);
-const selectedTrace = ref<TraceResult | null>(null);
+const selectedTrace = ref<TraceResponse | null>(null);
 
 // 获取耗时标签类型
 const getDurationTagType = (duration: number) => {
@@ -82,13 +71,39 @@ const getDurationTagType = (duration: number) => {
 };
 
 // 查看详情
-const handleViewDetail = (trace: TraceResult) => {
+const handleViewDetail = (trace: TraceResponse) => {
   selectedTrace.value = trace;
   showDetailModal.value = true;
 };
 
+// 递归渲染调用栈树为缩进列表
+function flattenTraceTree(node: TraceNode, depth: number = 0): Array<{ node: TraceNode; depth: number }> {
+  const result: Array<{ node: TraceNode; depth: number }> = [{ node, depth }];
+  if (node.children) {
+    for (const child of node.children) {
+      result.push(...flattenTraceTree(child, depth + 1));
+    }
+  }
+  return result;
+}
+
+// 获取树节点的耗时颜色
+function getNodeCostClass(nodeCost: number, rootCost: number): string {
+  if (rootCost === 0) return 'text-green-400';
+  const ratio = nodeCost / rootCost;
+  if (ratio > 0.3) return 'text-red-400';
+  if (ratio > 0.1) return 'text-yellow-400';
+  return 'text-green-400';
+}
+
 // 表格列配置
 const columns: DataTableColumns<TraceResponse> = [
+  {
+    title: '#',
+    key: 'index',
+    width: 60,
+    render: (_row: TraceResponse, rowIndex: number) => `${rowIndex + 1}`
+  },
   {
     title: '方法',
     key: 'method',
@@ -142,7 +157,7 @@ const columns: DataTableColumns<TraceResponse> = [
     key: 'actions',
     width: 120,
     align: 'center',
-    render: (row: TraceResult) => {
+    render: (row: TraceResponse) => {
       return h(
         NButton,
         {
@@ -156,18 +171,40 @@ const columns: DataTableColumns<TraceResponse> = [
   }
 ];
 
+// 处理 trace 结果
+function handleTraceResult(data: CommandExecuteResponse<TraceResponse>) {
+  if (data.data) {
+    const traceResponse = data.data as TraceResponse;
+    traceResults.value.push(traceResponse);
+    capturedCount.value = traceResponse.currentTimes || traceResults.value.length;
+  }
+}
+
+// 处理增强完成回调
+function handleEnhanceComplete(data: CommandExecuteResponse<EnhanceCommandComplete>) {
+  if (!isTracing.value) return;
+  const complete = data.data as EnhanceCommandComplete | undefined;
+  if (!complete) return;
+
+  // 匹配 trace 命令码，或匹配当前任务ID
+  const isTraceComplete =
+    complete.code === (commandEnum.TRACE_METHOD.value as number) ||
+    (currentTaskId.value && data.taskId === currentTaskId.value);
+
+  if (isTraceComplete) {
+    isTracing.value = false;
+    window.$message?.success(`追踪完成! 已捕获 ${capturedCount.value} 条调用记录`);
+  }
+}
+
 onMounted(() => {
-  eventbus.on('command:trace', (data: CommandExecuteResponse<TraceResponse>) => {
-    console.log('data', data);
-    if (data.data) {
-      const traceResponse = data.data as TraceResponse;
-      traceResults.value.push(traceResponse);
-    }
-  });
+  eventbus.on('command:trace', handleTraceResult);
+  eventbus.on('command:enhance-complete', handleEnhanceComplete);
 });
 
 onUnmounted(() => {
-  eventbus.off('command:trace');
+  eventbus.off('command:trace', handleTraceResult);
+  eventbus.off('command:enhance-complete', handleEnhanceComplete);
 });
 
 // 开始追踪
@@ -192,38 +229,14 @@ const handleStartTrace = async () => {
     }
   } as CommandCreateRequest<TraceRequest>;
 
-  fetchTraceCommand(params).catch(() => {
+  const { data: taskResponse, error } = await fetchTraceCommand(params);
+  if (error) {
     isTracing.value = false;
-  });
-
-  // // 模拟追踪过程
-  // const interval = setInterval(() => {
-  //   capturedCount.value++;
-  //
-  //   // 生成单条追踪结果
-  //   const time = new Date().toLocaleString('zh-CN');
-  //   const duration = Math.round(Math.random() * 500 + 10);
-  //   const depth = Math.floor(Math.random() * 5 + 3);
-  //   const traceTree = generateTraceTreeData(formData.value.className, formData.value.methodName, duration);
-  //
-  //   const result: TraceResult = {
-  //     index: capturedCount.value,
-  //     time,
-  //     duration,
-  //     depth,
-  //     className: formData.value.className,
-  //     methodName: formData.value.methodName,
-  //     traceTree
-  //   };
-  //
-  //   traceResults.value.push(result);
-  //
-  //   if (capturedCount.value >= totalCount.value) {
-  //     clearInterval(interval);
-  //     isTracing.value = false;
-  //     window.$message?.success(`追踪完成! 已捕获 ${totalCount.value} 条调用记录`);
-  //   }
-  // }, 200);
+    return;
+  }
+  if (taskResponse) {
+    currentTaskId.value = taskResponse.taskId || '';
+  }
 };
 
 // 停止追踪
@@ -433,26 +446,44 @@ const handleClear = () => {
           <NGrid :x-gap="12" :y-gap="8" :cols="2">
             <NGridItem>
               <div class="info-item">
-                <span class="info-label">序号:</span>
-                <span class="info-value">#{{ selectedTrace.index }}</span>
+                <span class="info-label">调用时间:</span>
+                <span class="info-value">{{ selectedTrace.finishTime }}</span>
               </div>
             </NGridItem>
             <NGridItem>
               <div class="info-item">
                 <span class="info-label">总耗时:</span>
-                <span class="info-value">{{ selectedTrace.duration }}ms</span>
+                <NTag
+                  :type="getDurationTagType(div4Round(selectedTrace.node.totalCost, 1000000, 0))"
+                  size="small"
+                  :bordered="false"
+                >
+                  {{ div4Round(selectedTrace.node.totalCost, 1000000, 0) }}ms
+                </NTag>
               </div>
             </NGridItem>
             <NGridItem>
               <div class="info-item">
                 <span class="info-label">类名:</span>
-                <span class="info-value">{{ selectedTrace.className }}</span>
+                <span class="info-value">{{ selectedTrace.node.className }}</span>
               </div>
             </NGridItem>
             <NGridItem>
               <div class="info-item">
                 <span class="info-label">方法:</span>
-                <span class="info-value">{{ selectedTrace.methodName }}()</span>
+                <span class="info-value">{{ selectedTrace.node.methodName }}()</span>
+              </div>
+            </NGridItem>
+            <NGridItem v-if="selectedTrace.thread">
+              <div class="info-item">
+                <span class="info-label">线程:</span>
+                <span class="info-value">{{ selectedTrace.thread.name }} (id={{ selectedTrace.thread.id }})</span>
+              </div>
+            </NGridItem>
+            <NGridItem v-if="selectedTrace.node.isThrow">
+              <div class="info-item">
+                <span class="info-label">异常:</span>
+                <NTag type="error" size="small" :bordered="false">抛出异常</NTag>
               </div>
             </NGridItem>
           </NGrid>
@@ -465,18 +496,19 @@ const handleClear = () => {
             调用栈树
           </h5>
           <div class="tree-content">
-            <div v-for="(node, index) in selectedTrace.traceTree" :key="index" class="tree-node">
-              <span :class="node.color" class="node-name">{{ node.name }}</span>
-              <span
-                :class="{
-                  'text-red-400': node.time > selectedTrace.duration * 0.3,
-                  'text-yellow-400':
-                    node.time > selectedTrace.duration * 0.1 && node.time <= selectedTrace.duration * 0.3,
-                  'text-green-400': node.time <= selectedTrace.duration * 0.1
-                }"
-                class="node-time"
-              >
-                {{ node.time }}ms
+            <div
+              v-for="(item, index) in flattenTraceTree(selectedTrace.node)"
+              :key="index"
+              class="tree-node"
+              :style="{ paddingLeft: `${item.depth * 20 + 8}px` }"
+            >
+              <span class="node-name" :class="{ 'text-red-400': item.node.isThrow }">
+                <span v-if="item.depth > 0" class="text-gray-500">{{ '└─ '.repeat(1) }}</span>
+                {{ item.node.className }}.{{ item.node.methodName }}()
+                <span v-if="item.node.line > 0" class="text-11px text-gray-500">:{{ item.node.line }}</span>
+              </span>
+              <span :class="getNodeCostClass(item.node.totalCost, selectedTrace.node.totalCost)" class="node-time">
+                {{ div4Round(item.node.totalCost, 1000000, 2) }}ms
               </span>
             </div>
           </div>
