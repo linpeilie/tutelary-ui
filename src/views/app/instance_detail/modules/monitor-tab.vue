@@ -14,8 +14,10 @@ import {
   useMessage
 } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
-import { fetchMonitorCommand } from '@/service/api/instance';
+import { cancelCommandTask, fetchMonitorCommand } from '@/service/api/instance';
 import eventBus from '@/utils/eventbus';
+import { commandEnum } from '@/enum/commandEnums';
+import EnhanceTaskRecords from '@/components/custom/enhance-task-records.vue';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { MonitorResponse } from '@/proto/command/result/MonitorResponse';
 
@@ -45,6 +47,7 @@ const message = useMessage();
 
 const monitorFormRef = ref();
 const isMonitoring = ref(false);
+const currentTaskId = ref('');
 
 const monitorConfig = ref({
   qualifiedClassName: '',
@@ -123,7 +126,7 @@ const columns: DataTableColumns<MonitorStats> = [
 ];
 
 // 开始监控
-function startMonitor() {
+async function startMonitor() {
   if (!monitorConfig.value.qualifiedClassName.trim()) {
     message.warning('请填写类名');
     return;
@@ -146,22 +149,32 @@ function startMonitor() {
     successRate: 100
   };
 
-  fetchMonitorCommand({
+  const { data: taskResponse, error } = await fetchMonitorCommand({
     instanceId: props.instanceId,
     param: {
       qualifiedClassName: monitorConfig.value.qualifiedClassName,
       methodName: monitorConfig.value.methodName,
       cycle: monitorConfig.value.cycle
     }
-  }).catch(() => {
-    isMonitoring.value = false;
   });
+
+  if (error) {
+    isMonitoring.value = false;
+    return;
+  }
+  if (taskResponse) {
+    currentTaskId.value = taskResponse.taskId || '';
+  }
 
   message.success('开始监控');
 }
 
 // 停止监控
-function stopMonitor() {
+async function stopMonitor() {
+  if (currentTaskId.value) {
+    await cancelCommandTask(props.instanceId, currentTaskId.value);
+    currentTaskId.value = '';
+  }
   isMonitoring.value = false;
   message.success('监控已停止');
 }
@@ -388,6 +401,14 @@ function clearResults() {
         </NGrid>
       </NForm>
     </NCard>
+
+    <!-- Monitor 任务记录 -->
+    <EnhanceTaskRecords
+      :instance-id="props.instanceId"
+      :command-code="commandEnum.MONITOR_METHOD.value as number"
+      running-label="进行中的监控"
+      recent-label="最近完成"
+    />
 
     <!-- 监控状态 -->
     <NCard v-show="isMonitoring" size="small">

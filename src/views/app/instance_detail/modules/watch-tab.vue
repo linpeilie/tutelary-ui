@@ -16,6 +16,8 @@ import {
 } from 'naive-ui';
 import { fetchWatchCommand } from '@/service/api/instance';
 import eventBus from '@/utils/eventbus';
+import { commandEnum } from '@/enum/commandEnums';
+import EnhanceTaskRecords from '@/components/custom/enhance-task-records.vue';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { WatchResponse } from '@/proto/command/result/WatchResponse';
 
@@ -349,6 +351,14 @@ function clearResults() {
         </NGrid>
       </NForm>
     </NCard>
+
+    <!-- Watch 任务记录 -->
+    <EnhanceTaskRecords
+      :instance-id="props.instanceId"
+      :command-code="commandEnum.WATCH_METHOD.value as number"
+      running-label="进行中的观察"
+      recent-label="最近完成"
+    />
 
     <!-- 观察状态 -->
     <NCard v-show="isWatching" size="small">

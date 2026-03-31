@@ -2,6 +2,8 @@
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { fetchStackCommand } from '@/service/api/instance';
 import eventBus from '@/utils/eventbus';
+import { commandEnum } from '@/enum/commandEnums';
+import EnhanceTaskRecords from '@/components/custom/enhance-task-records.vue';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { StackTraceNode } from '@/proto/command/domain/StackTraceNode';
 import type { EnhanceAffect } from '@/proto/command/result/EnhanceAffect';
@@ -469,6 +471,14 @@ onUnmounted(() => {
         </NGrid>
       </NForm>
     </NCard>
+
+    <!-- Stack 任务记录 -->
+    <EnhanceTaskRecords
+      :instance-id="props.instanceId"
+      :command-code="commandEnum.STACK_METHOD.value as number"
+      running-label="进行中的堆栈捕获"
+      recent-label="最近完成"
+    />
 
     <NCard v-show="isCapturing" :bordered="false" class="card-wrapper rounded-12px">
       <div class="flex-y-center justify-between">

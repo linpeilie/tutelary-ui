@@ -147,9 +147,9 @@ export const commandRouterConfig: CommandEventMapping[] = [
     description: '还原热更新类'
   },
   {
-    code: commandEnum.TRACE_TASK_LIST.value as number,
-    eventName: 'command:trace-task-list',
-    description: 'Trace 任务列表'
+    code: commandEnum.ENHANCE_TASK_LIST.value as number,
+    eventName: 'command:enhance-task-list',
+    description: '增强任务列表'
   },
 
   // 概览命令

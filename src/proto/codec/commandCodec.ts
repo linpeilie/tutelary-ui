@@ -11,7 +11,7 @@ import { RetransformResponse } from '@/proto/command/result/RetransformResponse'
 import { RetransformHistoryResponse } from '@/proto/command/result/RetransformHistoryResponse'
 import { RetransformDetailResponse } from '@/proto/command/result/RetransformDetailResponse'
 import { RetransformRevertResponse } from '@/proto/command/result/RetransformRevertResponse'
-import { TraceTaskListResponse } from '@/proto/command/result/TraceTaskListResponse'
+import { EnhanceTaskListResponse } from '@/proto/command/result/EnhanceTaskListResponse'
 import { SetVmOptionResponse } from '@/proto/command/result/SetVmOptionResponse'
 import { StackResponse } from '@/proto/command/result/StackResponse'
 import { ThreadDetail } from '@/proto/command/result/ThreadDetail'
@@ -107,8 +107,8 @@ export default {
     if (command === commandEnum.RETRANSFORM_REVERT.value)
       return RetransformRevertResponse.decode(unit8Array)
 
-    if (command === commandEnum.TRACE_TASK_LIST.value)
-      return TraceTaskListResponse.decode(unit8Array)
+    if (command === commandEnum.ENHANCE_TASK_LIST.value)
+      return EnhanceTaskListResponse.decode(unit8Array)
 
     if (command === commandEnum.JVM_MEMORY.value)
       return JvmMemoryResponse.decode(unit8Array)

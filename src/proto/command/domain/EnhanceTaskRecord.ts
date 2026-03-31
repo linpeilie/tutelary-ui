@@ -4,26 +4,26 @@ import _m0 from 'protobufjs/minimal'
 
 export const protobufPackage = ''
 
-export interface TraceTaskRecord {
+export interface EnhanceTaskRecord {
   taskId: string
+  commandCode: number
   qualifiedClassName: string
   methodNames: string[]
   times: number
   currentTimes: number
-  cost: number
   status: number
   createTime: number
 }
 
-function createBaseTraceTaskRecord(): TraceTaskRecord {
-  return { taskId: '', qualifiedClassName: '', methodNames: [], times: 0, currentTimes: 0, cost: 0, status: 0, createTime: 0 }
+function createBaseEnhanceTaskRecord(): EnhanceTaskRecord {
+  return { taskId: '', commandCode: 0, qualifiedClassName: '', methodNames: [], times: 0, currentTimes: 0, status: 0, createTime: 0 }
 }
 
-export const TraceTaskRecord = {
-  decode(input: _m0.Reader | Uint8Array, length?: number): TraceTaskRecord {
+export const EnhanceTaskRecord = {
+  decode(input: _m0.Reader | Uint8Array, length?: number): EnhanceTaskRecord {
     const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     const end = length === undefined ? reader.len : reader.pos + length
-    const message = createBaseTraceTaskRecord()
+    const message = createBaseEnhanceTaskRecord()
     while (reader.pos < end) {
       const tag = reader.uint32()
       switch (tag >>> 3) {
@@ -33,29 +33,29 @@ export const TraceTaskRecord = {
           message.taskId = reader.string()
           continue
         case 2:
-          if (tag !== 18)
+          if (tag !== 16)
             break
-          message.qualifiedClassName = reader.string()
+          message.commandCode = reader.int32()
           continue
         case 3:
           if (tag !== 26)
             break
-          message.methodNames.push(reader.string())
+          message.qualifiedClassName = reader.string()
           continue
         case 4:
-          if (tag !== 32)
+          if (tag !== 34)
             break
-          message.times = reader.int32()
+          message.methodNames.push(reader.string())
           continue
         case 5:
           if (tag !== 40)
             break
-          message.currentTimes = reader.int32()
+          message.times = reader.int32()
           continue
         case 6:
           if (tag !== 48)
             break
-          message.cost = reader.int32()
+          message.currentTimes = reader.int32()
           continue
         case 7:
           if (tag !== 56)

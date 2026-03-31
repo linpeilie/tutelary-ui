@@ -302,7 +302,8 @@ ws://{host}:{port}/api/ws?_tt={token}
 | `POST /api/command/creation/retransformHistory` | `200034` | `NoneParamRequest` | 无 | `200034 -> RetransformHistoryResponse` |
 | `POST /api/command/creation/retransformDetail` | `200035` | `RetransformDetailRequest` | `qualifiedClassName` | `200035 -> RetransformDetailResponse` |
 | `POST /api/command/creation/retransformRevert` | `200036` | `RetransformRevertRequest` | `qualifiedClassName` | `200036 -> RetransformRevertResponse` |
-| `POST /api/command/creation/traceTaskList` | `200037` | `NoneParamRequest` | 无 | `200037 -> TraceTaskListResponse` |
+| `POST /api/command/creation/traceTaskList` | `200037` | `NoneParamRequest` | 无 | `200037 -> EnhanceTaskListResponse`（所有增强任务的进行中+最近完成记录） |
+| `POST /api/command/creation/cancelTask` | — | `instanceId`, `taskId` (query params) | — | 取消正在执行的命令任务 |
 
 补充说明：
 

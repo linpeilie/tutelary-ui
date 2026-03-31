@@ -26,7 +26,7 @@ import type { JfrStopResponse } from '@/proto/command/result/JfrStopResponse';
 import type { RetransformHistoryResponse } from '@/proto/command/result/RetransformHistoryResponse';
 import type { RetransformDetailResponse } from '@/proto/command/result/RetransformDetailResponse';
 import type { RetransformRevertResponse } from '@/proto/command/result/RetransformRevertResponse';
-import type { TraceTaskListResponse } from '@/proto/command/result/TraceTaskListResponse';
+import type { EnhanceTaskListResponse } from '@/proto/command/result/EnhanceTaskListResponse';
 import type { WebSocketStatusEnum } from '../ws/WebSocketStatusEnum';
 import { EventBus } from './EventBus';
 
@@ -79,7 +79,7 @@ export interface GlobalEvents {
   'command:retransform-history': CommandExecuteResponse<RetransformHistoryResponse>; // 热更新历史
   'command:retransform-detail': CommandExecuteResponse<RetransformDetailResponse>; // 热更新类详情
   'command:retransform-revert': CommandExecuteResponse<RetransformRevertResponse>; // 还原热更新类
-  'command:trace-task-list': CommandExecuteResponse<TraceTaskListResponse>; // Trace 任务列表
+  'command:enhance-task-list': CommandExecuteResponse<EnhanceTaskListResponse>; // 增强任务列表
 
   // 概览命令
   'command:overview': CommandExecuteResponse<Overview>; // 概览

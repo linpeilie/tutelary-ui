@@ -1,38 +1,38 @@
 /* eslint-disable */
 import _m0 from 'protobufjs/minimal'
-import { TraceTaskRecord } from '../domain/TraceTaskRecord'
+import { EnhanceTaskRecord } from '../domain/EnhanceTaskRecord'
 
 export const protobufPackage = ''
 
-export interface TraceTaskListResponse {
-  runningTasks: TraceTaskRecord[]
-  recentTasks: TraceTaskRecord[]
+export interface EnhanceTaskListResponse {
+  runningTasks: EnhanceTaskRecord[]
+  recentTasks: EnhanceTaskRecord[]
   jobId: number
   state: number
   message: string
 }
 
-function createBaseTraceTaskListResponse(): TraceTaskListResponse {
+function createBaseEnhanceTaskListResponse(): EnhanceTaskListResponse {
   return { runningTasks: [], recentTasks: [], jobId: 0, state: 0, message: '' }
 }
 
-export const TraceTaskListResponse = {
-  decode(input: _m0.Reader | Uint8Array, length?: number): TraceTaskListResponse {
+export const EnhanceTaskListResponse = {
+  decode(input: _m0.Reader | Uint8Array, length?: number): EnhanceTaskListResponse {
     const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input)
     const end = length === undefined ? reader.len : reader.pos + length
-    const message = createBaseTraceTaskListResponse()
+    const message = createBaseEnhanceTaskListResponse()
     while (reader.pos < end) {
       const tag = reader.uint32()
       switch (tag >>> 3) {
         case 1:
           if (tag !== 10)
             break
-          message.runningTasks.push(TraceTaskRecord.decode(reader, reader.uint32()))
+          message.runningTasks.push(EnhanceTaskRecord.decode(reader, reader.uint32()))
           continue
         case 2:
           if (tag !== 18)
             break
-          message.recentTasks.push(TraceTaskRecord.decode(reader, reader.uint32()))
+          message.recentTasks.push(EnhanceTaskRecord.decode(reader, reader.uint32()))
           continue
         case 3:
           if (tag !== 24)
