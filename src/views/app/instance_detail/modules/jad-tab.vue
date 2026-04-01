@@ -456,7 +456,7 @@ onUnmounted(() => {
 <template>
   <div class="jad-tab">
     <!-- 反编译表单 -->
-    <NCard size="small" class="card mb-6">
+    <NCard size="small" class="id-card mb-6">
       <div class="mb-4 flex items-center gap-2">
         <SvgIcon icon="mdi:code-tags" class="h-5 w-5 text-primary" />
         <h4 class="text-sm font-semibold">反编译配置</h4>
@@ -508,7 +508,7 @@ onUnmounted(() => {
     </NCard>
 
     <!-- 反编译历史记录 -->
-    <NCard size="small" class="card mb-6">
+    <NCard size="small" class="id-card mb-6">
       <div class="mb-4 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <SvgIcon icon="mdi:history" class="h-4 w-4 text-purple-500" />
@@ -543,16 +543,15 @@ onUnmounted(() => {
     </NCard>
 
     <!-- 生效中的热更新历史 -->
-    <NCard size="small" class="card mb-6">
+    <NCard size="small" class="id-card mb-6">
       <div class="mb-4 flex items-center gap-2">
         <SvgIcon icon="mdi:git-commit" class="h-4 w-4 text-orange-500" />
         <h4 class="text-sm font-semibold">生效中的热更新历史</h4>
         <NTag size="small" :bordered="false">{{ hotswapHistory.length }} 个类</NTag>
       </div>
 
-      <div v-if="isHistoryLoading" class="py-8 text-center">
-        <NSpin size="small" />
-        <div class="mt-3 text-xs text-gray-400">正在获取 agent 热更新历史...</div>
+      <div v-if="isHistoryLoading" class="py-8">
+        <NSkeleton text :repeat="3" round />
       </div>
 
       <NEmpty
@@ -567,7 +566,7 @@ onUnmounted(() => {
         <div
           v-for="record in hotswapHistory"
           :key="record.className"
-          class="history-record flex items-center justify-between border-1 border-gray rounded-lg p-3"
+          class="id-history-record flex items-center justify-between border-1 border-gray rounded-lg p-3"
         >
           <div class="flex items-center gap-3">
             <SvgIcon icon="mdi:check-circle" class="h-5 w-5 text-success" />
@@ -601,7 +600,7 @@ onUnmounted(() => {
     </NCard>
 
     <!-- 反编译结果 -->
-    <NCard size="small" class="card">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
@@ -683,10 +682,8 @@ onUnmounted(() => {
       </NEmpty>
 
       <!-- 加载状态 -->
-      <div v-if="isLoading" class="py-12 text-center">
-        <NSpin size="large" />
-        <div class="mt-4 text-sm text-gray-300 font-semibold">正在反编译...</div>
-        <div class="text-xs text-gray-500">请稍候</div>
+      <div v-if="isLoading" class="py-8">
+        <NSkeleton text :repeat="12" round />
       </div>
 
       <!-- 代码展示区 -->
@@ -749,21 +746,9 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .jad-tab {
   padding: 0;
-}
-
-.card {
-  border-radius: 12px;
-}
-
-.history-record {
-  transition: all 0.2s;
-
-  &:hover {
-    background-color: rgba(var(--n-color-target-rgb), 0.3);
-  }
 }
 
 .diff-container {
@@ -776,26 +761,6 @@ onUnmounted(() => {
   :deep(.cm-editor) {
     font-size: 12px;
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  }
-}
-
-.code-content {
-  padding: 24px;
-  font-size: 12px;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  line-height: 1.6;
-  color: var(--n-text-color);
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-:deep(.code-editor) {
-  .n-input__textarea-el {
-    font-size: 12px;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    line-height: 1.6;
-    background-color: rgba(0, 0, 0, 0.2);
   }
 }
 </style>

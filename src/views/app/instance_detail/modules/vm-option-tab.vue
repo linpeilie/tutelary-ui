@@ -291,18 +291,18 @@ onUnmounted(() => {
 <template>
   <div class="vm-option-container">
     <!-- VM 选项列表 -->
-    <NCard class="table-card">
+    <NCard class="id-table-card">
       <template #header>
-        <div class="table-header">
-          <div class="table-title">
-            <div class="i-carbon-list text-16px text-blue-500" />
+        <div class="id-table-header">
+          <div class="id-table-title">
+            <SvgIcon icon="lucide:list" class="text-16px text-primary" />
             <span>VM 选项列表</span>
           </div>
-          <div class="table-actions">
+          <div class="id-table-actions">
             <!-- 搜索 -->
             <NInput v-model:value="searchText" placeholder="搜索选项名称..." clearable style="width: 240px">
               <template #prefix>
-                <div class="i-carbon-search text-14px" />
+                <SvgIcon icon="lucide:search" class="text-14px" />
               </template>
             </NInput>
 
@@ -318,7 +318,7 @@ onUnmounted(() => {
             <!-- 导出 -->
             <NButton @click="handleExport">
               <template #icon>
-                <div class="i-carbon-download" />
+                <SvgIcon icon="lucide:download" />
               </template>
               导出
             </NButton>
@@ -326,7 +326,7 @@ onUnmounted(() => {
             <!-- 刷新 -->
             <NButton type="primary" :loading="loading" @click="handleRefresh">
               <template #icon>
-                <div class="i-carbon-renew" />
+                <SvgIcon icon="lucide:refresh-cw" />
               </template>
               刷新
             </NButton>
@@ -334,14 +334,16 @@ onUnmounted(() => {
         </div>
       </template>
 
+      <NSkeleton v-if="loading && filteredData.length === 0" text :repeat="8" round />
       <NDataTable
+        v-else
         :columns="columns"
         :data="filteredData"
         :pagination="pagination"
         :bordered="false"
         :single-line="false"
         :loading="loading"
-        class="vm-option-table"
+        class="id-mono-table"
       />
     </NCard>
 
@@ -352,7 +354,7 @@ onUnmounted(() => {
           <NInput :value="editForm.name" readonly />
         </NFormItem>
         <NFormItem label="当前值">
-          <div class="current-value">{{ editForm.currentValue }}</div>
+          <div class="id-current-value">{{ editForm.currentValue }}</div>
         </NFormItem>
         <NFormItem label="新值" required>
           <NInput v-model:value="editForm.newValue" placeholder="输入新值" />
@@ -363,7 +365,7 @@ onUnmounted(() => {
       </NForm>
 
       <template #footer>
-        <div class="modal-footer">
+        <div class="id-modal-footer">
           <NButton @click="showEditModal = false">取消</NButton>
           <NButton type="primary" :loading="submitting" @click="handleSubmitEdit">确认修改</NButton>
         </div>
@@ -372,142 +374,8 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .vm-option-container {
-  padding: 16px;
-}
-
-.stat-card {
-  border-radius: 12px;
-
-  :deep(.n-card__content) {
-    padding: 16px;
-  }
-}
-
-.stat-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.stat-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: var(--n-text-color-3);
-  margin-bottom: 4px;
-}
-
-.stat-value {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--n-text-color-1);
-}
-
-.category-card {
-  border-radius: 12px;
-
-  :deep(.n-card__content) {
-    padding: 20px;
-  }
-}
-
-.category-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.category-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--n-text-color-1);
-  margin: 0;
-}
-
-.category-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.table-card {
-  border-radius: 12px;
-
-  :deep(.n-card-header) {
-    padding: 20px 20px 16px;
-    border-bottom: 1px solid var(--n-border-color);
-  }
-
-  :deep(.n-card__content) {
-    padding: 0;
-  }
-}
-
-.table-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.table-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--n-text-color-1);
-}
-
-.table-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.vm-option-table {
-  :deep(.n-data-table-th) {
-    font-size: 12px;
-    font-weight: 500;
-    background-color: var(--n-th-color);
-  }
-
-  :deep(.n-data-table-td) {
-    font-size: 12px;
-    font-family: 'Consolas', 'Monaco', monospace;
-  }
-
-  :deep(.n-data-table-tr:hover) {
-    background-color: var(--n-td-color-hover);
-  }
-}
-
-.current-value {
-  padding: 8px 12px;
-  background-color: var(--n-color-modal);
-  border: 1px solid var(--n-border-color);
-  border-radius: 3px;
-  font-size: 12px;
-  font-family: 'Consolas', 'Monaco', monospace;
-  color: var(--n-text-color-1);
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+  padding: 0;
 }
 </style>

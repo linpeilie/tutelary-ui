@@ -257,7 +257,7 @@ const formatTime = (date: Date) => {
 <template>
   <div class="h-full flex flex-col gap-16px">
     <!-- Profiler 配置表单 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center gap-8px">
           <SvgIcon icon="lucide:flame" class="text-16px text-error" />
@@ -377,8 +377,8 @@ const formatTime = (date: Date) => {
     <!-- 采样状态 -->
     <NCard v-if="activeProfiling" size="small" class="border-error/30 bg-error/5">
       <div class="flex items-center gap-16px">
-        <div class="flex items-center gap-8px">
-          <div class="h-12px w-12px animate-pulse rounded-full bg-error" />
+        <div class="id-status-indicator">
+          <div class="id-status-dot bg-error" />
           <span class="text-14px">正在采样...</span>
         </div>
         <div class="text-14px text-gray">
@@ -395,7 +395,7 @@ const formatTime = (date: Date) => {
 
     <!-- 采样统计 -->
     <div v-if="sessions.length > 0" class="grid grid-cols-1 gap-16px lg:grid-cols-3">
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="总会话数" :value="stats.totalSessions">
           <template #prefix>
             <SvgIcon icon="lucide:activity" class="text-error" />
@@ -403,7 +403,7 @@ const formatTime = (date: Date) => {
         </NStatistic>
       </NCard>
 
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="运行中" :value="stats.running">
           <template #prefix>
             <SvgIcon icon="lucide:play-circle" class="text-success" />
@@ -411,7 +411,7 @@ const formatTime = (date: Date) => {
         </NStatistic>
       </NCard>
 
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="已完成" :value="stats.completed">
           <template #prefix>
             <SvgIcon icon="lucide:check-circle" class="text-info" />
@@ -421,7 +421,7 @@ const formatTime = (date: Date) => {
     </div>
 
     <!-- 会话历史 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center justify-between">
           <div class="flex-y-center gap-8px">

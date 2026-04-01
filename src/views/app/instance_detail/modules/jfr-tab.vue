@@ -305,7 +305,7 @@ const formatTime = (date: Date) => {
   <div class="h-full flex flex-col gap-16px">
     <!-- 状态卡片 -->
     <div class="grid grid-cols-1 gap-16px lg:grid-cols-3">
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="JFR状态" :value="jfrStatus">
           <template #prefix>
             <SvgIcon icon="lucide:radio" class="text-info" />
@@ -313,7 +313,7 @@ const formatTime = (date: Date) => {
         </NStatistic>
       </NCard>
 
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="活动录制" :value="stats.activeCount">
           <template #prefix>
             <SvgIcon icon="lucide:play-circle" class="text-success" />
@@ -321,7 +321,7 @@ const formatTime = (date: Date) => {
         </NStatistic>
       </NCard>
 
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="总录制次数" :value="stats.totalCount">
           <template #prefix>
             <SvgIcon icon="lucide:database" class="text-purple" />
@@ -331,7 +331,7 @@ const formatTime = (date: Date) => {
     </div>
 
     <!-- 快速操作 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center gap-8px">
           <SvgIcon icon="lucide:zap" class="text-16px text-info" />
@@ -364,7 +364,7 @@ const formatTime = (date: Date) => {
     </NCard>
 
     <!-- 自定义录制配置 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center gap-8px">
           <SvgIcon icon="lucide:settings" class="text-16px text-info" />
@@ -429,7 +429,7 @@ const formatTime = (date: Date) => {
     </NCard>
 
     <!-- 录制列表 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center justify-between">
           <div class="flex-y-center gap-8px">
@@ -516,7 +516,7 @@ const formatTime = (date: Date) => {
     </NCard>
 
     <!-- 事件类型说明 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center justify-between">
           <div class="flex-y-center gap-8px">

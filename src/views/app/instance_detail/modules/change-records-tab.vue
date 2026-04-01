@@ -503,7 +503,7 @@ onMounted(() => {
   <div class="h-full flex flex-col gap-16px">
     <!-- 统计卡片 -->
     <div class="grid grid-cols-1 gap-16px md:grid-cols-5">
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="总变更数" :value="stats.total">
           <template #prefix>
             <SvgIcon icon="lucide:database" class="text-purple" />
@@ -512,7 +512,7 @@ onMounted(() => {
         <div class="mt-4px text-12px text-gray">所有类型变更记录</div>
       </NCard>
 
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="增强任务" :value="stats.enhanced">
           <template #prefix>
             <SvgIcon icon="lucide:zap" class="text-info" />
@@ -521,7 +521,7 @@ onMounted(() => {
         <div class="mt-4px text-12px text-gray">Trace/Watch/Monitor等</div>
       </NCard>
 
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="配置变更" :value="stats.config">
           <template #prefix>
             <SvgIcon icon="lucide:settings" class="text-warning" />
@@ -530,7 +530,7 @@ onMounted(() => {
         <div class="mt-4px text-12px text-gray">Logger/VMOption等</div>
       </NCard>
 
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="代码变更" :value="stats.code">
           <template #prefix>
             <SvgIcon icon="lucide:code" class="text-success" />
@@ -539,7 +539,7 @@ onMounted(() => {
         <div class="mt-4px text-12px text-gray">HotSwap热更新</div>
       </NCard>
 
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="活跃变更" :value="stats.active">
           <template #prefix>
             <SvgIcon icon="lucide:activity" class="text-error" />
@@ -550,7 +550,7 @@ onMounted(() => {
     </div>
 
     <!-- 筛选和操作栏 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <div class="flex flex-col gap-16px md:flex-row md:items-center md:justify-between">
         <div class="flex flex-wrap items-center gap-8px">
           <NButton :type="activeFilter === 'all' ? 'primary' : 'default'" size="small" @click="setFilter('all')">
@@ -594,7 +594,7 @@ onMounted(() => {
     </NCard>
 
     <!-- 变更记录表格 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <div v-if="filteredRecords.length === 0" class="py-48px text-center text-gray">
         <div class="mb-12px flex justify-center">
           <SvgIcon icon="lucide:inbox" class="text-48px opacity-50" />

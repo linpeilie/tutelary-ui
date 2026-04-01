@@ -383,7 +383,7 @@ onUnmounted(() => {
         <!-- SC - Search Class -->
         <div v-show="currentMode === 'sc'" class="flex flex-col gap-16px">
           <!-- 搜索表单 -->
-          <NCard size="small">
+          <NCard size="small" class="id-card">
             <template #header>
               <div class="flex-y-center gap-8px">
                 <SvgIcon icon="lucide:search" class="text-16px text-primary" />
@@ -443,7 +443,7 @@ onUnmounted(() => {
           </NCard>
 
           <!-- 搜索结果 -->
-          <NCard size="small">
+          <NCard size="small" class="id-card">
             <template #header>
               <div class="flex-y-center justify-between">
                 <div class="flex-y-center gap-8px">
@@ -462,7 +462,8 @@ onUnmounted(() => {
               </div>
             </template>
 
-            <div v-if="scResults.length === 0" class="py-48px text-center text-gray">
+            <NSkeleton v-if="scLoading" text :repeat="5" round />
+            <div v-else-if="scResults.length === 0" class="py-48px text-center text-gray">
               <div class="mb-12px flex justify-center">
                 <SvgIcon icon="lucide:inbox" class="text-48px opacity-50" />
               </div>
@@ -536,7 +537,7 @@ onUnmounted(() => {
         <!-- SM - Search Method -->
         <div v-show="currentMode === 'sm'" class="flex flex-col gap-16px">
           <!-- 搜索表单 -->
-          <NCard size="small">
+          <NCard size="small" class="id-card">
             <template #header>
               <div class="flex-y-center gap-8px">
                 <SvgIcon icon="lucide:list" class="text-16px text-success" />
@@ -600,7 +601,7 @@ onUnmounted(() => {
           </NCard>
 
           <!-- 方法列表 -->
-          <NCard size="small">
+          <NCard size="small" class="id-card">
             <template #header>
               <div class="flex-y-center justify-between">
                 <div class="flex-y-center gap-8px">
@@ -619,7 +620,8 @@ onUnmounted(() => {
               </div>
             </template>
 
-            <div v-if="smResults.length === 0" class="py-48px text-center text-gray">
+            <NSkeleton v-if="smLoading" text :repeat="5" round />
+            <div v-else-if="smResults.length === 0" class="py-48px text-center text-gray">
               <div class="mb-12px flex justify-center">
                 <SvgIcon icon="lucide:inbox" class="text-48px opacity-50" />
               </div>
@@ -678,7 +680,7 @@ onUnmounted(() => {
         <!-- ClassLoader -->
         <div v-show="currentMode === 'classloader'" class="flex flex-col gap-16px">
           <!-- ClassLoader 树 -->
-          <NCard size="small">
+          <NCard size="small" class="id-card">
             <template #header>
               <div class="flex-y-center justify-between">
                 <div class="flex-y-center gap-8px">
@@ -694,7 +696,8 @@ onUnmounted(() => {
               </div>
             </template>
 
-            <div v-if="classLoaderTree.length === 0" class="py-48px text-center text-gray">
+            <NSkeleton v-if="clLoading" text :repeat="5" round />
+            <div v-else-if="classLoaderTree.length === 0" class="py-48px text-center text-gray">
               <div class="mb-12px flex justify-center">
                 <SvgIcon icon="lucide:folder-tree" class="text-48px opacity-50" />
               </div>

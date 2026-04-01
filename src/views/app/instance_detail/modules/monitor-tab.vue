@@ -301,7 +301,7 @@ function clearResults() {
 <template>
   <div class="flex flex-col gap-16px">
     <!-- Monitor 配置表单 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center gap-8px">
           <SvgIcon icon="lucide:activity" class="text-18px" />
@@ -411,11 +411,11 @@ function clearResults() {
     />
 
     <!-- 监控状态 -->
-    <NCard v-show="isMonitoring" size="small">
+    <NCard v-show="isMonitoring" size="small" class="id-card">
       <div class="flex-y-center justify-between">
         <div class="flex-y-center gap-16px">
-          <div class="flex-y-center gap-8px">
-            <div class="h-8px w-8px animate-pulse rounded-full bg-success"></div>
+          <div class="id-status-indicator">
+            <div class="id-status-dot bg-success"></div>
             <span class="text-14px">监控中...</span>
           </div>
           <div class="text-14px text-gray">
@@ -432,7 +432,7 @@ function clearResults() {
       <NGrid :cols="24" :x-gap="16" :y-gap="16">
         <!-- 总调用次数 -->
         <NGridItem :span="6">
-          <NCard size="small">
+          <NCard size="small" class="id-card">
             <NStatistic label="总调用次数" :value="currentStats.totalCount">
               <template #prefix>
                 <SvgIcon icon="lucide:hash" class="text-primary" />
@@ -449,7 +449,7 @@ function clearResults() {
 
         <!-- 平均耗时 -->
         <NGridItem :span="6">
-          <NCard size="small">
+          <NCard size="small" class="id-card">
             <NStatistic label="平均耗时" :value="currentStats.avgTime">
               <template #prefix>
                 <SvgIcon icon="lucide:trending-up" class="text-warning" />
@@ -464,7 +464,7 @@ function clearResults() {
 
         <!-- 最大耗时 -->
         <NGridItem :span="6">
-          <NCard size="small">
+          <NCard size="small" class="id-card">
             <NStatistic label="最大耗时" :value="currentStats.maxTime">
               <template #prefix>
                 <SvgIcon icon="lucide:arrow-up" class="text-error" />
@@ -479,7 +479,7 @@ function clearResults() {
 
         <!-- 成功率 -->
         <NGridItem :span="6">
-          <NCard size="small">
+          <NCard size="small" class="id-card">
             <NStatistic label="成功率" :value="currentStats.successRate.toFixed(2)">
               <template #prefix>
                 <SvgIcon icon="lucide:check-circle" class="text-success" />
@@ -497,7 +497,7 @@ function clearResults() {
       <NGrid :cols="24" :x-gap="16" :y-gap="16" class="mt-16px">
         <!-- QPS 趋势图 -->
         <NGridItem :span="12">
-          <NCard size="small">
+          <NCard size="small" class="id-card">
             <template #header>
               <div class="flex-y-center gap-8px">
                 <SvgIcon icon="lucide:bar-chart" class="text-primary" />
@@ -519,7 +519,7 @@ function clearResults() {
 
         <!-- 成功率图表 -->
         <NGridItem :span="12">
-          <NCard size="small">
+          <NCard size="small" class="id-card">
             <template #header>
               <div class="flex-y-center gap-8px">
                 <SvgIcon icon="lucide:pie-chart" class="text-success" />
@@ -550,7 +550,7 @@ function clearResults() {
     </div>
 
     <!-- 统计记录 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center justify-between">
           <div class="flex-y-center gap-8px">

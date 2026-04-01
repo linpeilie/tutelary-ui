@@ -291,11 +291,11 @@ const handleClear = () => {
 <template>
   <div class="trace-container">
     <!-- 追踪配置表单 -->
-    <NCard class="config-card mb-6">
-      <div class="config-header">
-        <div class="i-carbon-activity text-20px text-blue-500" />
-        <h4 class="config-title">方法追踪配置</h4>
-      </div>
+    <NCard class="id-card mb-6">
+      <h4 class="id-card-title-lg">
+        <SvgIcon icon="lucide:git-branch" class="text-20px text-primary" />
+        方法追踪配置
+      </h4>
 
       <NForm :model="formData" label-placement="top">
         <NGrid :x-gap="16" :y-gap="16" :cols="2">
@@ -337,28 +337,28 @@ const handleClear = () => {
         </NGrid>
 
         <!-- 操作按钮 -->
-        <div class="action-buttons">
+        <div class="id-action-buttons">
           <NButton v-if="!isTracing" type="primary" @click="handleStartTrace">
             <template #icon>
-              <div class="i-carbon-play" />
+              <SvgIcon icon="lucide:play" />
             </template>
             开始追踪
           </NButton>
           <NButton v-else type="error" @click="handleStopTrace">
             <template #icon>
-              <div class="i-carbon-stop" />
+              <SvgIcon icon="lucide:square" />
             </template>
             停止追踪
           </NButton>
           <NButton @click="handleLoadSample">
             <template #icon>
-              <div class="i-carbon-document-tasks" />
+              <SvgIcon icon="lucide:file-text" />
             </template>
             加载示例
           </NButton>
           <NButton @click="handleReset">
             <template #icon>
-              <div class="i-carbon-reset" />
+              <SvgIcon icon="lucide:rotate-ccw" />
             </template>
             重置
           </NButton>
@@ -376,48 +376,48 @@ const handleClear = () => {
     />
 
     <!-- 追踪状态 -->
-    <NCard v-if="isTracing" class="status-card mb-6">
-      <div class="status-content">
-        <div class="status-info">
-          <div class="status-indicator">
-            <div class="status-dot" />
-            <span class="status-text">追踪中...</span>
+    <NCard v-if="isTracing" class="id-card mb-6">
+      <div class="flex items-center justify-between gap-20px">
+        <div class="flex items-center gap-16px">
+          <div class="id-status-indicator">
+            <div class="id-status-dot bg-success" />
+            <span class="text-14px">追踪中...</span>
           </div>
-          <div class="status-count">
+          <div class="text-12px text-gray">
             已捕获:
-            <span class="count-current">{{ capturedCount }}</span>
+            <span class="font-600">{{ capturedCount }}</span>
             /
-            <span class="count-total">{{ totalCount }}</span>
+            <span class="font-600">{{ totalCount }}</span>
           </div>
         </div>
-        <div class="status-progress">
+        <div class="max-w-300px flex flex-1 items-center gap-12px">
           <NProgress type="line" :percentage="progress" :show-indicator="false" />
-          <span class="progress-text">{{ progress }}%</span>
+          <span class="min-w-40px text-12px text-gray">{{ progress }}%</span>
         </div>
       </div>
     </NCard>
 
     <!-- 追踪结果 -->
-    <NCard class="result-card">
+    <NCard class="id-table-card">
       <template #header>
-        <div class="result-header">
-          <div class="result-title">
-            <div class="i-carbon-tree-view text-16px text-green-500" />
+        <div class="id-table-header">
+          <div class="id-table-title">
+            <SvgIcon icon="lucide:list-tree" class="text-16px text-success" />
             <span>调用栈列表</span>
-            <span v-if="hasResults" class="result-info">
+            <span v-if="hasResults" class="text-12px text-gray font-normal">
               追踪: {{ traceResults[0].node.className }}.{{ traceResults[0].node.methodName }}()
             </span>
           </div>
-          <div class="result-actions">
+          <div class="id-table-actions">
             <NButton size="small" @click="handleExport">
               <template #icon>
-                <div class="i-carbon-download" />
+                <SvgIcon icon="lucide:download" />
               </template>
               导出
             </NButton>
             <NButton size="small" @click="handleClear">
               <template #icon>
-                <div class="i-carbon-trash-can" />
+                <SvgIcon icon="lucide:trash-2" />
               </template>
               清空
             </NButton>
@@ -426,10 +426,10 @@ const handleClear = () => {
       </template>
 
       <!-- 空状态 -->
-      <NEmpty v-if="!hasResults" description="暂无追踪数据" class="empty-state">
+      <NEmpty v-if="!hasResults" description="暂无追踪数据" class="id-empty-state">
         <template #icon>
-          <div class="empty-icon">
-            <div class="i-carbon-activity text-48px text-gray-600" />
+          <div class="id-empty-icon">
+            <SvgIcon icon="lucide:git-branch" class="text-48px text-gray-600" />
           </div>
         </template>
         <template #extra>
@@ -446,7 +446,7 @@ const handleClear = () => {
         :single-line="false"
         :max-height="500"
         :row-class-name="(row: TraceResponse) => (row.node.isThrow ? 'trace-row-error' : '')"
-        class="trace-table"
+        class="id-mono-table"
       />
     </NCard>
 
@@ -458,18 +458,18 @@ const handleClear = () => {
 
       <div v-if="selectedTrace" class="detail-content">
         <!-- 追踪信息 -->
-        <div class="trace-info">
-          <h5 class="info-title">追踪信息</h5>
+        <div class="id-detail-section">
+          <h5 class="id-detail-section-title">追踪信息</h5>
           <NGrid :x-gap="12" :y-gap="8" :cols="2">
             <NGridItem>
               <div class="info-item">
-                <span class="info-label">调用时间:</span>
-                <span class="info-value">{{ selectedTrace.finishTime }}</span>
+                <span class="id-detail-label">调用时间:</span>
+                <span class="id-detail-value font-mono">{{ selectedTrace.finishTime }}</span>
               </div>
             </NGridItem>
             <NGridItem>
               <div class="info-item">
-                <span class="info-label">总耗时:</span>
+                <span class="id-detail-label">总耗时:</span>
                 <NTag
                   :type="getDurationTagType(div4Round(selectedTrace.node.totalCost, 1000000, 0))"
                   size="small"
@@ -481,25 +481,27 @@ const handleClear = () => {
             </NGridItem>
             <NGridItem>
               <div class="info-item">
-                <span class="info-label">类名:</span>
-                <span class="info-value">{{ selectedTrace.node.className }}</span>
+                <span class="id-detail-label">类名:</span>
+                <span class="id-detail-value font-mono">{{ selectedTrace.node.className }}</span>
               </div>
             </NGridItem>
             <NGridItem>
               <div class="info-item">
-                <span class="info-label">方法:</span>
-                <span class="info-value">{{ selectedTrace.node.methodName }}()</span>
+                <span class="id-detail-label">方法:</span>
+                <span class="id-detail-value font-mono">{{ selectedTrace.node.methodName }}()</span>
               </div>
             </NGridItem>
             <NGridItem v-if="selectedTrace.thread">
               <div class="info-item">
-                <span class="info-label">线程:</span>
-                <span class="info-value">{{ selectedTrace.thread.name }} (id={{ selectedTrace.thread.id }})</span>
+                <span class="id-detail-label">线程:</span>
+                <span class="id-detail-value font-mono">
+                  {{ selectedTrace.thread.name }} (id={{ selectedTrace.thread.id }})
+                </span>
               </div>
             </NGridItem>
             <NGridItem v-if="selectedTrace.node.isThrow">
               <div class="info-item">
-                <span class="info-label">异常:</span>
+                <span class="id-detail-label">异常:</span>
                 <NTag type="error" size="small" :bordered="false">抛出异常</NTag>
               </div>
             </NGridItem>
@@ -535,199 +537,13 @@ const handleClear = () => {
   </div>
 </template>
 
-<style scoped lang="scss">
-.config-card {
-  border-radius: 12px;
-
-  :deep(.n-card__content) {
-    padding: 20px;
-  }
+<style lang="scss">
+.trace-container {
+  padding: 0;
 }
 
-.config-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.config-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--n-text-color-1);
-  margin: 0;
-}
-
-.advanced-section {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--n-border-color);
-}
-
-.advanced-toggle {
-  font-size: 12px;
-  color: var(--n-text-color-3);
-}
-
-.advanced-options {
-  margin-top: 12px;
-}
-
-.action-buttons {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 20px;
-  padding-top: 16px;
-}
-
-.status-card {
-  border-radius: 12px;
-
-  :deep(.n-card__content) {
-    padding: 20px;
-  }
-}
-
-.status-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.status-info {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.status-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  background-color: rgb(34, 197, 94);
-  border-radius: 50%;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.status-text {
-  font-size: 14px;
-  color: var(--n-text-color-1);
-}
-
-.status-count {
-  font-size: 12px;
-  color: var(--n-text-color-3);
-}
-
-.count-current,
-.count-total {
-  font-weight: 600;
-  color: var(--n-text-color-1);
-}
-
-.status-progress {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  max-width: 300px;
-}
-
-.progress-text {
-  font-size: 12px;
-  color: var(--n-text-color-3);
-  min-width: 40px;
-}
-
-.result-card {
-  border-radius: 12px;
-
-  :deep(.n-card-header) {
-    padding: 20px 20px 16px;
-    border-bottom: 1px solid var(--n-border-color);
-  }
-
-  :deep(.n-card__content) {
-    padding: 0;
-  }
-}
-
-.result-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.result-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--n-text-color-1);
-}
-
-.result-info {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--n-text-color-3);
-}
-
-.result-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.empty-state {
-  padding: 48px 0;
-}
-
-.empty-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 80px;
-  height: 80px;
-  margin: 0 auto;
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 50%;
-}
-
-.trace-table {
-  :deep(.n-data-table-th) {
-    font-size: 12px;
-    font-weight: 500;
-    background-color: var(--n-th-color);
-  }
-
-  :deep(.n-data-table-td) {
-    font-size: 12px;
-    font-family: 'Consolas', 'Monaco', monospace;
-  }
-
-  :deep(.n-data-table-tr:hover) {
-    background-color: var(--n-td-color-hover);
-  }
-
-  // 异常行样式
+// 异常行样式
+.id-mono-table {
   :deep(.trace-row-error) {
     background-color: rgba(239, 68, 68, 0.08);
     border-left: 3px solid rgb(239, 68, 68);
@@ -738,57 +554,10 @@ const handleClear = () => {
   }
 }
 
-// 方法名样式
-.method-with-error {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: rgb(239, 68, 68);
-  font-weight: 600;
-  cursor: help;
-}
-
-.method-error-icon {
-  flex-shrink: 0;
-  color: rgb(239, 68, 68);
-}
-
-.method-normal {
-  color: var(--n-text-color);
-}
-
 .detail-content {
   display: flex;
   flex-direction: column;
   gap: 20px;
-}
-
-.trace-info {
-  padding: 16px;
-  background-color: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
-}
-
-.info-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--n-text-color-1);
-  margin: 0 0 12px 0;
-}
-
-.info-item {
-  font-size: 12px;
-  display: flex;
-  gap: 8px;
-}
-
-.info-label {
-  color: var(--n-text-color-3);
-}
-
-.info-value {
-  color: var(--n-text-color-1);
-  font-family: 'Consolas', 'Monaco', monospace;
 }
 
 .trace-tree {
@@ -803,7 +572,7 @@ const handleClear = () => {
   gap: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--n-text-color-1);
+  color: var(--n-text-color);
   margin: 0 0 12px 0;
 }
 
@@ -825,7 +594,7 @@ const handleClear = () => {
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--n-color-target);
   }
 }
 

@@ -196,6 +196,11 @@ ws://{host}:{port}/api/ws?_tt={token}
 - `appName`
 - `registerDate`
 - `instanceNum`
+- `onlineInstanceNum`
+- `offlineInstanceNum`
+- `hostCount`
+- `jdkVersionCount`
+- `topJdkVersions: string[]`
 
 `AppDetailResponse` 在 `AppInfoResponse` 基础上额外包含：
 
@@ -219,6 +224,7 @@ ws://{host}:{port}/api/ws?_tt={token}
 - `ip`
 - `registerDate`
 - `state`：`1` 有效，`0` 无效
+- `online`：显式在线状态
 - `startTime`
 - `hostName`
 - `osName`

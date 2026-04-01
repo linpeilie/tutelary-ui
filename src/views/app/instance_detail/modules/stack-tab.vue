@@ -370,11 +370,11 @@ onUnmounted(() => {
 
 <template>
   <div class="space-y-16px">
-    <NCard :bordered="false" class="card-wrapper rounded-12px">
-      <div class="mb-16px flex-y-center gap-8px">
-        <div class="i-lucide:layers text-18px text-purple-500"></div>
-        <h4 class="text-14px text-white font-semibold">方法执行栈配置</h4>
-      </div>
+    <NCard :bordered="false" class="id-card">
+      <h4 class="id-card-title-lg">
+        <SvgIcon icon="lucide:layers" class="text-18px text-purple-500" />
+        方法执行栈配置
+      </h4>
 
       <NForm ref="stackFormRef" :model="stackConfig" label-placement="top" require-mark-placement="left">
         <NGrid :cols="24" :x-gap="16" :y-gap="16">
@@ -415,7 +415,7 @@ onUnmounted(() => {
                 class="mb-12px flex-y-center cursor-pointer gap-8px text-12px text-gray-400 hover:text-purple-400"
                 @click="showAdvanced = !showAdvanced"
               >
-                <div :class="showAdvanced ? 'i-lucide:chevron-up' : 'i-lucide:chevron-down'" class="text-12px"></div>
+                <SvgIcon :icon="showAdvanced ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="text-12px" />
                 高级选项
               </div>
               <div v-show="showAdvanced">
@@ -444,25 +444,25 @@ onUnmounted(() => {
             <div class="flex-y-center gap-12px pt-8px">
               <NButton type="primary" @click="startCapture">
                 <template #icon>
-                  <div class="i-lucide:play"></div>
+                  <SvgIcon icon="lucide:play" />
                 </template>
                 开始捕获
               </NButton>
               <NButton @click="loadSample">
                 <template #icon>
-                  <div class="i-lucide:file-code"></div>
+                  <SvgIcon icon="lucide:file-code" />
                 </template>
                 加载示例
               </NButton>
               <NButton v-if="isCapturing" type="error" @click="stopCapture">
                 <template #icon>
-                  <div class="i-lucide:square"></div>
+                  <SvgIcon icon="lucide:square" />
                 </template>
                 停止捕获
               </NButton>
               <NButton @click="resetForm">
                 <template #icon>
-                  <div class="i-lucide:rotate-ccw"></div>
+                  <SvgIcon icon="lucide:rotate-ccw" />
                 </template>
                 重置
               </NButton>
@@ -480,12 +480,12 @@ onUnmounted(() => {
       recent-label="最近完成"
     />
 
-    <NCard v-show="isCapturing" :bordered="false" class="card-wrapper rounded-12px">
+    <NCard v-show="isCapturing" :bordered="false" class="id-card">
       <div class="flex-y-center justify-between">
         <div class="flex-y-center gap-16px">
-          <div class="flex-y-center gap-8px">
-            <div class="h-8px w-8px animate-pulse rounded-full bg-purple-500"></div>
-            <span class="text-14px text-white">捕获中...</span>
+          <div class="id-status-indicator">
+            <div class="id-status-dot bg-purple-500"></div>
+            <span class="text-14px">捕获中...</span>
           </div>
           <div class="text-12px text-gray-400">
             已捕获:
@@ -508,30 +508,30 @@ onUnmounted(() => {
       </div>
     </NCard>
 
-    <NCard :bordered="false" class="overflow-hidden card-wrapper rounded-12px">
+    <NCard :bordered="false" class="id-card overflow-hidden">
       <template #header>
         <div class="flex-y-center justify-between">
           <div class="flex-y-center gap-8px">
-            <div class="i-lucide:file-stack text-16px text-purple-500"></div>
-            <h4 class="text-14px text-white font-semibold">方法执行栈列表</h4>
+            <SvgIcon icon="lucide:file-stack" class="text-16px text-purple-500" />
+            <h4 class="text-14px font-semibold">方法执行栈列表</h4>
             <span v-if="resultInfo" class="text-12px text-gray-400">{{ resultInfo }}</span>
           </div>
           <div class="flex-y-center gap-8px">
             <NButton size="small" @click="showHistory">
               <template #icon>
-                <div class="i-lucide:history"></div>
+                <SvgIcon icon="lucide:history" />
               </template>
               历史
             </NButton>
             <NButton size="small" @click="exportResults">
               <template #icon>
-                <div class="i-lucide:download"></div>
+                <SvgIcon icon="lucide:download" />
               </template>
               导出
             </NButton>
             <NButton size="small" @click="clearResults">
               <template #icon>
-                <div class="i-lucide:trash-2"></div>
+                <SvgIcon icon="lucide:trash-2" />
               </template>
               清空
             </NButton>
@@ -542,7 +542,7 @@ onUnmounted(() => {
       <div v-if="stackResults.length === 0" class="p-48px text-center">
         <div class="mb-16px flex justify-center">
           <div class="rounded-full bg-gray-800/50 p-16px">
-            <div class="i-lucide:layers text-48px text-gray-600"></div>
+            <SvgIcon icon="lucide:layers" class="text-48px text-gray-600" />
           </div>
         </div>
         <h5 class="mb-8px text-14px text-gray-400 font-semibold">暂无执行栈数据</h5>
@@ -553,7 +553,7 @@ onUnmounted(() => {
         <div
           v-for="result in stackResults"
           :key="result.index"
-          class="overflow-hidden border card-wrapper rounded-8px transition-all duration-300"
+          class="overflow-hidden border rounded-8px transition-all duration-300"
           :class="[result.hasException ? 'border-red-500/30' : 'border-gray-700']"
           :style="{ opacity: result.opacity }"
         >
@@ -572,7 +572,7 @@ onUnmounted(() => {
               </div>
               <NButton size="small" type="primary" @click="showDetail(result)">
                 <template #icon>
-                  <div class="i-lucide:maximize-2"></div>
+                  <SvgIcon icon="lucide:maximize-2" />
                 </template>
                 展开详情
               </NButton>
@@ -608,7 +608,7 @@ onUnmounted(() => {
 
     <NModal v-model:show="showDetailModal" preset="card" title="执行栈详情" class="w-1200px">
       <template #header-extra>
-        <div class="i-lucide:code-2 text-20px text-purple-500"></div>
+        <SvgIcon icon="lucide:code-2" class="text-20px text-purple-500" />
       </template>
 
       <div v-if="selectedStack" class="space-y-16px">
@@ -691,7 +691,7 @@ onUnmounted(() => {
 
         <NCard :bordered="false" title="异常信息" class="border border-red-500/20 bg-red-500/10">
           <template #header-extra>
-            <div class="i-lucide:alert-circle text-16px text-red-400"></div>
+            <SvgIcon icon="lucide:alert-circle" class="text-16px text-red-400" />
           </template>
           <div class="rounded bg-gray-900/50 p-12px">
             <pre class="text-12px text-red-300 font-mono">{{ selectedStack.fullException }}</pre>
@@ -708,13 +708,13 @@ onUnmounted(() => {
 
     <NModal v-model:show="showHistoryModal" preset="card" title="捕获历史" class="w-1000px">
       <template #header-extra>
-        <div class="i-lucide:history text-20px text-purple-500"></div>
+        <SvgIcon icon="lucide:history" class="text-20px text-purple-500" />
       </template>
 
       <div v-if="historyRecords.length === 0" class="p-48px text-center">
         <div class="mb-16px flex justify-center">
           <div class="rounded-full bg-gray-800/50 p-16px">
-            <div class="i-lucide:inbox text-48px text-gray-600"></div>
+            <SvgIcon icon="lucide:inbox" class="text-48px text-gray-600" />
           </div>
         </div>
         <p class="text-14px text-gray-400">暂无历史记录</p>
@@ -724,7 +724,7 @@ onUnmounted(() => {
         <div
           v-for="record in historyRecords"
           :key="record.id"
-          class="cursor-pointer border border-gray-700 card-wrapper rounded-8px p-16px transition hover:border-purple-500/50"
+          class="cursor-pointer border border-gray-700 rounded-8px p-16px transition hover:border-purple-500/50"
           @click="loadHistoryRecord(record)"
         >
           <div class="mb-8px flex-y-center justify-between">
@@ -759,10 +759,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.card-wrapper {
-  background: var(--n-color);
-}
-
 pre {
   margin: 0;
   white-space: pre-wrap;

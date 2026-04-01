@@ -242,7 +242,7 @@ const getCostColor = (cost: number) => {
 <template>
   <div class="h-full flex flex-col gap-16px">
     <!-- TimeTunnel 配置表单 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center gap-8px">
           <SvgIcon icon="lucide:clock" class="text-16px text-purple" />
@@ -354,8 +354,8 @@ const getCostColor = (cost: number) => {
     <NCard v-if="isRecording" size="small">
       <div class="flex-y-center justify-between">
         <div class="flex-y-center gap-16px">
-          <div class="flex-y-center gap-8px">
-            <div class="h-12px w-12px animate-pulse rounded-full bg-purple"></div>
+          <div class="id-status-indicator">
+            <div class="id-status-dot bg-purple"></div>
             <span class="text-14px text-gray">正在记录...</span>
           </div>
           <div class="text-14px text-gray">
@@ -369,7 +369,7 @@ const getCostColor = (cost: number) => {
 
     <!-- 快照统计 -->
     <div v-if="ttRecords.length > 0" class="grid grid-cols-1 gap-16px lg:grid-cols-4">
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="总快照数" :value="stats.total">
           <template #prefix>
             <SvgIcon icon="lucide:database" class="text-purple" />
@@ -377,7 +377,7 @@ const getCostColor = (cost: number) => {
         </NStatistic>
       </NCard>
 
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="成功调用" :value="stats.success">
           <template #prefix>
             <SvgIcon icon="lucide:check-circle" class="text-success" />
@@ -385,7 +385,7 @@ const getCostColor = (cost: number) => {
         </NStatistic>
       </NCard>
 
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="异常调用" :value="stats.error">
           <template #prefix>
             <SvgIcon icon="lucide:alert-circle" class="text-error" />
@@ -393,7 +393,7 @@ const getCostColor = (cost: number) => {
         </NStatistic>
       </NCard>
 
-      <NCard size="small">
+      <NCard size="small" class="id-card">
         <NStatistic label="平均耗时" :value="stats.avgCost">
           <template #prefix>
             <SvgIcon icon="lucide:clock" class="text-warning" />
@@ -406,7 +406,7 @@ const getCostColor = (cost: number) => {
     </div>
 
     <!-- 快照记录列表 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center justify-between">
           <div class="flex-y-center gap-8px">
@@ -498,150 +498,126 @@ const getCostColor = (cost: number) => {
     </NCard>
 
     <!-- 快照详情模态框 -->
-    <div
-      v-if="showDetailModal && selectedSnapshot"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-16px"
-      @click.self="closeDetail"
+    <NModal
+      v-model:show="showDetailModal"
+      preset="card"
+      :title="`快照详情 #${selectedSnapshot?.index ?? ''}`"
+      class="max-w-4xl w-90%"
+      :segmented="{ content: true, footer: 'soft' }"
     >
-      <div
-        class="max-h-[90vh] max-w-4xl w-full flex flex-col overflow-hidden border border-gray/30 rounded-12px bg-container"
-      >
-        <!-- 头部 -->
-        <div class="flex-y-center justify-between border-b border-gray/10 p-24px">
-          <div class="flex-y-center gap-8px">
-            <SvgIcon icon="lucide:eye" class="text-20px text-purple" />
-            <h3 class="text-18px font-semibold">快照详情</h3>
-            <span class="text-14px text-gray">#{{ selectedSnapshot.index }}</span>
-          </div>
-          <NButton quaternary circle @click="closeDetail">
-            <template #icon>
-              <SvgIcon icon="lucide:x" class="text-20px" />
-            </template>
-          </NButton>
-        </div>
+      <template #header-extra>
+        <SvgIcon icon="lucide:eye" class="text-20px text-purple" />
+      </template>
 
-        <!-- 内容 -->
-        <div class="flex-1 overflow-y-auto p-24px">
-          <div class="space-y-24px">
-            <!-- 基本信息 -->
-            <div class="border border-gray/20 rounded-8px bg-container/50 p-16px">
-              <h4 class="mb-12px flex-y-center gap-8px text-14px font-semibold">
-                <SvgIcon icon="lucide:info" class="text-16px text-purple" />
-                基本信息
-              </h4>
-              <div class="grid grid-cols-2 gap-12px text-12px">
-                <div>
-                  <span class="text-gray">时间:</span>
-                  <span class="ml-8px">{{ selectedSnapshot.finishTime }}</span>
-                </div>
-                <div>
-                  <span class="text-gray">耗时:</span>
-                  <NTag :type="getCostColor(selectedSnapshot.cost)" size="small" class="ml-8px">
-                    {{ selectedSnapshot.cost }} ms
-                  </NTag>
-                </div>
-                <div class="col-span-2">
-                  <span class="text-gray">方法:</span>
-                  <code class="ml-8px text-primary">
-                    {{ selectedSnapshot.className }}.{{ selectedSnapshot.methodName }}
-                  </code>
-                </div>
-              </div>
+      <div v-if="selectedSnapshot" class="space-y-24px">
+        <!-- 基本信息 -->
+        <div class="id-detail-section">
+          <h4 class="id-detail-section-title flex-y-center gap-8px">
+            <SvgIcon icon="lucide:info" class="text-16px text-purple" />
+            基本信息
+          </h4>
+          <div class="grid grid-cols-2 gap-12px text-12px">
+            <div class="id-detail-item">
+              <span class="id-detail-label">时间</span>
+              <span class="id-detail-value">{{ selectedSnapshot.finishTime }}</span>
             </div>
-
-            <!-- 参数 -->
-            <div v-if="selectedSnapshot.params" class="border border-gray/20 rounded-8px bg-container/50 p-16px">
-              <h4 class="mb-12px flex-y-center gap-8px text-14px font-semibold">
-                <SvgIcon icon="lucide:package" class="text-16px text-info" />
-                参数
-              </h4>
-              <div class="overflow-x-auto rounded-6px bg-black/20 p-12px">
-                <pre class="text-12px font-mono">{{ selectedSnapshot.params }}</pre>
-              </div>
+            <div class="id-detail-item">
+              <span class="id-detail-label">耗时</span>
+              <NTag :type="getCostColor(selectedSnapshot.cost)" size="small">{{ selectedSnapshot.cost }} ms</NTag>
             </div>
-
-            <!-- 目标对象 -->
-            <div class="border border-gray/20 rounded-8px bg-container/50 p-16px">
-              <h4 class="mb-12px flex-y-center gap-8px text-14px font-semibold">
-                <SvgIcon icon="lucide:target" class="text-16px text-success" />
-                目标对象
-              </h4>
-              <div class="text-12px space-y-8px">
-                <div>
-                  <span class="text-gray">类名:</span>
-                  <code class="ml-8px text-primary">{{ selectedSnapshot.targetClassName }}</code>
-                </div>
-                <div>
-                  <span class="text-gray">HashCode:</span>
-                  <code class="ml-8px text-warning font-mono">{{ selectedSnapshot.targetHashCode }}</code>
-                </div>
-              </div>
-            </div>
-
-            <!-- 返回值 -->
-            <div
-              v-if="selectedSnapshot.returnValue && !selectedSnapshot.hasException"
-              class="border border-gray/20 rounded-8px bg-container/50 p-16px"
-            >
-              <h4 class="mb-12px flex-y-center gap-8px text-14px font-semibold">
-                <SvgIcon icon="lucide:corner-down-left" class="text-16px text-success" />
-                返回值
-              </h4>
-              <div class="text-12px space-y-8px">
-                <div>
-                  <span class="text-gray">类型:</span>
-                  <span class="ml-8px text-warning">{{ selectedSnapshot.returnType }}</span>
-                </div>
-                <div>
-                  <span class="text-gray">值:</span>
-                  <pre class="ml-8px mt-8px overflow-x-auto rounded-6px bg-black/20 p-12px text-11px font-mono">{{
-                    selectedSnapshot.returnValue
-                  }}</pre>
-                </div>
-              </div>
-            </div>
-
-            <!-- 异常 -->
-            <div v-if="selectedSnapshot.hasException" class="border border-error/20 rounded-8px bg-error/5 p-16px">
-              <h4 class="mb-12px flex-y-center gap-8px text-14px text-error font-semibold">
-                <SvgIcon icon="lucide:alert-triangle" class="text-16px" />
-                异常
-              </h4>
-              <div class="text-12px space-y-12px">
-                <div>
-                  <span class="text-gray">类型:</span>
-                  <span class="ml-8px text-error">{{ selectedSnapshot.exceptionType }}</span>
-                </div>
-                <div>
-                  <span class="text-gray">消息:</span>
-                  <div class="ml-8px mt-4px text-error">{{ selectedSnapshot.exceptionMessage }}</div>
-                </div>
-                <div v-if="selectedSnapshot.exceptionStackTrace.length > 0">
-                  <span class="text-gray">堆栈跟踪:</span>
-                  <pre
-                    class="ml-8px mt-8px overflow-x-auto rounded-6px bg-black/20 p-12px text-11px text-error font-mono"
-                    >{{ selectedSnapshot.exceptionStackTrace.join('\n') }}</pre
-                  >
-                </div>
-              </div>
+            <div class="id-detail-item col-span-2">
+              <span class="id-detail-label">方法</span>
+              <code class="id-detail-value font-mono">
+                {{ selectedSnapshot.className }}.{{ selectedSnapshot.methodName }}
+              </code>
             </div>
           </div>
         </div>
 
-        <!-- 底部操作栏 -->
-        <div class="flex-y-center justify-end border-t border-gray/10 bg-container/50 p-24px">
-          <div class="flex-y-center gap-8px">
-            <NButton @click="copySnapshot">
-              <template #icon>
-                <SvgIcon icon="lucide:copy" />
-              </template>
-              复制数据
-            </NButton>
-            <NButton @click="closeDetail">关闭</NButton>
+        <!-- 参数 -->
+        <div v-if="selectedSnapshot.params" class="id-detail-section">
+          <h4 class="id-detail-section-title flex-y-center gap-8px">
+            <SvgIcon icon="lucide:package" class="text-16px text-info" />
+            参数
+          </h4>
+          <div class="overflow-x-auto rounded-6px bg-black/20 p-12px">
+            <pre class="text-12px font-mono">{{ selectedSnapshot.params }}</pre>
+          </div>
+        </div>
+
+        <!-- 目标对象 -->
+        <div class="id-detail-section">
+          <h4 class="id-detail-section-title flex-y-center gap-8px">
+            <SvgIcon icon="lucide:target" class="text-16px text-success" />
+            目标对象
+          </h4>
+          <div class="text-12px space-y-8px">
+            <div class="id-detail-item">
+              <span class="id-detail-label">类名</span>
+              <code class="id-detail-value font-mono">{{ selectedSnapshot.targetClassName }}</code>
+            </div>
+            <div class="id-detail-item">
+              <span class="id-detail-label">HashCode</span>
+              <code class="id-detail-value font-mono">{{ selectedSnapshot.targetHashCode }}</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- 返回值 -->
+        <div v-if="selectedSnapshot.returnValue && !selectedSnapshot.hasException" class="id-detail-section">
+          <h4 class="id-detail-section-title flex-y-center gap-8px">
+            <SvgIcon icon="lucide:corner-down-left" class="text-16px text-success" />
+            返回值
+          </h4>
+          <div class="text-12px space-y-8px">
+            <div class="id-detail-item">
+              <span class="id-detail-label">类型</span>
+              <span class="id-detail-value">{{ selectedSnapshot.returnType }}</span>
+            </div>
+            <div>
+              <pre class="mt-8px overflow-x-auto rounded-6px bg-black/20 p-12px text-11px font-mono">{{
+                selectedSnapshot.returnValue
+              }}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- 异常 -->
+        <div v-if="selectedSnapshot.hasException" class="border border-error/20 rounded-8px bg-error/5 p-16px">
+          <h4 class="mb-12px flex-y-center gap-8px text-14px text-error font-semibold">
+            <SvgIcon icon="lucide:alert-triangle" class="text-16px" />
+            异常
+          </h4>
+          <div class="text-12px space-y-12px">
+            <div class="id-detail-item">
+              <span class="id-detail-label">类型</span>
+              <span class="text-error">{{ selectedSnapshot.exceptionType }}</span>
+            </div>
+            <div class="id-detail-item">
+              <span class="id-detail-label">消息</span>
+              <div class="text-error">{{ selectedSnapshot.exceptionMessage }}</div>
+            </div>
+            <div v-if="selectedSnapshot.exceptionStackTrace.length > 0">
+              <pre class="mt-8px overflow-x-auto rounded-6px bg-black/20 p-12px text-11px text-error font-mono">{{
+                selectedSnapshot.exceptionStackTrace.join('\n')
+              }}</pre>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <template #footer>
+        <div class="id-modal-footer">
+          <NButton @click="copySnapshot">
+            <template #icon>
+              <SvgIcon icon="lucide:copy" />
+            </template>
+            复制数据
+          </NButton>
+          <NButton @click="closeDetail">关闭</NButton>
+        </div>
+      </template>
+    </NModal>
   </div>
 </template>
 

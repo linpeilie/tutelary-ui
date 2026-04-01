@@ -217,7 +217,7 @@ function clearResults() {
 <template>
   <div class="flex flex-col gap-16px">
     <!-- Watch 配置表单 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center gap-8px">
           <SvgIcon icon="lucide:eye" class="text-18px" />
@@ -361,11 +361,11 @@ function clearResults() {
     />
 
     <!-- 观察状态 -->
-    <NCard v-show="isWatching" size="small">
+    <NCard v-show="isWatching" size="small" class="id-card">
       <div class="mb-12px flex-y-center justify-between">
         <div class="flex-y-center gap-16px">
-          <div class="flex-y-center gap-8px">
-            <div class="h-8px w-8px animate-pulse rounded-full bg-primary"></div>
+          <div class="id-status-indicator">
+            <div class="id-status-dot bg-primary"></div>
             <span class="text-14px">观察中...</span>
           </div>
           <div class="text-14px text-gray">
@@ -380,7 +380,7 @@ function clearResults() {
     </NCard>
 
     <!-- 观察结果 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center justify-between">
           <div class="flex-y-center gap-8px">

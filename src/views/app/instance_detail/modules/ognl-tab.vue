@@ -353,7 +353,7 @@ const formatFullTime = (date: Date) => {
     </div>
 
     <!-- 表达式模板库 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center justify-between">
           <div class="flex-y-center gap-8px">
@@ -412,7 +412,7 @@ const formatFullTime = (date: Date) => {
     </NCard>
 
     <!-- 表达式输入区 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center gap-8px">
           <SvgIcon icon="lucide:code" class="text-16px text-warning" />
@@ -478,7 +478,7 @@ const formatFullTime = (date: Date) => {
     </NCard>
 
     <!-- 执行结果 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center justify-between">
           <div class="flex-y-center gap-8px">
@@ -502,7 +502,10 @@ const formatFullTime = (date: Date) => {
         </div>
       </template>
 
-      <div v-if="!currentResult" class="py-48px text-center text-gray">
+      <div v-if="isExecuting" class="py-8">
+        <NSkeleton text :repeat="4" round />
+      </div>
+      <div v-else-if="!currentResult" class="py-48px text-center text-gray">
         <div class="mb-12px flex justify-center">
           <SvgIcon icon="lucide:inbox" class="text-48px opacity-50" />
         </div>
@@ -588,7 +591,7 @@ const formatFullTime = (date: Date) => {
     </NCard>
 
     <!-- 执行历史 -->
-    <NCard size="small">
+    <NCard size="small" class="id-card">
       <template #header>
         <div class="flex-y-center justify-between">
           <div class="flex-y-center gap-8px">

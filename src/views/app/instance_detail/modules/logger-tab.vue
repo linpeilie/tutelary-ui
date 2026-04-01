@@ -358,79 +358,85 @@ onUnmounted(() => {
     <!-- 日志级别统计 -->
     <NGrid :x-gap="16" :y-gap="16" :cols="6" class="mb-6">
       <NGridItem>
-        <NCard class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon bg-blue-500/10">
-              <div class="i-carbon-document text-20px text-blue-500" />
+        <NCard class="id-card" size="small">
+          <div class="id-stat-content">
+            <div class="id-stat-icon bg-blue-500/10">
+              <SvgIcon icon="lucide:file-text" class="text-20px text-blue-500" />
             </div>
-            <div class="stat-info">
-              <div class="stat-label">总Logger数</div>
-              <div class="stat-value">{{ levelStats.total }}</div>
-            </div>
-          </div>
-        </NCard>
-      </NGridItem>
-      <NGridItem>
-        <NCard class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon bg-red-500/10">
-              <div class="i-carbon-warning-alt text-20px text-red-500" />
-            </div>
-            <div class="stat-info">
-              <div class="stat-label">ERROR</div>
-              <div class="stat-value text-red-500">{{ levelStats.error }}</div>
+            <div class="id-stat-info">
+              <div class="id-stat-label">总Logger数</div>
+              <NSkeleton v-if="loading && loggers.length === 0" text style="width: 60px; height: 24px" />
+              <div v-else class="id-stat-value">{{ levelStats.total }}</div>
             </div>
           </div>
         </NCard>
       </NGridItem>
       <NGridItem>
-        <NCard class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon bg-yellow-500/10">
-              <div class="i-carbon-warning text-20px text-yellow-500" />
+        <NCard class="id-card" size="small">
+          <div class="id-stat-content">
+            <div class="id-stat-icon bg-red-500/10">
+              <SvgIcon icon="lucide:alert-triangle" class="text-20px text-red-500" />
             </div>
-            <div class="stat-info">
-              <div class="stat-label">WARN</div>
-              <div class="stat-value text-yellow-500">{{ levelStats.warn }}</div>
-            </div>
-          </div>
-        </NCard>
-      </NGridItem>
-      <NGridItem>
-        <NCard class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon bg-green-500/10">
-              <div class="i-carbon-information text-20px text-green-500" />
-            </div>
-            <div class="stat-info">
-              <div class="stat-label">INFO</div>
-              <div class="stat-value text-green-500">{{ levelStats.info }}</div>
+            <div class="id-stat-info">
+              <div class="id-stat-label">ERROR</div>
+              <NSkeleton v-if="loading && loggers.length === 0" text style="width: 40px; height: 24px" />
+              <div v-else class="id-stat-value text-red-500">{{ levelStats.error }}</div>
             </div>
           </div>
         </NCard>
       </NGridItem>
       <NGridItem>
-        <NCard class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon bg-cyan-500/10">
-              <div class="i-carbon-debug text-20px text-cyan-500" />
+        <NCard class="id-card" size="small">
+          <div class="id-stat-content">
+            <div class="id-stat-icon bg-yellow-500/10">
+              <SvgIcon icon="lucide:alert-circle" class="text-20px text-yellow-500" />
             </div>
-            <div class="stat-info">
-              <div class="stat-label">DEBUG</div>
-              <div class="stat-value text-cyan-500">{{ levelStats.debug }}</div>
+            <div class="id-stat-info">
+              <div class="id-stat-label">WARN</div>
+              <NSkeleton v-if="loading && loggers.length === 0" text style="width: 40px; height: 24px" />
+              <div v-else class="id-stat-value text-yellow-500">{{ levelStats.warn }}</div>
             </div>
           </div>
         </NCard>
       </NGridItem>
       <NGridItem>
-        <NCard class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon bg-purple-500/10">
-              <div class="i-carbon-code text-20px text-purple-500" />
+        <NCard class="id-card" size="small">
+          <div class="id-stat-content">
+            <div class="id-stat-icon bg-green-500/10">
+              <SvgIcon icon="lucide:info" class="text-20px text-green-500" />
             </div>
-            <div class="stat-info">
-              <div class="stat-label">TRACE</div>
-              <div class="stat-value text-purple-500">{{ levelStats.trace }}</div>
+            <div class="id-stat-info">
+              <div class="id-stat-label">INFO</div>
+              <NSkeleton v-if="loading && loggers.length === 0" text style="width: 40px; height: 24px" />
+              <div v-else class="id-stat-value text-green-500">{{ levelStats.info }}</div>
+            </div>
+          </div>
+        </NCard>
+      </NGridItem>
+      <NGridItem>
+        <NCard class="id-card" size="small">
+          <div class="id-stat-content">
+            <div class="id-stat-icon bg-cyan-500/10">
+              <SvgIcon icon="lucide:bug" class="text-20px text-cyan-500" />
+            </div>
+            <div class="id-stat-info">
+              <div class="id-stat-label">DEBUG</div>
+              <NSkeleton v-if="loading && loggers.length === 0" text style="width: 40px; height: 24px" />
+              <div v-else class="id-stat-value text-cyan-500">{{ levelStats.debug }}</div>
+            </div>
+          </div>
+        </NCard>
+      </NGridItem>
+      <NGridItem>
+        <NCard class="id-card" size="small">
+          <div class="id-stat-content">
+            <div class="id-stat-icon bg-purple-500/10">
+              <SvgIcon icon="lucide:code" class="text-20px text-purple-500" />
+            </div>
+            <div class="id-stat-info">
+              <div class="id-stat-label">TRACE</div>
+              <NSkeleton v-if="loading && loggers.length === 0" text style="width: 40px; height: 24px" />
+              <div v-else class="id-stat-value text-purple-500">{{ levelStats.trace }}</div>
             </div>
           </div>
         </NCard>
@@ -438,39 +444,39 @@ onUnmounted(() => {
     </NGrid>
 
     <!-- 快速操作 -->
-    <NCard class="quick-actions-card mb-6">
-      <div class="quick-actions-header">
-        <div class="i-carbon-flash text-16px text-orange-500" />
-        <h4 class="quick-actions-title">快速操作</h4>
-      </div>
+    <NCard class="id-card mb-6">
+      <h4 class="id-card-title-lg">
+        <SvgIcon icon="lucide:zap" class="text-16px text-orange-500" />
+        快速操作
+      </h4>
       <div class="quick-actions-buttons">
         <NButton @click="handleSetAllInfo">
           <template #icon>
-            <div class="i-carbon-volume-up" />
+            <SvgIcon icon="lucide:volume-2" />
           </template>
           全部设为 INFO
         </NButton>
         <NButton @click="handleSetAllDebug">
           <template #icon>
-            <div class="i-carbon-debug" />
+            <SvgIcon icon="lucide:bug" />
           </template>
           全部设为 DEBUG
         </NButton>
         <NButton @click="handleSetAllWarn">
           <template #icon>
-            <div class="i-carbon-warning" />
+            <SvgIcon icon="lucide:alert-circle" />
           </template>
           全部设为 WARN
         </NButton>
         <NButton @click="handleResetDefault">
           <template #icon>
-            <div class="i-carbon-reset" />
+            <SvgIcon icon="lucide:rotate-ccw" />
           </template>
           恢复默认配置
         </NButton>
         <NButton type="primary" @click="handleExport">
           <template #icon>
-            <div class="i-carbon-download" />
+            <SvgIcon icon="lucide:download" />
           </template>
           导出配置
         </NButton>
@@ -478,14 +484,14 @@ onUnmounted(() => {
     </NCard>
 
     <!-- Logger 列表 -->
-    <NCard class="table-card">
+    <NCard class="id-table-card">
       <template #header>
-        <div class="table-header">
-          <div class="table-title">
-            <div class="i-carbon-list text-16px text-blue-500" />
+        <div class="id-table-header">
+          <div class="id-table-title">
+            <SvgIcon icon="lucide:list" class="text-16px text-primary" />
             <span>Logger 列表</span>
           </div>
-          <div class="table-actions">
+          <div class="id-table-actions">
             <!-- 级别筛选 -->
             <NSelect
               v-model:value="selectedLevel"
@@ -498,14 +504,14 @@ onUnmounted(() => {
             <!-- 搜索 -->
             <NInput v-model:value="searchText" placeholder="搜索Logger名称..." clearable style="width: 240px">
               <template #prefix>
-                <div class="i-carbon-search text-14px" />
+                <SvgIcon icon="lucide:search" class="text-14px" />
               </template>
             </NInput>
 
             <!-- 刷新 -->
             <NButton type="primary" :loading="loading" @click="handleRefresh">
               <template #icon>
-                <div class="i-carbon-renew" />
+                <SvgIcon icon="lucide:refresh-cw" />
               </template>
               刷新
             </NButton>
@@ -513,14 +519,16 @@ onUnmounted(() => {
         </div>
       </template>
 
+      <NSkeleton v-if="loading && loggers.length === 0" text :repeat="8" round />
       <NDataTable
+        v-else
         :columns="columns"
         :data="filteredData"
         :pagination="pagination"
         :bordered="false"
         :single-line="false"
         :loading="loading"
-        class="logger-table"
+        class="id-mono-table"
       />
     </NCard>
 
@@ -531,25 +539,25 @@ onUnmounted(() => {
           <NInput :value="editForm.name" readonly />
         </NFormItem>
         <NFormItem label="当前级别">
-          <div class="current-value">{{ editForm.currentLevel }}</div>
+          <div class="id-current-value">{{ editForm.currentLevel }}</div>
         </NFormItem>
         <NFormItem label="新级别" required>
           <NSelect v-model:value="editForm.newLevel" :options="levelOptions" placeholder="请选择级别" />
         </NFormItem>
-        <div class="info-box">
-          <div class="info-box-icon">
-            <div class="i-carbon-information text-16px text-blue-400" />
+        <div class="id-info-box">
+          <div class="mt-2px flex-shrink-0">
+            <SvgIcon icon="lucide:info" class="text-16px text-info" />
           </div>
-          <div class="info-box-content">
-            <p class="info-box-title">日志级别说明:</p>
-            <p class="info-box-text">级别从低到高: TRACE &lt; DEBUG &lt; INFO &lt; WARN &lt; ERROR &lt; OFF</p>
-            <p class="info-box-text">设置为某级别后,该级别及以上级别的日志都会输出</p>
+          <div class="flex-1">
+            <p class="id-info-box-title">日志级别说明:</p>
+            <p class="id-info-box-text">级别从低到高: TRACE &lt; DEBUG &lt; INFO &lt; WARN &lt; ERROR &lt; OFF</p>
+            <p class="id-info-box-text">设置为某级别后,该级别及以上级别的日志都会输出</p>
           </div>
         </div>
       </NForm>
 
       <template #footer>
-        <div class="modal-footer">
+        <div class="id-modal-footer">
           <NButton @click="showEditModal = false">取消</NButton>
           <NButton type="primary" :loading="submitting" @click="handleSubmitEdit">确认修改</NButton>
         </div>
@@ -558,173 +566,14 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .logger-container {
-  padding: 16px;
-}
-
-.stat-card {
-  border-radius: 12px;
-
-  :deep(.n-card__content) {
-    padding: 16px;
-  }
-}
-
-.stat-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.stat-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: var(--n-text-color-3);
-  margin-bottom: 4px;
-}
-
-.stat-value {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--n-text-color-1);
-}
-
-.quick-actions-card {
-  border-radius: 12px;
-
-  :deep(.n-card__content) {
-    padding: 20px;
-  }
-}
-
-.quick-actions-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.quick-actions-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--n-text-color-1);
-  margin: 0;
+  padding: 0;
 }
 
 .quick-actions-buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-}
-
-.table-card {
-  border-radius: 12px;
-
-  :deep(.n-card-header) {
-    padding: 20px 20px 16px;
-    border-bottom: 1px solid var(--n-border-color);
-  }
-
-  :deep(.n-card__content) {
-    padding: 0;
-  }
-}
-
-.table-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.table-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--n-text-color-1);
-}
-
-.table-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.logger-table {
-  :deep(.n-data-table-th) {
-    font-size: 12px;
-    font-weight: 500;
-    background-color: var(--n-th-color);
-  }
-
-  :deep(.n-data-table-td) {
-    font-size: 12px;
-    font-family: 'Consolas', 'Monaco', monospace;
-  }
-
-  :deep(.n-data-table-tr:hover) {
-    background-color: var(--n-td-color-hover);
-  }
-}
-
-.current-value {
-  padding: 8px 12px;
-  background-color: var(--n-color-modal);
-  border: 1px solid var(--n-border-color);
-  border-radius: 3px;
-  font-size: 12px;
-  font-family: 'Consolas', 'Monaco', monospace;
-  color: var(--n-text-color-1);
-}
-
-.info-box {
-  display: flex;
-  gap: 8px;
-  padding: 12px;
-  background-color: rgba(24, 160, 251, 0.1);
-  border: 1px solid rgba(24, 160, 251, 0.2);
-  border-radius: 8px;
-}
-
-.info-box-icon {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.info-box-content {
-  flex: 1;
-}
-
-.info-box-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: rgb(96, 196, 255);
-  margin-bottom: 4px;
-}
-
-.info-box-text {
-  font-size: 12px;
-  color: rgb(96, 196, 255);
-  margin-top: 4px;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
   gap: 12px;
 }
 </style>

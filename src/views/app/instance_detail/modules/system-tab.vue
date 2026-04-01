@@ -226,7 +226,9 @@ onMounted(() => {
         <SvgIcon icon="mdi:server" class="h-4 w-4 text-primary" />
         主机信息
       </h4>
+      <NSkeleton v-if="!hostInfo" text :repeat="4" round />
       <TDescriptions
+        v-else
         :column="4"
         :items="hostInfoDescriptions"
         :val="hostInfo"
@@ -408,7 +410,9 @@ onMounted(() => {
         <SvgIcon icon="mdi:language-java" class="h-4 w-4 text-orange" />
         JVM 信息
       </h4>
+      <NSkeleton v-if="!jvmInfo" text :repeat="4" round />
       <TDescriptions
+        v-else
         :items="jvmInfoDescriptions"
         :val="jvmInfo"
         :columns="3"

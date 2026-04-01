@@ -6,6 +6,7 @@ declare namespace Api {
       ip: string;
       registerDate: string;
       state: number;
+      online: boolean;
       startTime: string;
       vmVendor: string;
       vmName: string;

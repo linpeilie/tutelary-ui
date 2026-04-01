@@ -536,3 +536,137 @@
   gap: 12px;
   padding: 4px 0;
 }
+
+/* ===== Status Indicator (running pulse) ===== */
+.id-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.id-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: id-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes id-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ===== Empty State ===== */
+.id-empty-state {
+  padding: 48px 0;
+  text-align: center;
+  color: var(--n-text-color-disabled);
+}
+
+.id-empty-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 16px;
+  background-color: var(--n-color-embedded);
+  border-radius: 50%;
+}
+
+/* ===== Action Buttons Row ===== */
+.id-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+}
+
+/* ===== History Record Item ===== */
+.id-history-record {
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: var(--n-color-target);
+  }
+}
+
+/* ===== Current Value (modal edit) ===== */
+.id-current-value {
+  padding: 8px 12px;
+  background-color: var(--n-color-embedded);
+  border: 1px solid var(--n-border-color);
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: var(--n-text-color);
+}
+
+/* ===== Modal Footer ===== */
+.id-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* ===== Stat Card (logger/change-records) ===== */
+.id-stat-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.id-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.id-stat-info {
+  flex: 1;
+}
+
+.id-stat-label {
+  font-size: 12px;
+  color: var(--n-text-color-disabled);
+  margin-bottom: 4px;
+}
+
+.id-stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--n-text-color);
+}
+
+/* ===== Info Box (logger modal) ===== */
+.id-info-box {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  background-color: rgba(var(--info-color), 0.1);
+  border: 1px solid rgba(var(--info-color), 0.2);
+  border-radius: 8px;
+}
+
+.id-info-box-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(var(--info-color));
+  margin-bottom: 4px;
+}
+
+.id-info-box-text {
+  font-size: 12px;
+  color: rgb(var(--info-color));
+  margin-top: 4px;
+}
