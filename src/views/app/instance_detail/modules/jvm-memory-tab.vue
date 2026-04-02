@@ -17,9 +17,6 @@ interface Props {
 interface GcStat {
   count: number;
   totalTime: number | null;
-  avgTime: number | null;
-  maxTime: number | null;
-  lastGc: string;
 }
 
 interface MemoryPool {
@@ -32,35 +29,21 @@ interface MemoryPool {
   status: string;
 }
 
-interface GcLog {
-  time: string;
-  type: string;
-  duration: string;
-  before: string;
-  after: string;
-  reason: string;
-}
-
 const props = defineProps<Props>();
 
 const loading = ref(false);
 const memoryPools: Ref<MemoryPool[]> = ref([]);
-const gcLogs: Ref<GcLog[]> = ref([]);
+const gcLogs: Ref<string[]> = ref([]);
 
 const gcStats = ref<{ youngGc: GcStat; oldGc: GcStat }>({
   youngGc: createEmptyGcStat(),
   oldGc: createEmptyGcStat()
 });
 
-const gcLogPlaceholder = computed(() => gcLogs.value.length === 0);
-
 function createEmptyGcStat(): GcStat {
   return {
     count: 0,
-    totalTime: null,
-    avgTime: null,
-    maxTime: null,
-    lastGc: '待补充'
+    totalTime: null
   };
 }
 
@@ -68,12 +51,6 @@ function getUsageColor(usage: number): string {
   if (usage > 80) return 'text-error';
   if (usage > 60) return 'text-warning';
   return 'text-success';
-}
-
-function getUsageTagType(usage: number): 'error' | 'warning' | 'success' {
-  if (usage > 80) return 'error';
-  if (usage > 60) return 'warning';
-  return 'success';
 }
 
 function getUsagePercent(memory: JvmMemory): number {
@@ -158,6 +135,7 @@ function handleJvmMemory(response: CommandExecuteResponse<JvmMemoryResponse>) {
 
   if (!data || data.state === 0) {
     memoryPools.value = [];
+    gcLogs.value = [];
     gcStats.value = {
       youngGc: createEmptyGcStat(),
       oldGc: createEmptyGcStat()
@@ -172,6 +150,7 @@ function handleJvmMemory(response: CommandExecuteResponse<JvmMemoryResponse>) {
 
   updateMemoryPools(data);
   updateGcStats(data.garbageCollectors || []);
+  gcLogs.value = data?.recentGcLogs;
 }
 
 function refreshMemoryData() {
@@ -180,10 +159,6 @@ function refreshMemoryData() {
 
 function forceGC() {
   window.$message?.info('后端暂未提供强制 GC 命令，先保留当前页面样式');
-}
-
-function clearGCLogs() {
-  window.$message?.info('后端暂未提供 GC 日志，当前区域仅保留样式占位');
 }
 
 onMounted(() => {
@@ -240,17 +215,6 @@ onUnmounted(() => {
             <span class="id-gc-stats-label">总时间</span>
             <span class="id-gc-stats-value">{{ formatMetric(gcStats.youngGc.totalTime, 's') }}</span>
           </div>
-          <div class="id-gc-stats-item">
-            <span class="id-gc-stats-label">平均时间</span>
-            <span class="id-gc-stats-value">{{ formatMetric(gcStats.youngGc.avgTime, 'ms') }}</span>
-          </div>
-          <div class="id-gc-stats-item">
-            <span class="id-gc-stats-label">最大时间</span>
-            <span class="id-gc-stats-value">{{ formatMetric(gcStats.youngGc.maxTime, 'ms') }}</span>
-          </div>
-        </div>
-        <div class="id-gc-last-time">
-          <span class="text-xs text-gray-400">上次GC: {{ gcStats.youngGc.lastGc }}</span>
         </div>
       </NCard>
 
@@ -272,17 +236,6 @@ onUnmounted(() => {
             <span class="id-gc-stats-label">总时间</span>
             <span class="id-gc-stats-value">{{ formatMetric(gcStats.oldGc.totalTime, 's') }}</span>
           </div>
-          <div class="id-gc-stats-item">
-            <span class="id-gc-stats-label">平均时间</span>
-            <span class="id-gc-stats-value">{{ formatMetric(gcStats.oldGc.avgTime, 'ms') }}</span>
-          </div>
-          <div class="id-gc-stats-item">
-            <span class="id-gc-stats-label">最大时间</span>
-            <span class="id-gc-stats-value">{{ formatMetric(gcStats.oldGc.maxTime, 'ms') }}</span>
-          </div>
-        </div>
-        <div class="id-gc-last-time">
-          <span class="text-xs text-gray-400">上次GC: {{ gcStats.oldGc.lastGc }}</span>
         </div>
       </NCard>
     </div>
@@ -322,15 +275,6 @@ onUnmounted(() => {
             render: (row: MemoryPool) => {
               return h('span', { class: ['font-semibold', getUsageColor(row.usage)] }, `${row.usage.toFixed(1)}%`);
             }
-          },
-          {
-            title: '状态',
-            key: 'status',
-            align: 'center',
-            width: 100,
-            render: (row: MemoryPool) => {
-              return h(NTag, { type: getUsageTagType(row.usage), size: 'small' }, { default: () => row.status });
-            }
           }
         ]"
         :data="memoryPools"
@@ -346,26 +290,14 @@ onUnmounted(() => {
           <SvgIcon icon="mdi:text-box" class="h-5 w-5 text-gray-400" />
           最近GC日志
         </h3>
-        <NButton size="small" type="error" quaternary :disabled="gcLogPlaceholder" @click="clearGCLogs">
-          清空日志
-        </NButton>
       </div>
       <NScrollbar class="id-gc-log-container">
         <div v-if="gcLogs.length > 0" class="text-xs font-mono space-y-2">
           <div v-for="(log, index) in gcLogs" :key="index" class="id-gc-log-item">
-            <span class="text-gray-500">{{ log.time }}</span>
-            <NTag :type="log.type.includes('Young') ? 'warning' : 'error'" size="small">{{ log.type }}</NTag>
-            <span class="text-gray-400">
-              耗时:
-              <span class="text-white">{{ log.duration }}</span>
-            </span>
-            <span class="text-gray-400">{{ log.before }} → {{ log.after }}</span>
-            <span class="text-gray-500">[{{ log.reason }}]</span>
+            <span>{{ log }}</span>
           </div>
         </div>
-        <div v-else class="h-full flex items-center justify-center text-sm text-gray-500">
-          后端暂未返回 GC 日志，当前保留区域样式占位。
-        </div>
+        <div v-else class="h-full flex items-center justify-center text-sm text-gray-500">暂无 GC 日志</div>
       </NScrollbar>
     </NCard>
   </div>

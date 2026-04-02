@@ -6,7 +6,6 @@
 /* ===== Card ===== */
 .id-card {
   border-radius: 12px;
-  border: 1px solid var(--n-border-color);
 }
 
 /* ===== Card Title ===== */
@@ -218,7 +217,7 @@
 /* ===== Stack Trace ===== */
 .id-stack-trace {
   padding: 12px;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgb(var(--layout-bg-color));
   border-radius: 6px;
   font-family: 'Consolas', 'Monaco', monospace;
   font-size: 11px;
@@ -497,7 +496,6 @@
   padding: 8px 12px;
   background-color: var(--n-color-embedded);
   border-radius: 6px;
-  border: 1px solid var(--n-border-color);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -526,7 +524,7 @@
 .id-gc-log-container {
   max-height: 400px;
   padding: 16px;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: var(--layout-bg-color);
   border-radius: 8px;
 }
 

@@ -83,6 +83,9 @@ importers:
       ts-proto:
         specifier: ^1.167.1
         version: 1.181.2
+      ts-protoc-gen:
+        specifier: ^0.15.0
+        version: 0.15.0
       vue:
         specifier: 3.5.22
         version: 3.5.22(typescript@5.9.3)
@@ -2550,6 +2553,9 @@ packages:
   good-listener@1.2.2:
     resolution: {integrity: sha512-goW1b+d9q/HIwbVYZzZ6SsTr4IgE+WA44A0GmPIQstuOrgsFcT7VEJ48nmr9GaRtNu0XTKacFLGnBPAM6Afouw==}
 
+  google-protobuf@3.21.4:
+    resolution: {integrity: sha512-MnG7N936zcKTco4Jd2PX2U96Kf9PxygAPKBug+74LHzmHXmceN16MmRcdgZv+DGef/S9YvQAfRsNCn4cjf9yyQ==}
+
   gopd@1.2.0:
     resolution: {integrity: sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==}
     engines: {node: '>= 0.4'}
@@ -3873,6 +3879,10 @@ packages:
 
   ts-proto@1.181.2:
     resolution: {integrity: sha512-knJ8dtjn2Pd0c5ZGZG8z9DMiD4PUY8iGI9T9tb8DvGdWRMkLpf0WcPO7G+7cmbZyxvNTAG6ci3fybEaFgMZIvg==}
+    hasBin: true
+
+  ts-protoc-gen@0.15.0:
+    resolution: {integrity: sha512-TycnzEyrdVDlATJ3bWFTtra3SCiEP0W0vySXReAuEygXCUr1j2uaVyL0DhzjwuUdQoW5oXPwk6oZWeA0955V+g==}
     hasBin: true
 
   tslib@2.3.0:
@@ -6735,6 +6745,8 @@ snapshots:
     dependencies:
       delegate: 3.2.0
 
+  google-protobuf@3.21.4: {}
+
   gopd@1.2.0: {}
 
   graceful-fs@4.2.11: {}
@@ -8098,6 +8110,10 @@ snapshots:
       protobufjs: 7.5.4
       ts-poet: 6.12.0
       ts-proto-descriptors: 1.16.0
+
+  ts-protoc-gen@0.15.0:
+    dependencies:
+      google-protobuf: 3.21.4
 
   tslib@2.3.0: {}
 

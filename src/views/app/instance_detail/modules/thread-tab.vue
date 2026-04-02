@@ -283,7 +283,7 @@ onUnmounted(() => {
           </h4>
           <span class="text-12px text-gray">{{ filteredThreads.length }} / {{ totalThreads }}</span>
         </div>
-        <NInput v-model:value="searchText" size="small" placeholder="搜索线程..." clearable class="w-220px">
+        <NInput v-model:value="searchText" size="small" placeholder="搜索线程..." clearable class="w-220px mb-2">
           <template #prefix>
             <SvgIcon icon="mdi:magnify" />
           </template>
