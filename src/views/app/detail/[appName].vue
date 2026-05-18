@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 import TSegmented from '@/components/custom/t-segmented.vue';
 import type { OptionsType } from '@/components/custom/types/t-segmented';
 import { fetchAppDetail } from '@/service/api';
-import { formatMemory } from '@/utils/common';
 import { formatTimeDifference } from '@/utils/time';
 import { useRoute, useRouter } from 'vue-router';
 import { useBoolean } from '~/packages/hooks';
@@ -45,8 +44,6 @@ const onlineRate = computed(() => {
   return Math.round((onlineCount.value / instances.value.length) * 100);
 });
 const hostCount = computed(() => appDetail.value?.hostCount || 0);
-const versionCount = computed(() => appDetail.value?.jdkVersionCount || 0);
-const topJdkVersions = computed(() => appDetail.value?.topJdkVersions || []);
 
 const filteredInstances = computed(() => {
   const keyword = searchText.value.trim().toLowerCase();
@@ -159,87 +156,14 @@ onMounted(() => {
     </template>
 
     <div class="instance-war-room">
-      <section class="instance-war-room__hero id-card">
-        <div class="instance-war-room__hero-mesh"></div>
-        <div class="instance-war-room__hero-main">
-          <div>
-            <div class="instance-war-room__hero-eyebrow">Instance Orchestration Surface</div>
-            <div class="instance-war-room__hero-title">实例作战面板</div>
-            <p class="instance-war-room__hero-description">
-              把在线状态、主机分布、JDK 版本和单实例关键画像压缩到同一视图里，快速判断这个应用是否健康、是否分裂。
-            </p>
-          </div>
-
-          <div class="instance-war-room__hero-side">
-            <div class="instance-war-room__hero-rate">{{ onlineRate }}%</div>
-            <div class="instance-war-room__hero-rate-label">集群在线率</div>
-          </div>
-        </div>
-
-        <div class="instance-war-room__hero-tags">
-          <span class="instance-war-room__hero-tag-label">版本画像</span>
-          <NTag v-for="version in topJdkVersions" :key="version" size="small" round :bordered="false" type="info">
-            {{ version }}
-          </NTag>
-          <span v-if="!topJdkVersions.length" class="instance-war-room__hero-tag-empty">暂无版本标签</span>
-        </div>
-      </section>
-
-      <section class="instance-war-room__stats">
-        <button class="instance-war-room__stat-card" :class="{ 'is-active': statusFilter === 'all' }" @click="statusFilter = 'all'">
-          <div class="instance-war-room__stat-icon bg-primary/12 text-primary">
-            <SvgIcon icon="lucide:boxes" class="text-18px" />
-          </div>
-          <div>
-            <div class="instance-war-room__stat-label">实例总数</div>
-            <div class="instance-war-room__stat-value">{{ instances.length }}</div>
-          </div>
-        </button>
-
-        <button class="instance-war-room__stat-card" :class="{ 'is-active': statusFilter === 'online' }" @click="statusFilter = 'online'">
-          <div class="instance-war-room__stat-icon bg-success/12 text-success">
-            <SvgIcon icon="lucide:activity" class="text-18px" />
-          </div>
-          <div>
-            <div class="instance-war-room__stat-label">在线</div>
-            <div class="instance-war-room__stat-value text-success">{{ onlineCount }}</div>
-          </div>
-        </button>
-
-        <button class="instance-war-room__stat-card" :class="{ 'is-active': statusFilter === 'offline' }" @click="statusFilter = 'offline'">
-          <div class="instance-war-room__stat-icon bg-error/12 text-error">
-            <SvgIcon icon="lucide:power-off" class="text-18px" />
-          </div>
-          <div>
-            <div class="instance-war-room__stat-label">离线</div>
-            <div class="instance-war-room__stat-value text-error">{{ offlineCount }}</div>
-          </div>
-        </button>
-
-        <div class="instance-war-room__stat-card instance-war-room__stat-card--static">
-          <div class="instance-war-room__stat-icon bg-info/12 text-info">
-            <SvgIcon icon="lucide:network" class="text-18px" />
-          </div>
-          <div>
-            <div class="instance-war-room__stat-label">主机数</div>
-            <div class="instance-war-room__stat-value">{{ hostCount }}</div>
-          </div>
-        </div>
-
-        <div class="instance-war-room__stat-card instance-war-room__stat-card--static">
-          <div class="instance-war-room__stat-icon bg-purple-500/12 text-purple-500">
-            <SvgIcon icon="lucide:git-branch" class="text-18px" />
-          </div>
-          <div>
-            <div class="instance-war-room__stat-label">JDK 版本簇</div>
-            <div class="instance-war-room__stat-value">{{ versionCount }}</div>
-          </div>
-        </div>
-      </section>
-
       <section class="instance-war-room__toolbar id-card">
         <div class="instance-war-room__toolbar-left">
           <TSegmented v-model:model-value="statusFilter" :options="statusOptions" size="large" />
+          <div class="instance-war-room__summary" aria-label="实例摘要">
+            <span>总数 {{ instances.length }}</span>
+            <span>在线 {{ onlineCount }}</span>
+            <span>离线 {{ offlineCount }}</span>
+          </div>
           <span class="instance-war-room__toolbar-hint">
             当前显示 {{ filteredInstances.length }} / {{ instances.length }} 个实例
           </span>
@@ -313,16 +237,8 @@ onMounted(() => {
               <strong class="signal-instance-card__metric-value">{{ instance.jdkVersion || '—' }}</strong>
             </div>
             <div class="signal-instance-card__metric">
-              <span class="signal-instance-card__metric-label">VM</span>
-              <strong class="signal-instance-card__metric-value">{{ instance.vmVersion || instance.vmName || '—' }}</strong>
-            </div>
-            <div class="signal-instance-card__metric">
-              <span class="signal-instance-card__metric-label">架构</span>
-              <strong class="signal-instance-card__metric-value">{{ instance.arch || '—' }}</strong>
-            </div>
-            <div class="signal-instance-card__metric">
-              <span class="signal-instance-card__metric-label">CPU / 内存</span>
-              <strong class="signal-instance-card__metric-value">{{ instance.availableProcessors ?? '-' }} 核 / {{ formatMemory(instance.memorySize) }}</strong>
+              <span class="signal-instance-card__metric-label">运行</span>
+              <strong class="signal-instance-card__metric-value">{{ formatUptime(instance.startTime) }}</strong>
             </div>
           </div>
 
@@ -362,18 +278,6 @@ onMounted(() => {
               <span>JDK</span>
               <strong>{{ instance.jdkVersion || '—' }}</strong>
             </div>
-            <div class="instance-line-card__chip">
-              <span>VM</span>
-              <strong>{{ instance.vmVersion || instance.vmName || '—' }}</strong>
-            </div>
-            <div class="instance-line-card__chip">
-              <span>ARCH</span>
-              <strong>{{ instance.arch || '—' }}</strong>
-            </div>
-            <div class="instance-line-card__chip">
-              <span>MEM</span>
-              <strong>{{ formatMemory(instance.memorySize) }}</strong>
-            </div>
           </div>
 
           <div class="instance-line-card__side">
@@ -394,7 +298,7 @@ onMounted(() => {
 .instance-war-room {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .instance-war-room__header {
@@ -439,173 +343,6 @@ onMounted(() => {
   gap: 10px;
 }
 
-.instance-war-room__hero {
-  position: relative;
-  overflow: hidden;
-  padding: 26px 32px;
-  background:
-    radial-gradient(circle at top right, rgba(var(--primary-color), 0.22), transparent 32%),
-    radial-gradient(circle at left bottom, rgba(var(--info-color), 0.18), transparent 26%),
-    linear-gradient(145deg, rgba(10, 14, 26, 0.99), rgba(22, 30, 50, 0.99));
-  color: #f8fafc !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-.instance-war-room__hero-mesh {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 24px 24px;
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), transparent);
-}
-
-.instance-war-room__hero-main,
-.instance-war-room__hero-tags {
-  position: relative;
-}
-
-.instance-war-room__hero-main {
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.instance-war-room__hero-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #f8fafc;
-}
-
-.instance-war-room__hero-title {
-  margin-top: 14px;
-  font-size: 32px;
-  font-weight: 900;
-  line-height: 1.15;
-  color: #f8fafc;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.instance-war-room__hero-description {
-  margin: 10px 0 0;
-  max-width: 640px;
-  font-size: 14px;
-  line-height: 1.7;
-  color: rgba(241, 245, 249, 0.72);
-}
-
-.instance-war-room__hero-side {
-  min-width: 140px;
-  text-align: right;
-}
-
-.instance-war-room__hero-rate {
-  font-size: 42px;
-  font-weight: 800;
-  line-height: 1;
-  color: #f8fafc;
-}
-
-.instance-war-room__hero-rate-label {
-  margin-top: 10px;
-  font-size: 12px;
-  color: rgba(241, 245, 249, 0.56);
-}
-
-.instance-war-room__hero-tags {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 18px;
-}
-
-.instance-war-room__hero-tag-label {
-  font-size: 12px;
-  color: rgba(241, 245, 249, 0.6);
-}
-
-.instance-war-room__hero-tag-empty {
-  font-size: 12px;
-  color: rgba(241, 245, 249, 0.5);
-}
-
-.instance-war-room__stats {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.instance-war-room__stat-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-  backdrop-filter: blur(24px);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.03);
-  text-align: left;
-  transition:
-    transform 0.25s ease,
-    border-color 0.25s ease,
-    background 0.25s ease,
-    box-shadow 0.25s ease;
-}
-
-button.instance-war-room__stat-card {
-  cursor: pointer;
-}
-
-button.instance-war-room__stat-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(var(--primary-color), 0.35);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-.instance-war-room__stat-card.is-active {
-  border-color: rgba(var(--primary-color), 0.45);
-  background: linear-gradient(135deg, rgba(var(--primary-color), 0.1), rgba(255, 255, 255, 0.05));
-  box-shadow: 0 8px 24px rgba(var(--primary-color), 0.12);
-}
-
-.instance-war-room__stat-card--static {
-  cursor: default;
-}
-
-.instance-war-room__stat-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  flex-shrink: 0;
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.08);
-}
-
-.instance-war-room__stat-label {
-  font-size: 12px;
-  color: var(--n-text-color-disabled);
-}
-
-.instance-war-room__stat-value {
-  margin-top: 4px;
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1;
-}
-
 .instance-war-room__toolbar {
   display: flex;
   align-items: center;
@@ -630,14 +367,27 @@ button.instance-war-room__stat-card:hover {
   color: var(--n-text-color-disabled);
 }
 
+.instance-war-room__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px;
+  font-size: 12px;
+  color: var(--n-text-color-disabled);
+}
+
+.instance-war-room__summary span {
+  white-space: nowrap;
+}
+
 .instance-war-room__search {
   width: 300px;
 }
 
 .instance-war-room__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
 }
 
 .instance-war-room__empty {
@@ -652,32 +402,22 @@ button.instance-war-room__stat-card:hover {
 
 .signal-instance-card {
   position: relative;
-  overflow: hidden;
   cursor: pointer;
   transition:
-    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
-    border-color 0.35s ease;
-  background:
-    radial-gradient(circle at top right, rgba(var(--success-color), 0.14), transparent 30%),
-    linear-gradient(160deg, rgba(13, 18, 28, 0.98), rgba(26, 34, 52, 0.98));
-  color: #f8fafc !important;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  border-left: 3px solid rgb(var(--success-color));
 
   &:hover {
-    transform: translateY(-4px) scale(1.01);
+    transform: translateY(-2px);
     border-color: rgba(var(--primary-color), 0.35);
-    box-shadow:
-      0 18px 40px rgba(15, 23, 42, 0.25),
-      0 0 40px rgba(var(--primary-color), 0.15);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   }
 }
 
 .signal-instance-card--offline {
-  background:
-    radial-gradient(circle at top right, rgba(var(--error-color), 0.16), transparent 26%),
-    linear-gradient(160deg, rgba(18, 18, 24, 0.98), rgba(34, 26, 30, 0.98));
+  border-left-color: rgb(var(--error-color));
   opacity: 0.9;
 }
 
@@ -699,14 +439,13 @@ button.instance-war-room__stat-card:hover {
   font-weight: 700;
   line-height: 1.2;
   font-family: 'Consolas', 'Monaco', monospace;
-  color: #f8fafc;
 }
 
 .signal-instance-card__ip,
 .signal-instance-card__meta-row,
 .signal-instance-card__footer-item {
   font-size: 12px;
-  color: rgba(241, 245, 249, 0.62);
+  color: var(--n-text-color-disabled);
 }
 
 .signal-instance-card__ip {
@@ -731,14 +470,13 @@ button.instance-war-room__stat-card:hover {
 
 .signal-instance-card__metric {
   padding: 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  background: var(--n-color-embedded);
 }
 
 .signal-instance-card__metric-label {
   font-size: 11px;
-  color: rgba(241, 245, 249, 0.54);
+  color: var(--n-text-color-disabled);
   text-transform: uppercase;
 }
 
@@ -748,7 +486,6 @@ button.instance-war-room__stat-card:hover {
   font-size: 14px;
   line-height: 1.35;
   word-break: break-all;
-  color: #f8fafc;
 }
 
 .signal-instance-card__footer {
@@ -757,7 +494,7 @@ button.instance-war-room__stat-card:hover {
   gap: 10px;
   margin-top: 16px;
   padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--n-border-color);
 }
 
 .signal-instance-card__footer-item {
@@ -786,16 +523,13 @@ button.instance-war-room__stat-card:hover {
 
 .instance-line-card {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1.3fr) minmax(120px, 0.35fr) auto;
   gap: 16px;
   align-items: center;
   padding: 16px 20px;
   border: 1px solid var(--n-border-color);
-  border-radius: 16px;
-  background:
-    linear-gradient(135deg, rgba(var(--primary-color), 0.05), transparent 30%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
-  backdrop-filter: blur(12px);
+  border-radius: 8px;
+  background: var(--n-color);
   text-align: left;
   transition:
     transform 0.25s ease,
@@ -811,9 +545,7 @@ button.instance-war-room__stat-card:hover {
 }
 
 .instance-line-card--offline {
-  background:
-    linear-gradient(135deg, rgba(var(--error-color), 0.06), transparent 32%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+  border-left: 3px solid rgb(var(--error-color));
   opacity: 0.9;
 }
 
@@ -832,7 +564,7 @@ button.instance-war-room__stat-card:hover {
 
 .instance-line-card__chips {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 10px;
 }
 
@@ -841,7 +573,7 @@ button.instance-war-room__stat-card:hover {
   flex-direction: column;
   gap: 6px;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: 8px;
   background-color: var(--n-color-embedded);
 }
 
@@ -864,10 +596,6 @@ button.instance-war-room__stat-card:hover {
 }
 
 @media (max-width: 1200px) {
-  .instance-war-room__stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .instance-war-room__toolbar {
     flex-direction: column;
     align-items: stretch;
@@ -889,7 +617,6 @@ button.instance-war-room__stat-card:hover {
 @media (max-width: 768px) {
   .instance-war-room__header,
   .instance-war-room__header-actions,
-  .instance-war-room__hero-main,
   .signal-instance-card__footer {
     flex-direction: column;
     align-items: flex-start;
@@ -899,15 +626,10 @@ button.instance-war-room__stat-card:hover {
     width: 100%;
   }
 
-  .instance-war-room__stats,
   .instance-war-room__grid,
   .signal-instance-card__metrics,
   .instance-line-card__chips {
     grid-template-columns: 1fr;
-  }
-
-  .instance-war-room__hero-side {
-    text-align: left;
   }
 }
 </style>
