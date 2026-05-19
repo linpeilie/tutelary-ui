@@ -16,25 +16,33 @@ interface Props {
 const props = defineProps<Props>();
 
 const onlinePercent = computed(() => {
+  if (typeof props.app.onlineInstanceNum !== 'number') return undefined;
   if (!props.app.instanceNum) return 0;
-  return Math.round(((props.app.onlineInstanceNum || 0) / props.app.instanceNum) * 100);
+  return Math.round((props.app.onlineInstanceNum / props.app.instanceNum) * 100);
 });
 
 const healthMeta = computed(() => {
-  if (!props.app.instanceNum || props.app.onlineInstanceNum === 0) {
-    return { label: props.app.instanceNum ? '离线' : '未接入', type: 'error' as const, tone: 'offline' };
+  if (!props.app.instanceNum) {
+    return { label: '未接入', type: 'default' as const, tone: 'empty' };
+  }
+  if (typeof props.app.onlineInstanceNum !== 'number') {
+    return { label: '已登记', type: 'info' as const, tone: 'active' };
   }
   if (props.app.onlineInstanceNum === props.app.instanceNum) {
-    return { label: '健康', type: 'success' as const, tone: 'healthy' };
+    return { label: '在线', type: 'success' as const, tone: 'active' };
   }
-  return { label: '风险', type: 'warning' as const, tone: 'warning' };
+  return { label: '需关注', type: 'warning' as const, tone: 'attention' };
 });
 
 const versionTags = computed(() => props.app.topJdkVersions || []);
 const onlineSummary = computed(() => {
   if (!props.app.instanceNum) return '等待实例接入';
+  if (typeof props.app.onlineInstanceNum !== 'number') return `${props.app.instanceNum || 0} 个登记实例`;
   return `${props.app.onlineInstanceNum || 0}/${props.app.instanceNum || 0} 在线`;
 });
+
+const progressWidth = computed(() => `${onlinePercent.value ?? 100}%`);
+const rateSummary = computed(() => (onlinePercent.value === undefined ? '运行态见实例列表' : `在线率 ${onlinePercent.value}%`));
 
 function formatRegisterTime(value: string) {
   if (!value) return '—';
@@ -67,11 +75,11 @@ function handleClick() {
       <div>
         <div class="app-radar-card__rate">{{ onlineSummary }}</div>
       </div>
-      <div class="app-radar-card__summary-text">在线率 {{ onlinePercent }}%</div>
+      <div class="app-radar-card__summary-text">{{ rateSummary }}</div>
     </div>
 
     <div class="id-progress id-progress-sm app-radar-card__progress">
-      <div class="id-progress-fill app-radar-card__progress-fill" :style="{ width: `${onlinePercent}%` }"></div>
+      <div class="id-progress-fill app-radar-card__progress-fill" :style="{ width: progressWidth }"></div>
     </div>
 
     <div class="app-radar-card__versions">
@@ -84,7 +92,7 @@ function handleClick() {
     </div>
 
     <div class="app-radar-card__footer">
-      <span class="app-radar-card__footer-text">实例 {{ props.app.instanceNum || 0 }} · 主机 {{ props.app.hostCount || 0 }}</span>
+      <span class="app-radar-card__footer-text">实例 {{ props.app.instanceNum || 0 }} · 主机 {{ props.app.hostCount ?? '—' }}</span>
       <NButton size="small" type="primary" ghost @click.stop="handleClick">
         查看实例
       </NButton>
@@ -109,15 +117,15 @@ function handleClick() {
   }
 }
 
-.app-radar-card--healthy {
+.app-radar-card--active {
   --app-accent: rgb(var(--success-color));
 }
 
-.app-radar-card--warning {
+.app-radar-card--attention {
   --app-accent: rgb(var(--warning-color));
 }
 
-.app-radar-card--offline {
+.app-radar-card--empty {
   --app-accent: rgb(var(--error-color));
   opacity: 0.9;
 }

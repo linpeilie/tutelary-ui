@@ -8,7 +8,15 @@ import { formatTimeDifference } from '@/utils/time';
 import { useRoute, useRouter } from 'vue-router';
 import { useBoolean } from '~/packages/hooks';
 
-type StatusFilter = 'all' | 'online' | 'offline';
+type RuntimeStatus =
+  | 'REGISTERING'
+  | 'ONLINE'
+  | 'DRAINING'
+  | 'SUSPECT'
+  | 'TEMP_OFFLINE'
+  | 'PERMANENT_OFFLINE'
+  | 'DELETED';
+type StatusFilter = 'all' | 'online' | 'suspect' | 'offline' | 'permanent';
 type ViewMode = 'cards' | 'list';
 
 const route = useRoute();
@@ -23,7 +31,9 @@ const { bool: loading, setTrue: startLoading, setFalse: stopLoading } = useBoole
 const statusOptions: OptionsType[] = [
   { label: '全部', value: 'all', icon: 'lucide:layout-grid', iconType: 'iconify' },
   { label: '在线', value: 'online', icon: 'lucide:activity', iconType: 'iconify' },
-  { label: '离线', value: 'offline', icon: 'lucide:power-off', iconType: 'iconify' }
+  { label: '疑似', value: 'suspect', icon: 'lucide:circle-alert', iconType: 'iconify' },
+  { label: '临时下线', value: 'offline', icon: 'lucide:power-off', iconType: 'iconify' },
+  { label: '永久下线', value: 'permanent', icon: 'lucide:archive-x', iconType: 'iconify' }
 ];
 
 const viewOptions: OptionsType[] = [
@@ -33,11 +43,31 @@ const viewOptions: OptionsType[] = [
 
 const instances = computed(() => appDetail.value?.instances || []);
 
+function runtimeStatus(instance: Api.Instance.InstanceInfo): RuntimeStatus {
+  if (instance.runtimeStatus) return instance.runtimeStatus as RuntimeStatus;
+  return (instance.online ?? instance.state === 1) ? 'ONLINE' : 'TEMP_OFFLINE';
+}
+
 function isOnline(instance: Api.Instance.InstanceInfo) {
-  return instance.online ?? instance.state === 1;
+  return ['ONLINE', 'DRAINING'].includes(runtimeStatus(instance));
+}
+
+function isSuspect(instance: Api.Instance.InstanceInfo) {
+  return runtimeStatus(instance) === 'SUSPECT';
+}
+
+function isPermanentOffline(instance: Api.Instance.InstanceInfo) {
+  return ['PERMANENT_OFFLINE', 'DELETED'].includes(runtimeStatus(instance));
+}
+
+function isTemporaryOffline(instance: Api.Instance.InstanceInfo) {
+  return ['TEMP_OFFLINE', 'REGISTERING'].includes(runtimeStatus(instance));
 }
 
 const onlineCount = computed(() => instances.value.filter(isOnline).length);
+const suspectCount = computed(() => instances.value.filter(isSuspect).length);
+const temporaryOfflineCount = computed(() => instances.value.filter(isTemporaryOffline).length);
+const permanentOfflineCount = computed(() => instances.value.filter(isPermanentOffline).length);
 const offlineCount = computed(() => instances.value.length - onlineCount.value);
 const onlineRate = computed(() => {
   if (!instances.value.length) return 0;
@@ -45,13 +75,42 @@ const onlineRate = computed(() => {
 });
 const hostCount = computed(() => appDetail.value?.hostCount || 0);
 
+const runtimeStatusMeta: Record<RuntimeStatus, { label: string; type: 'default' | 'success' | 'warning' | 'error' | 'info'; tone: string }> = {
+  REGISTERING: { label: '注册中', type: 'info', tone: 'registering' },
+  ONLINE: { label: '在线', type: 'success', tone: 'online' },
+  DRAINING: { label: '摘流中', type: 'warning', tone: 'draining' },
+  SUSPECT: { label: '疑似下线', type: 'warning', tone: 'suspect' },
+  TEMP_OFFLINE: { label: '临时下线', type: 'error', tone: 'offline' },
+  PERMANENT_OFFLINE: { label: '永久下线', type: 'error', tone: 'permanent' },
+  DELETED: { label: '已删除', type: 'default', tone: 'deleted' }
+};
+
+function getRuntimeMeta(instance: Api.Instance.InstanceInfo) {
+  return runtimeStatusMeta[runtimeStatus(instance)] || runtimeStatusMeta.TEMP_OFFLINE;
+}
+
+function runtimeStatusWeight(instance: Api.Instance.InstanceInfo) {
+  const weight: Record<RuntimeStatus, number> = {
+    SUSPECT: 0,
+    REGISTERING: 1,
+    TEMP_OFFLINE: 2,
+    PERMANENT_OFFLINE: 3,
+    DELETED: 4,
+    DRAINING: 5,
+    ONLINE: 6
+  };
+  return weight[runtimeStatus(instance)] ?? 2;
+}
+
 const filteredInstances = computed(() => {
   const keyword = searchText.value.trim().toLowerCase();
 
   return [...instances.value]
     .filter(instance => {
       if (statusFilter.value === 'online') return isOnline(instance);
-      if (statusFilter.value === 'offline') return !isOnline(instance);
+      if (statusFilter.value === 'suspect') return isSuspect(instance);
+      if (statusFilter.value === 'offline') return isTemporaryOffline(instance);
+      if (statusFilter.value === 'permanent') return isPermanentOffline(instance);
       return true;
     })
     .filter(instance => {
@@ -62,20 +121,30 @@ const filteredInstances = computed(() => {
         instance.hostName,
         instance.jdkVersion,
         instance.vmVersion,
-        instance.arch
+        instance.arch,
+        instance.env,
+        instance.region,
+        instance.zone,
+        instance.runtimeStatus,
+        instance.ownerNodeId,
+        instance.runtimeId,
+        instance.bootId,
+        instance.reason
       ]
         .filter((value): value is string => Boolean(value))
         .some(value => value.toLowerCase().includes(keyword));
     })
     .sort((a, b) => {
-      const onlineDiff = Number(isOnline(b)) - Number(isOnline(a));
-      if (onlineDiff !== 0) return onlineDiff;
-      return dayjs(b.startTime).valueOf() - dayjs(a.startTime).valueOf();
+      const statusDiff = runtimeStatusWeight(a) - runtimeStatusWeight(b);
+      if (statusDiff !== 0) return statusDiff;
+      return timeValue(b.lastSeenAt || b.leaseExpireAt || b.startTime)
+        - timeValue(a.lastSeenAt || a.leaseExpireAt || a.startTime);
     });
 });
 
 const headerStatus = computed(() => {
   if (!instances.value.length || onlineCount.value === 0) return { label: '离线风险', type: 'error' as const };
+  if (suspectCount.value > 0) return { label: '存在疑似下线', type: 'warning' as const };
   if (onlineCount.value === instances.value.length) return { label: '稳定运行', type: 'success' as const };
   return { label: '存在波动', type: 'warning' as const };
 });
@@ -93,6 +162,27 @@ function formatCompactTime(value?: string) {
 function formatUptime(value?: string) {
   if (!value) return '—';
   return formatTimeDifference(value, dayjs());
+}
+
+function formatRelativeTime(value?: string) {
+  if (!value) return '—';
+  return formatTimeDifference(value, dayjs());
+}
+
+function formatLocation(instance: Api.Instance.InstanceInfo) {
+  const location = [instance.env, instance.region, instance.zone].filter(Boolean).join(' / ');
+  return location || 'default';
+}
+
+function formatOwner(instance: Api.Instance.InstanceInfo) {
+  if (!instance.ownerNodeId) return '—';
+  return instance.ownerNodeId;
+}
+
+function timeValue(value?: string) {
+  if (!value) return 0;
+  const timestamp = dayjs(value).valueOf();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
 function fetchData() {
@@ -132,7 +222,8 @@ onMounted(() => {
             </NTag>
           </div>
           <div class="instance-war-room__subtitle">
-            注册于 {{ formatAbsoluteTime(appDetail?.registerDate) }} · {{ hostCount }} 台主机 · 在线率 {{ onlineRate }}%
+            注册于 {{ formatAbsoluteTime(appDetail?.registerDate) }} · {{ hostCount }} 台主机 · 在线率 {{ onlineRate }}% ·
+            疑似 {{ suspectCount }} / 临时下线 {{ temporaryOfflineCount }} / 永久下线 {{ permanentOfflineCount }}
           </div>
         </div>
       </div>
@@ -162,7 +253,8 @@ onMounted(() => {
           <div class="instance-war-room__summary" aria-label="实例摘要">
             <span>总数 {{ instances.length }}</span>
             <span>在线 {{ onlineCount }}</span>
-            <span>离线 {{ offlineCount }}</span>
+            <span>疑似 {{ suspectCount }}</span>
+            <span>下线 {{ offlineCount }}</span>
           </div>
           <span class="instance-war-room__toolbar-hint">
             当前显示 {{ filteredInstances.length }} / {{ instances.length }} 个实例
@@ -206,35 +298,43 @@ onMounted(() => {
           :key="instance.instanceId"
           size="small"
           class="id-card signal-instance-card"
-          :class="{ 'signal-instance-card--offline': !isOnline(instance) }"
+          :class="`signal-instance-card--${getRuntimeMeta(instance).tone}`"
           hoverable
           @click="toInstanceDetail(instance)"
         >
           <div class="signal-instance-card__header">
             <div class="signal-instance-card__identity">
               <div class="id-status-indicator">
-                <span class="id-status-dot" :class="isOnline(instance) ? 'signal-instance-card__status-dot--online' : 'signal-instance-card__status-dot--offline'"></span>
+                <span class="id-status-dot" :class="`signal-instance-card__status-dot--${getRuntimeMeta(instance).tone}`"></span>
                 <div>
                   <div class="signal-instance-card__id">{{ instance.instanceId }}</div>
-                  <div class="signal-instance-card__ip">{{ instance.ip }}</div>
+                  <div class="signal-instance-card__ip">{{ instance.ip }} · {{ formatLocation(instance) }}</div>
                 </div>
               </div>
             </div>
 
-            <NTag :type="isOnline(instance) ? 'success' : 'error'" size="small" round :bordered="false">
-              {{ isOnline(instance) ? '在线' : '离线' }}
+            <NTag :type="getRuntimeMeta(instance).type" size="small" round :bordered="false">
+              {{ getRuntimeMeta(instance).label }}
             </NTag>
           </div>
 
           <div class="signal-instance-card__meta-row">
             <span>{{ instance.hostName || '未知主机' }}</span>
-            <span>接入 {{ formatCompactTime(instance.registerDate) }}</span>
+            <span>心跳 {{ formatRelativeTime(instance.lastSeenAt) }}</span>
           </div>
 
           <div class="signal-instance-card__metrics">
             <div class="signal-instance-card__metric">
               <span class="signal-instance-card__metric-label">JDK</span>
               <strong class="signal-instance-card__metric-value">{{ instance.jdkVersion || '—' }}</strong>
+            </div>
+            <div class="signal-instance-card__metric">
+              <span class="signal-instance-card__metric-label">Lease</span>
+              <strong class="signal-instance-card__metric-value">{{ formatCompactTime(instance.leaseExpireAt) }}</strong>
+            </div>
+            <div class="signal-instance-card__metric">
+              <span class="signal-instance-card__metric-label">Epoch</span>
+              <strong class="signal-instance-card__metric-value">{{ instance.ownerEpoch ?? '—' }}</strong>
             </div>
             <div class="signal-instance-card__metric">
               <span class="signal-instance-card__metric-label">运行</span>
@@ -244,12 +344,12 @@ onMounted(() => {
 
           <div class="signal-instance-card__footer">
             <div class="signal-instance-card__footer-item">
-              <SvgIcon icon="lucide:clock-3" class="text-12px" />
-              <span>运行 {{ formatUptime(instance.startTime) }}</span>
+              <SvgIcon icon="lucide:server-cog" class="text-12px" />
+              <span>{{ formatOwner(instance) }}</span>
             </div>
             <div class="signal-instance-card__footer-item">
-              <SvgIcon icon="lucide:calendar-range" class="text-12px" />
-              <span>{{ formatCompactTime(instance.startTime) }}</span>
+              <SvgIcon icon="lucide:message-square-warning" class="text-12px" />
+              <span>{{ instance.reason || '—' }}</span>
             </div>
           </div>
         </NCard>
@@ -260,31 +360,41 @@ onMounted(() => {
           v-for="instance in filteredInstances"
           :key="instance.instanceId"
           class="instance-line-card"
-          :class="{ 'instance-line-card--offline': !isOnline(instance) }"
+          :class="`instance-line-card--${getRuntimeMeta(instance).tone}`"
           @click="toInstanceDetail(instance)"
         >
           <div class="instance-line-card__primary">
             <div class="id-status-indicator">
-              <span class="id-status-dot" :class="isOnline(instance) ? 'signal-instance-card__status-dot--online' : 'signal-instance-card__status-dot--offline'"></span>
+              <span class="id-status-dot" :class="`signal-instance-card__status-dot--${getRuntimeMeta(instance).tone}`"></span>
               <div>
                 <div class="instance-line-card__id">{{ instance.instanceId }}</div>
-                <div class="instance-line-card__ip">{{ instance.ip }} · {{ instance.hostName || '未知主机' }}</div>
+                <div class="instance-line-card__ip">
+                  {{ instance.ip }} · {{ instance.hostName || '未知主机' }} · {{ formatLocation(instance) }}
+                </div>
               </div>
             </div>
           </div>
 
           <div class="instance-line-card__chips">
             <div class="instance-line-card__chip">
-              <span>JDK</span>
-              <strong>{{ instance.jdkVersion || '—' }}</strong>
+              <span>心跳</span>
+              <strong>{{ formatRelativeTime(instance.lastSeenAt) }}</strong>
+            </div>
+            <div class="instance-line-card__chip">
+              <span>Lease</span>
+              <strong>{{ formatCompactTime(instance.leaseExpireAt) }}</strong>
+            </div>
+            <div class="instance-line-card__chip">
+              <span>Epoch</span>
+              <strong>{{ instance.ownerEpoch ?? '—' }}</strong>
             </div>
           </div>
 
           <div class="instance-line-card__side">
-            <NTag :type="isOnline(instance) ? 'success' : 'error'" size="small" round :bordered="false">
-              {{ isOnline(instance) ? '在线' : '离线' }}
+            <NTag :type="getRuntimeMeta(instance).type" size="small" round :bordered="false">
+              {{ getRuntimeMeta(instance).label }}
             </NTag>
-            <span class="instance-line-card__runtime">运行 {{ formatUptime(instance.startTime) }}</span>
+            <span class="instance-line-card__runtime">{{ instance.reason || formatOwner(instance) }}</span>
           </div>
         </button>
       </div>
@@ -416,7 +526,15 @@ onMounted(() => {
   }
 }
 
-.signal-instance-card--offline {
+.signal-instance-card--draining,
+.signal-instance-card--suspect,
+.signal-instance-card--registering {
+  border-left-color: rgb(var(--warning-color));
+}
+
+.signal-instance-card--offline,
+.signal-instance-card--permanent,
+.signal-instance-card--deleted {
   border-left-color: rgb(var(--error-color));
   opacity: 0.9;
 }
@@ -501,14 +619,30 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
 }
 
-.signal-instance-card__status-dot--online {
+.signal-instance-card__footer-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.signal-instance-card__status-dot--online,
+.signal-instance-card__status-dot--draining {
   background-color: rgb(var(--success-color));
   box-shadow: 0 0 10px rgba(var(--success-color), 0.58);
 }
 
-.signal-instance-card__status-dot--offline {
+.signal-instance-card__status-dot--suspect,
+.signal-instance-card__status-dot--registering {
+  background-color: rgb(var(--warning-color));
+  box-shadow: 0 0 10px rgba(var(--warning-color), 0.5);
+}
+
+.signal-instance-card__status-dot--offline,
+.signal-instance-card__status-dot--permanent,
+.signal-instance-card__status-dot--deleted {
   background-color: rgb(var(--error-color));
   box-shadow: none;
   animation: none;
@@ -523,7 +657,7 @@ onMounted(() => {
 
 .instance-line-card {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(120px, 0.35fr) auto;
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.9fr) auto;
   gap: 16px;
   align-items: center;
   padding: 16px 20px;
@@ -544,7 +678,15 @@ onMounted(() => {
   }
 }
 
-.instance-line-card--offline {
+.instance-line-card--suspect,
+.instance-line-card--draining,
+.instance-line-card--registering {
+  border-left: 3px solid rgb(var(--warning-color));
+}
+
+.instance-line-card--offline,
+.instance-line-card--permanent,
+.instance-line-card--deleted {
   border-left: 3px solid rgb(var(--error-color));
   opacity: 0.9;
 }
@@ -564,7 +706,7 @@ onMounted(() => {
 
 .instance-line-card__chips {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 

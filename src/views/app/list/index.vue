@@ -6,7 +6,7 @@ import { fetchAppList } from '@/service/api';
 import AppCard from '@/views/app/list/modules/app-card.vue';
 import { useBoolean } from '~/packages/hooks';
 
-type AppFilter = 'all' | 'healthy' | 'warning' | 'offline';
+type AppFilter = 'all' | 'active' | 'empty' | 'attention';
 type AppHealthTone = Exclude<AppFilter, 'all'>;
 
 const appList = ref<Api.Application.AppInfo[]>([]);
@@ -16,23 +16,20 @@ const { bool: loading, setTrue: startLoading, setFalse: stopLoading } = useBoole
 
 const filterOptions: OptionsType[] = [
   { label: '全部', value: 'all', icon: 'lucide:layout-grid', iconType: 'iconify' },
-  { label: '健康', value: 'healthy', icon: 'lucide:shield-check', iconType: 'iconify' },
-  { label: '风险', value: 'warning', icon: 'lucide:triangle-alert', iconType: 'iconify' },
-  { label: '离线', value: 'offline', icon: 'lucide:power-off', iconType: 'iconify' }
+  { label: '有实例', value: 'active', icon: 'lucide:server', iconType: 'iconify' },
+  { label: '空应用', value: 'empty', icon: 'lucide:server-off', iconType: 'iconify' },
+  { label: '需关注', value: 'attention', icon: 'lucide:triangle-alert', iconType: 'iconify' }
 ];
 
 function resolveHealthTone(app: Api.Application.AppInfo): AppHealthTone {
-  if (!app.instanceNum || app.onlineInstanceNum === 0) return 'offline';
-  if (app.onlineInstanceNum === app.instanceNum) return 'healthy';
-  return 'warning';
+  if (!app.instanceNum) return 'empty';
+  if (typeof app.onlineInstanceNum === 'number' && app.onlineInstanceNum < app.instanceNum) return 'attention';
+  return 'active';
 }
 
 const totalInstances = computed(() => appList.value.reduce((sum, app) => sum + (app.instanceNum || 0), 0));
-const totalOnline = computed(() => appList.value.reduce((sum, app) => sum + (app.onlineInstanceNum || 0), 0));
-const onlineRate = computed(() => {
-  if (!totalInstances.value) return 0;
-  return Math.round((totalOnline.value / totalInstances.value) * 100);
-});
+const activeAppCount = computed(() => appList.value.filter(app => (app.instanceNum || 0) > 0).length);
+const emptyAppCount = computed(() => appList.value.length - activeAppCount.value);
 
 const filteredApps = computed(() => {
   const keyword = searchText.value.trim().toLowerCase();
@@ -49,7 +46,7 @@ const filteredApps = computed(() => {
         .some(value => value.toLowerCase().includes(keyword));
     })
     .sort((a, b) => {
-      const toneWeight = { warning: 0, offline: 1, healthy: 2 } as const;
+      const toneWeight = { attention: 0, empty: 1, active: 2 } as const;
       const toneDiff = toneWeight[resolveHealthTone(a)] - toneWeight[resolveHealthTone(b)];
       if (toneDiff !== 0) return toneDiff;
       return (b.instanceNum || 0) - (a.instanceNum || 0);
@@ -77,7 +74,7 @@ onMounted(() => {
         <div class="app-command-hero__copy">
           <h1 class="app-command-hero__title">应用列表</h1>
           <p class="app-command-hero__description">
-            查看已接入应用的在线状态和实例规模。
+            查看已接入应用和登记实例规模，进入应用后查看会话、Lease 和运行态。
           </p>
         </div>
 
@@ -91,8 +88,8 @@ onMounted(() => {
             <strong>{{ totalInstances }}</strong>
           </div>
           <div class="app-command-summary__item">
-            <span>在线率</span>
-            <strong>{{ onlineRate }}%</strong>
+            <span>有实例</span>
+            <strong>{{ activeAppCount }}</strong>
           </div>
         </div>
 
@@ -122,7 +119,7 @@ onMounted(() => {
       <div class="app-command-toolbar__left">
         <TSegmented v-model:model-value="healthFilter" :options="filterOptions" size="large" />
         <span class="app-command-toolbar__hint">
-          当前显示 {{ filteredApps.length }} / {{ appList.length }} 个应用，在线实例 {{ totalOnline }}
+          当前显示 {{ filteredApps.length }} / {{ appList.length }} 个应用，空应用 {{ emptyAppCount }}
         </span>
       </div>
     </section>
