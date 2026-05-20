@@ -34,3 +34,6 @@ yarn.lock
 
 .VSCodeCounter
 index-refer.html
+
+auto-imports.d.ts
+components.d.ts

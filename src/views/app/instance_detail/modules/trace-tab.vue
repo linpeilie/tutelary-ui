@@ -17,6 +17,7 @@ import {
 } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
 import { fetchTraceCommand } from '@/service/api/instance';
+import { recoverEnhanceTaskResults } from '@/composables/useRecoveredEnhanceTasks';
 import eventbus from '@/utils/eventbus';
 import { div4Round } from '@/utils/math';
 import { commandEnum } from '@/enum/commandEnums';
@@ -208,6 +209,11 @@ function handleEnhanceComplete(data: CommandExecuteResponse<EnhanceCommandComple
 onMounted(() => {
   eventbus.on('command:trace', handleTraceResult);
   eventbus.on('command:enhance-complete', handleEnhanceComplete);
+  recoverEnhanceTaskResults<TraceResponse>(
+    props.instanceId,
+    commandEnum.TRACE_METHOD.value as number,
+    handleTraceResult
+  );
 });
 
 onUnmounted(() => {

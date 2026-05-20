@@ -39,5 +39,7 @@ declare namespace StorageType {
     };
     /** The last login user id */
     lastLoginUserId: string;
+    /** Browser command sessions keyed by instance id */
+    instanceCommandSessions: Record<string, string>;
   }
 }

@@ -15,6 +15,7 @@ import {
 } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
 import { cancelCommandTask, fetchMonitorCommand } from '@/service/api/instance';
+import { recoverEnhanceTaskResults } from '@/composables/useRecoveredEnhanceTasks';
 import eventBus from '@/utils/eventbus';
 import { commandEnum } from '@/enum/commandEnums';
 import EnhanceTaskRecords from '@/components/custom/enhance-task-records.vue';
@@ -222,6 +223,11 @@ function handleMonitorResult(response: CommandExecuteResponse<MonitorResponse>) 
 
 onMounted(() => {
   eventBus.on('command:monitor', handleMonitorResult);
+  recoverEnhanceTaskResults<MonitorResponse>(
+    props.instanceId,
+    commandEnum.MONITOR_METHOD.value as number,
+    handleMonitorResult
+  );
 });
 
 onUnmounted(() => {

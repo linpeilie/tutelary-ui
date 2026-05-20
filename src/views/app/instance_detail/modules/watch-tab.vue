@@ -15,6 +15,7 @@ import {
   useMessage
 } from 'naive-ui';
 import { fetchWatchCommand } from '@/service/api/instance';
+import { recoverEnhanceTaskResults } from '@/composables/useRecoveredEnhanceTasks';
 import eventBus from '@/utils/eventbus';
 import { commandEnum } from '@/enum/commandEnums';
 import EnhanceTaskRecords from '@/components/custom/enhance-task-records.vue';
@@ -151,6 +152,11 @@ function handleWatchResult(response: CommandExecuteResponse<WatchResponse>) {
 
 onMounted(() => {
   eventBus.on('command:watch', handleWatchResult);
+  recoverEnhanceTaskResults<WatchResponse>(
+    props.instanceId,
+    commandEnum.WATCH_METHOD.value as number,
+    handleWatchResult
+  );
 });
 
 onUnmounted(() => {

@@ -11,6 +11,7 @@
 - 当前 token 名称配置为 `_tt`。
 - 浏览器侧命令回调走 Spring WebSocket：`ws://{host}:{port}/api/ws?_tt={token}`。
 - 浏览器 WebSocket 收到的是**二进制 protobuf 消息**，不是 JSON。
+- 浏览器进入实例详情页后，必须先为该实例获取浏览器命令会话 `browserSessionId`；后续 REST 创建命令和 WebSocket 回调路由都以该会话为准。
 
 ## 2. 通用响应格式
 
@@ -259,6 +260,18 @@ ws://{host}:{port}/api/ws?_tt={token}
 
 ## 5. 命令接口联调
 
+## 5.0 浏览器实例命令会话
+
+浏览器针对同一个实例维持同一个 `browserSessionId`。前端把 `instanceId -> browserSessionId` 保存在本地存储中；页面刷新后携带旧 `sessionId` 调用签发接口，服务端会在会话仍有效时返回同一个值，否则签发新值。
+
+| 接口 | 说明 | 请求参数 | 返回数据 |
+| --- | --- | --- | --- |
+| `POST /api/browser/instance-session/issue` | 获取或签发浏览器实例会话 | `instanceId`, `sessionId?` | `BrowserInstanceSessionResponse` |
+| `POST /api/browser/instance-session/bind` | 绑定当前用户最新 WebSocket 到会话 | `instanceId`, `sessionId` | `BrowserInstanceSessionResponse` |
+| `POST /api/browser/instance-session/enhance-tasks` | 获取该会话下增强命令历史任务及结果 | `instanceId`, `sessionId`, `commandCode?` | `BrowserSessionEnhanceTaskResponse[]` |
+
+服务端规则：创建命令时校验 `browserSessionId`；任务持久化该字段；回调只推送到该 `browserSessionId` 当前绑定的 WebSocket；浏览器 WebSocket 断开超过 30 秒后取消该会话下未完成任务；增强命令刷新后可通过 `enhance-tasks` 恢复上次任务及结果。
+
 ## 5.1 通用流程
 
 除文件下载外，命令接口都是两段式：
@@ -271,6 +284,7 @@ ws://{host}:{port}/api/ws?_tt={token}
 ```json
 {
   "instanceId": "目标实例 ID",
+  "browserSessionId": "浏览器实例会话 ID",
   "param": {}
 }
 ```
@@ -280,6 +294,7 @@ ws://{host}:{port}/api/ws?_tt={token}
 - `commandCode`
 - `instanceId`
 - `taskId`
+- `browserSessionId`
 - `param`
 - `completeTime`
 
@@ -478,6 +493,7 @@ ws://{host}:{port}/api/ws?_tt={token}
 ```json
 {
   "instanceId": "2ec2bf39480946f29a291a48686c2f04",
+  "browserSessionId": "浏览器实例会话 ID",
   "param": {
     "samplerInterval": 200
   }
@@ -491,6 +507,7 @@ ws://{host}:{port}/api/ws?_tt={token}
 ```json
 {
   "instanceId": "2ec2bf39480946f29a291a48686c2f04",
+  "browserSessionId": "浏览器实例会话 ID",
   "param": {
     "qualifiedClassName": "com.example.demo.ServiceImpl",
     "methodNames": ["execute"],

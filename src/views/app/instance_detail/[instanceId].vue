@@ -3,6 +3,7 @@ import type { Ref } from 'vue';
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { fetchInstanceDetail } from '@/service/api/instance';
+import { useInstanceCommandSession } from '@/composables/useInstanceCommandSession';
 import { $t } from '@/locales';
 import InstanceInfoCard from '@/views/app/instance_detail/modules/instance-info-card.vue';
 import DashboardTab from '@/views/app/instance_detail/modules/dashboard-tab.vue';
@@ -24,9 +25,12 @@ import JfrTab from '@/views/app/instance_detail/modules/jfr-tab.vue';
 import ChangeRecordsTab from '@/views/app/instance_detail/modules/change-records-tab.vue';
 
 const route = useRoute();
+const instanceId = route.params.instanceId as string;
 const instanceDetail: Ref<Api.Instance.InstanceInfo | undefined> = ref();
 const activeTab = ref('dashboard');
 const infoCollapsed = ref(false);
+const commandSession = useInstanceCommandSession(instanceId);
+const commandSessionReady = commandSession.ready;
 
 interface TabItem {
   label: string;
@@ -93,7 +97,7 @@ const tabGroups: TabGroup[] = [
 ];
 
 function refreshInstance() {
-  fetchInstanceDetail(route.params.instanceId as string).then(res => {
+  fetchInstanceDetail(instanceId).then(res => {
     if (res.data) {
       instanceDetail.value = res.data;
     }
@@ -102,6 +106,7 @@ function refreshInstance() {
 
 onMounted(() => {
   refreshInstance();
+  commandSession.init();
 });
 </script>
 
@@ -174,7 +179,14 @@ onMounted(() => {
       </NCard>
 
       <!-- Tab 内容 -->
-      <DashboardTab v-if="activeTab === 'dashboard' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <NCard v-if="instanceDetail && !commandSessionReady" size="small" class="id-card">
+        <NEmpty description="正在建立浏览器会话...">
+          <template #icon>
+            <SvgIcon icon="lucide:radio-tower" class="text-4xl" />
+          </template>
+        </NEmpty>
+      </NCard>
+      <DashboardTab v-else-if="activeTab === 'dashboard' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <SystemTab v-else-if="activeTab === 'system' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <ThreadTab v-else-if="activeTab === 'thread' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <JvmMemoryTab v-else-if="activeTab === 'jvmMemory' && instanceDetail" :instance-id="instanceDetail.instanceId" />

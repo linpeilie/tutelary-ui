@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { fetchStackCommand } from '@/service/api/instance';
+import { recoverEnhanceTaskResults } from '@/composables/useRecoveredEnhanceTasks';
 import eventBus from '@/utils/eventbus';
 import { commandEnum } from '@/enum/commandEnums';
 import EnhanceTaskRecords from '@/components/custom/enhance-task-records.vue';
@@ -359,6 +360,11 @@ onMounted(() => {
   eventBus.on('command:enhance-affect', handleEnhanceAffect);
   eventBus.on('command:stack', handleStack);
   eventBus.on('command:enhance-complete', handleEnhanceComplete);
+  recoverEnhanceTaskResults<StackResponse>(
+    props.instanceId,
+    commandEnum.STACK_METHOD.value as number,
+    handleStack
+  );
 });
 
 onUnmounted(() => {

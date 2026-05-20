@@ -37,14 +37,31 @@ declare namespace Api {
     namespace Command {
       interface CommandCreateRequest<T> {
         instanceId: string;
+        browserSessionId?: string;
         param?: T;
       }
       interface CommandTaskResponse {
         commandCode: number;
         instanceId: string;
         taskId: string;
+        browserSessionId?: string;
         param: string;
         completeTime: string;
+      }
+      interface BrowserInstanceSessionResponse {
+        instanceId: string;
+        sessionId: string;
+        bound: boolean;
+      }
+      interface BrowserSessionEnhanceTaskResponse {
+        commandCode: number;
+        instanceId: string;
+        taskId: string;
+        browserSessionId: string;
+        param: string;
+        enhanceAffect?: unknown;
+        completeTime?: string;
+        results: unknown[];
       }
     }
   }

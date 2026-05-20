@@ -2,7 +2,9 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { NButton, NCard, NForm, NFormItem, NInput, NInputNumber, NSelect, NStatistic, NTag } from 'naive-ui';
 import { fetchTimeTunnelCommand } from '@/service/api/instance';
+import { recoverEnhanceTaskResults } from '@/composables/useRecoveredEnhanceTasks';
 import eventBus from '@/utils/eventbus';
+import { commandEnum } from '@/enum/commandEnums';
 import SvgIcon from '@/components/custom/svg-icon.vue';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { TimeTunnelResponse } from '@/proto/command/result/TimeTunnelResponse';
@@ -153,6 +155,11 @@ function handleTimeTunnelResult(response: CommandExecuteResponse<TimeTunnelRespo
 
 onMounted(() => {
   eventBus.on('command:time-tunnel', handleTimeTunnelResult);
+  recoverEnhanceTaskResults<TimeTunnelResponse>(
+    props.instanceId,
+    commandEnum.TIME_TUNNEL.value as number,
+    handleTimeTunnelResult
+  );
 });
 
 onUnmounted(() => {
