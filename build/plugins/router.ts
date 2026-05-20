@@ -19,6 +19,10 @@ export function setupElegantRouter() {
         return `/login/:module(${moduleReg})?`;
       }
 
+      if (key === 'app_instance_detail') {
+        return `${routePath}/:tab?`;
+      }
+
       return routePath;
     },
     onRouteMetaGen(routeName) {

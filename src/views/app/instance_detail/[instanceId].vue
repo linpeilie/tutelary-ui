@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Ref } from 'vue';
-import { onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { computed, onMounted, ref, shallowRef, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { fetchInstanceDetail } from '@/service/api/instance';
 import { useInstanceCommandSession } from '@/composables/useInstanceCommandSession';
 import { $t } from '@/locales';
@@ -25,10 +25,12 @@ import JfrTab from '@/views/app/instance_detail/modules/jfr-tab.vue';
 import ChangeRecordsTab from '@/views/app/instance_detail/modules/change-records-tab.vue';
 
 const route = useRoute();
+const router = useRouter();
 const instanceId = route.params.instanceId as string;
 const instanceDetail: Ref<Api.Instance.InstanceInfo | undefined> = ref();
-const activeTab = ref('dashboard');
-const infoCollapsed = ref(false);
+const defaultTab = 'dashboard';
+const activeTab = shallowRef(defaultTab);
+const infoCollapsed = shallowRef(false);
 const commandSession = useInstanceCommandSession(instanceId);
 const commandSessionReady = commandSession.ready;
 
@@ -96,6 +98,41 @@ const tabGroups: TabGroup[] = [
   }
 ];
 
+const tabValues = computed(() => new Set(tabGroups.flatMap(group => group.tabs.map(tab => tab.value))));
+
+function getRouteTab() {
+  const tab = route.params.tab;
+  return typeof tab === 'string' && tabValues.value.has(tab) ? tab : defaultTab;
+}
+
+function syncRouteTab(tab: string, replace = false) {
+  const params = {
+    ...route.params,
+    instanceId,
+    tab
+  };
+
+  const navigation = {
+    name: 'app_instance_detail',
+    params,
+    query: route.query,
+    hash: route.hash
+  };
+
+  if (replace) {
+    router.replace(navigation);
+    return;
+  }
+
+  router.push(navigation);
+}
+
+function selectTab(tab: string) {
+  if (tab === activeTab.value) return;
+  activeTab.value = tab;
+  syncRouteTab(tab);
+}
+
 function refreshInstance() {
   fetchInstanceDetail(instanceId).then(res => {
     if (res.data) {
@@ -103,6 +140,19 @@ function refreshInstance() {
     }
   });
 }
+
+watch(
+  () => route.params.tab,
+  () => {
+    const routeTab = getRouteTab();
+    activeTab.value = routeTab;
+
+    if (route.params.tab !== routeTab) {
+      syncRouteTab(routeTab, true);
+    }
+  },
+  { immediate: true }
+);
 
 onMounted(() => {
   refreshInstance();
@@ -166,7 +216,7 @@ onMounted(() => {
                     :key="tab.value"
                     class="tab-nav-item"
                     :class="{ 'tab-nav-item-active': activeTab === tab.value }"
-                    @click="activeTab = tab.value"
+                    @click="selectTab(tab.value)"
                   >
                     <SvgIcon :icon="tab.icon" class="text-14px" />
                     <span>{{ tab.label }}</span>

@@ -82,6 +82,11 @@ export const useTabStore = defineStore(SetupStoreId.Tab, () => {
 
     if (!isHomeTab && !isTabInTabs(tab.id, tabs.value)) {
       tabs.value.push(tab);
+    } else {
+      const existingTab = tabs.value.find(item => item.id === tab.id);
+      if (existingTab) {
+        existingTab.fullPath = tab.fullPath;
+      }
     }
 
     if (active) {

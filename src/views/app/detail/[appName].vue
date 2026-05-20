@@ -195,7 +195,7 @@ function fetchData() {
 }
 
 function toInstanceDetail(instance: Api.Instance.InstanceInfo) {
-  router.push({ name: 'app_instance_detail', params: { instanceId: instance.instanceId } });
+  router.push({ name: 'app_instance_detail', params: { instanceId: instance.instanceId, tab: 'dashboard' } });
 }
 
 function goBack() {

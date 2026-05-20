@@ -40,9 +40,13 @@ function isFixedTab(tab: App.Global.Tab) {
  * @param route
  */
 export function getTabIdByRoute(route: App.Global.TabRoute) {
-  const { path, query = {}, meta } = route;
+  const { name, path, query = {}, meta, params = {} } = route;
 
   let id = path;
+
+  if (name === 'app_instance_detail' && typeof params.instanceId === 'string') {
+    id = `/app/instance/detail/${params.instanceId}`;
+  }
 
   if (meta.multiTab) {
     const queryKeys = Object.keys(query).sort();

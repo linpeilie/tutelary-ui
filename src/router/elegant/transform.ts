@@ -169,7 +169,7 @@ const routeMap: RouteMap = {
   "app": "/app",
   "app_detail": "/app/detail/:appName",
   "app_instance": "/app/instance",
-  "app_instance_detail": "/app/instance/detail/:instanceId",
+  "app_instance_detail": "/app/instance/detail/:instanceId/:tab?",
   "app_list": "/app/list",
   "home": "/home",
   "iframe-page": "/iframe-page/:url",

@@ -71,7 +71,7 @@ export const generatedRoutes: GeneratedRoute[] = [
         children: [
           {
             name: 'app_instance_detail',
-            path: '/app/instance/detail/:instanceId',
+            path: '/app/instance/detail/:instanceId/:tab?',
             component: 'view.app_instance_detail',
             meta: {
               title: 'app_instance_detail',
