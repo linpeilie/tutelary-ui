@@ -16,7 +16,14 @@ interface Props {
   instanceId: string;
 }
 
+interface Emits {
+  decompile: [payload: { className: string; methodName?: string }];
+  trace: [payload: { className: string; methodName: string }];
+  watch: [payload: { className: string; methodName: string }];
+}
+
 const props = defineProps<Props>();
+const emit = defineEmits<Emits>();
 
 // Class Explorer 模式
 type ExplorerMode = 'sc' | 'sm' | 'classloader';
@@ -36,17 +43,6 @@ const scConfig = ref<SearchClassConfig>({
   showField: false,
   useRegex: false
 });
-
-// 类搜索结果
-interface ClassInfo {
-  name: string;
-  classLoader: string;
-  superClass: string;
-  interfaces: string[];
-  fields: number;
-  methods: number;
-  modifiers: string;
-}
 
 const scResults = ref<ClassInfo[]>([]);
 
@@ -237,17 +233,22 @@ const viewClassMethods = (className: string) => {
 
 // 反编译类
 const decompileClass = (className: string) => {
-  window.$message?.info(`反编译 ${className} (功能开发中)`);
+  emit('decompile', { className });
+};
+
+// 反编译方法
+const decompileMethod = (className: string, methodName: string) => {
+  emit('decompile', { className, methodName });
 };
 
 // Watch 方法
 const watchMethod = (className: string, methodName: string) => {
-  window.$message?.info(`Watch ${className}.${methodName} (功能开发中)`);
+  emit('watch', { className, methodName });
 };
 
 // Trace 方法
 const traceMethod = (className: string, methodName: string) => {
-  window.$message?.info(`Trace ${className}.${methodName} (功能开发中)`);
+  emit('trace', { className, methodName });
 };
 
 // 获取方法修饰符颜色
@@ -660,15 +661,23 @@ onUnmounted(() => {
                   </div>
 
                   <div class="flex-y-center gap-4px">
+                    <NButton size="tiny" type="warning" @click="decompileMethod(smConfig.className, method.name)">
+                      <template #icon>
+                        <SvgIcon icon="lucide:code" />
+                      </template>
+                      反编译
+                    </NButton>
                     <NButton size="tiny" type="primary" @click="watchMethod(smConfig.className, method.name)">
                       <template #icon>
                         <SvgIcon icon="lucide:eye" />
                       </template>
+                      Watch
                     </NButton>
                     <NButton size="tiny" type="info" @click="traceMethod(smConfig.className, method.name)">
                       <template #icon>
                         <SvgIcon icon="lucide:git-branch" />
                       </template>
+                      Trace
                     </NButton>
                   </div>
                 </div>

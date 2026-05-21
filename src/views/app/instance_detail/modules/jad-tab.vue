@@ -26,6 +26,13 @@ import eventbus from '@/utils/eventbus';
 interface Props {
   instanceId: string;
   appName: string;
+  launchAction?: DecompileLaunchAction | null;
+}
+
+interface DecompileLaunchAction {
+  id: number;
+  className: string;
+  methodName?: string;
 }
 
 interface HistoryItem {
@@ -76,6 +83,7 @@ const hasUnsavedChanges = shallowRef(false);
 const isHotSwapping = shallowRef(false);
 const isHistoryLoading = shallowRef(false);
 const isValidationReady = shallowRef(false);
+const handledLaunchActionId = shallowRef(0);
 
 const validationIssues = ref<ValidationIssue[]>([]);
 const decompileHistory = ref<HistoryItem[]>([]);
@@ -104,6 +112,13 @@ watch(
   { immediate: true }
 );
 
+watch(
+  () => props.launchAction?.id,
+  () => {
+    launchDecompile(props.launchAction);
+  }
+);
+
 function performDecompile() {
   if (!trimmedClassName.value) {
     return;
@@ -125,6 +140,15 @@ function performDecompile() {
     isLoading.value = false;
     requestError.value = getErrorMessage(error, '反编译请求发送失败');
   });
+}
+
+function launchDecompile(action?: DecompileLaunchAction | null) {
+  if (!action || action.id === handledLaunchActionId.value) return;
+
+  handledLaunchActionId.value = action.id;
+  formData.className = action.className;
+  formData.methodName = action.methodName || '';
+  performDecompile();
 }
 
 function resetForm() {
@@ -665,6 +689,7 @@ onMounted(() => {
   eventbus.on('command:retransform-detail', handleRetransformDetailResult);
   eventbus.on('command:retransform-revert', handleRetransformRevertResult);
   loadRetransformHistory();
+  launchDecompile(props.launchAction);
 });
 
 onUnmounted(() => {

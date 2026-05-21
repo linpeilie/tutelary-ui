@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import {
   NButton,
   NCard,
@@ -41,6 +41,13 @@ defineOptions({
 
 interface Props {
   instanceId: string;
+  launchAction?: WatchLaunchAction | null;
+}
+
+interface WatchLaunchAction {
+  id: number;
+  className: string;
+  methodName: string;
 }
 
 const props = defineProps<Props>();
@@ -49,6 +56,7 @@ const message = useMessage();
 
 const watchFormRef = ref();
 const isWatching = ref(false);
+const handledLaunchActionId = ref(0);
 
 // 配置
 const watchConfig = ref({
@@ -112,6 +120,23 @@ function startWatch() {
   });
 }
 
+function launchWatch(action?: WatchLaunchAction | null) {
+  if (!action || action.id === handledLaunchActionId.value) return;
+
+  handledLaunchActionId.value = action.id;
+  watchConfig.value = {
+    ...watchConfig.value,
+    qualifiedClassName: action.className,
+    methodNames: action.methodName,
+    times: 50,
+    cost: 0,
+    includeParams: true,
+    includeReturn: true,
+    includeException: true
+  };
+  startWatch();
+}
+
 // 停止观察
 function stopWatch() {
   isWatching.value = false;
@@ -157,11 +182,19 @@ onMounted(() => {
     commandEnum.WATCH_METHOD.value as number,
     handleWatchResult
   );
+  launchWatch(props.launchAction);
 });
 
 onUnmounted(() => {
   eventBus.off('command:watch', handleWatchResult);
 });
+
+watch(
+  () => props.launchAction?.id,
+  () => {
+    launchWatch(props.launchAction);
+  }
+);
 
 // 获取耗时标签类型
 function getDurationTagType(duration: number): 'success' | 'warning' | 'error' {

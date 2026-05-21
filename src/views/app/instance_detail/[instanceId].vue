@@ -45,6 +45,34 @@ interface TabGroup {
   tabs: TabItem[];
 }
 
+interface DecompileLaunchAction {
+  id: number;
+  className: string;
+  methodName?: string;
+}
+
+interface TraceLaunchAction {
+  id: number;
+  className: string;
+  methodName: string;
+}
+
+interface WatchLaunchAction {
+  id: number;
+  className: string;
+  methodName: string;
+}
+
+interface ClassExplorerActionPayload {
+  className: string;
+  methodName?: string;
+}
+
+const decompileLaunchAction = shallowRef<DecompileLaunchAction | null>(null);
+const traceLaunchAction = shallowRef<TraceLaunchAction | null>(null);
+const watchLaunchAction = shallowRef<WatchLaunchAction | null>(null);
+let launchActionId = 0;
+
 const tabGroups: TabGroup[] = [
   {
     label: '概览',
@@ -131,6 +159,38 @@ function selectTab(tab: string) {
   if (tab === activeTab.value) return;
   activeTab.value = tab;
   syncRouteTab(tab);
+}
+
+function nextLaunchActionId() {
+  launchActionId += 1;
+  return launchActionId;
+}
+
+function handleClassExplorerDecompile(payload: ClassExplorerActionPayload) {
+  decompileLaunchAction.value = {
+    id: nextLaunchActionId(),
+    className: payload.className,
+    methodName: payload.methodName || ''
+  };
+  selectTab('jad');
+}
+
+function handleClassExplorerTrace(payload: Required<ClassExplorerActionPayload>) {
+  traceLaunchAction.value = {
+    id: nextLaunchActionId(),
+    className: payload.className,
+    methodName: payload.methodName
+  };
+  selectTab('trace');
+}
+
+function handleClassExplorerWatch(payload: Required<ClassExplorerActionPayload>) {
+  watchLaunchAction.value = {
+    id: nextLaunchActionId(),
+    className: payload.className,
+    methodName: payload.methodName
+  };
+  selectTab('watch');
 }
 
 function refreshInstance() {
@@ -244,16 +304,28 @@ onMounted(() => {
         v-else-if="activeTab === 'jad' && instanceDetail"
         :instance-id="instanceDetail.instanceId"
         :app-name="instanceDetail.appName"
+        :launch-action="decompileLaunchAction"
       />
       <VmOptionTab v-else-if="activeTab === 'vmOption' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <LoggerTab v-else-if="activeTab === 'logger' && instanceDetail" :instance-id="instanceDetail.instanceId" />
-      <TraceTab v-else-if="activeTab === 'trace' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <TraceTab
+        v-else-if="activeTab === 'trace' && instanceDetail"
+        :instance-id="instanceDetail.instanceId"
+        :launch-action="traceLaunchAction"
+      />
       <StackTab v-else-if="activeTab === 'stack' && instanceDetail" :instance-id="instanceDetail.instanceId" />
-      <WatchTab v-else-if="activeTab === 'watch' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <WatchTab
+        v-else-if="activeTab === 'watch' && instanceDetail"
+        :instance-id="instanceDetail.instanceId"
+        :launch-action="watchLaunchAction"
+      />
       <MonitorTab v-else-if="activeTab === 'monitor' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <ClassExplorerTab
         v-else-if="activeTab === 'classExplorer' && instanceDetail"
         :instance-id="instanceDetail.instanceId"
+        @decompile="handleClassExplorerDecompile"
+        @trace="handleClassExplorerTrace"
+        @watch="handleClassExplorerWatch"
       />
       <TimeTunnelTab
         v-else-if="activeTab === 'timeTunnel' && instanceDetail"

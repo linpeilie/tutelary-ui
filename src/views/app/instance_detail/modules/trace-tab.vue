@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, h, onMounted, onUnmounted, ref } from 'vue';
+import { computed, h, onMounted, onUnmounted, ref, watch } from 'vue';
 import {
   NButton,
   NCard,
@@ -32,6 +32,13 @@ import CommandCreateRequest = Api.Instance.Command.CommandCreateRequest;
 // Props
 interface Props {
   instanceId: string;
+  launchAction?: TraceLaunchAction | null;
+}
+
+interface TraceLaunchAction {
+  id: number;
+  className: string;
+  methodName: string;
 }
 
 const props = defineProps<Props>();
@@ -53,6 +60,7 @@ const capturedCount = ref(0);
 const totalCount = ref(10);
 const currentTaskId = ref('');
 const taskRecordsRef = ref<InstanceType<typeof EnhanceTaskRecords> | null>(null);
+const handledLaunchActionId = ref(0);
 const progress = computed(() => {
   if (totalCount.value === 0) return 0;
   return Math.round((capturedCount.value / totalCount.value) * 100);
@@ -78,6 +86,20 @@ const handleViewDetail = (trace: TraceResponse) => {
   selectedTrace.value = trace;
   showDetailModal.value = true;
 };
+
+function launchTrace(action?: TraceLaunchAction | null) {
+  if (!action || action.id === handledLaunchActionId.value) return;
+
+  handledLaunchActionId.value = action.id;
+  formData.value = {
+    ...formData.value,
+    className: action.className,
+    methodName: action.methodName,
+    count: 10,
+    minTime: null
+  };
+  handleStartTrace();
+}
 
 // 递归渲染调用栈树为缩进列表
 function flattenTraceTree(node: TraceNode, depth: number = 0): Array<{ node: TraceNode; depth: number }> {
@@ -214,12 +236,20 @@ onMounted(() => {
     commandEnum.TRACE_METHOD.value as number,
     handleTraceResult
   );
+  launchTrace(props.launchAction);
 });
 
 onUnmounted(() => {
   eventbus.off('command:trace', handleTraceResult);
   eventbus.off('command:enhance-complete', handleEnhanceComplete);
 });
+
+watch(
+  () => props.launchAction?.id,
+  () => {
+    launchTrace(props.launchAction);
+  }
+);
 
 // 开始追踪
 const handleStartTrace = async () => {
