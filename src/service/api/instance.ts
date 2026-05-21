@@ -28,131 +28,131 @@ export function fetchInstanceDetail(instanceId: string) {
 }
 
 export function fetchDashboardCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/overview`, data);
+  return createRestCommand('overview', data);
 }
 
 export function fetchSystemInfoCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/systemInfo`, data);
+  return createRestCommand('systemInfo', data);
 }
 
 export function fetchSystemMetricsCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/systemMetricsMonitoring`, data);
+  return createRestCommand('systemMetricsMonitoring', data);
 }
 
 export function fetchThreadListCommand(data: CommandCreateRequest<ThreadListRequest>) {
-  return createRestCommand(`/command/creation/threadList`, data);
+  return createRestCommand('threadList', data);
 }
 
 export function fetchThreadDetailCommand(data: CommandCreateRequest<ThreadDetailRequest>) {
-  return createRestCommand(`/command/creation/threadDetail`, data);
+  return createRestCommand('threadDetail', data);
 }
 
 export function fetchDecompileCommand(data: CommandCreateRequest<DecompileRequest>) {
-  return createRestCommand(`/command/creation/decompile`, data);
+  return createRestCommand('decompile', data);
 }
 
 export function fetchHeapDumpCommand(data: CommandCreateRequest<HeapDumpRequest>) {
-  return createRestCommand(`/command/creation/heapDump`, data);
+  return createRestCommand('heapDump', data);
 }
 
 export function fetchFileListCommand(data: CommandCreateRequest<FileListRequest>) {
-  return createRestCommand(`/command/creation/fileList`, data);
+  return createRestCommand('fileList', data);
 }
 
 export function fetchGetStaticCommand(data: CommandCreateRequest<GetStaticRequest>) {
-  return createRestCommand(`/command/creation/getStatic`, data);
+  return createRestCommand('getStatic', data);
 }
 
 export function fetchJvmMemoryCommand(data: CommandCreateRequest<Record<string, never>>) {
-  return createRestCommand(`/command/creation/jvmMemory`, data);
+  return createRestCommand('jvmMemory', data);
 }
 
 export function fetchVmOptionCommand(data: CommandCreateRequest<VmOptionRequest>) {
-  return createRestCommand(`/command/creation/getVmOption`, data);
+  return createRestCommand('getVmOption', data);
 }
 
 export function fetchSetVmOptionCommand(data: CommandCreateRequest<SetVmOptionRequest>) {
-  return createRestCommand(`/command/creation/setVmOption`, data);
+  return createRestCommand('setVmOption', data);
 }
 
 export function fetchLoggerInfoCommand(data: CommandCreateRequest<LoggerInfoRequest>) {
-  return createRestCommand(`/command/creation/loggerInfo`, data);
+  return createRestCommand('loggerInfo', data);
 }
 
 export function fetchUpdateLoggerLevelCommand(data: CommandCreateRequest<UpdateLoggerLevelRequest>) {
-  return createRestCommand(`/command/creation/updateLoggerLevel`, data);
+  return createRestCommand('updateLoggerLevel', data);
 }
 
 export function fetchTraceCommand(data: CommandCreateRequest<TraceRequest>) {
-  return createRestCommand(`/command/creation/traceMethod`, data);
+  return createRestCommand('traceMethod', data);
 }
 
 export function fetchStackCommand(data: CommandCreateRequest<StackRequest>) {
-  return createRestCommand(`/command/creation/stackMethod`, data);
+  return createRestCommand('stackMethod', data);
 }
 
 export function fetchSearchClassCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/searchClass`, data);
+  return createRestCommand('searchClass', data);
 }
 
 export function fetchSearchMethodCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/searchMethod`, data);
+  return createRestCommand('searchMethod', data);
 }
 
 export function fetchClassLoaderTreeCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/classLoaderTree`, data);
+  return createRestCommand('classLoaderTree', data);
 }
 
 export function fetchOgnlCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/ognl`, data);
+  return createRestCommand('ognl', data);
 }
 
 export function fetchWatchCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/watchMethod`, data);
+  return createRestCommand('watchMethod', data);
 }
 
 export function fetchMonitorCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/monitorMethod`, data);
+  return createRestCommand('monitorMethod', data);
 }
 
 export function fetchTimeTunnelCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/timeTunnel`, data);
+  return createRestCommand('timeTunnel', data);
 }
 
 export function fetchProfilerStartCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/profilerStart`, data);
+  return createRestCommand('profilerStart', data);
 }
 
 export function fetchProfilerStopCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/profilerStop`, data);
+  return createRestCommand('profilerStop', data);
 }
 
 export function fetchJfrStartCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/jfrStart`, data);
+  return createRestCommand('jfrStart', data);
 }
 
 export function fetchJfrStopCommand(data: CommandCreateRequest<any>) {
-  return createRestCommand(`/command/creation/jfrStop`, data);
+  return createRestCommand('jfrStop', data);
 }
 
 export function fetchRetransformCommand(data: CommandCreateRequest<RetransformRequest>) {
-  return createRestCommand(`/command/creation/retransform`, data);
+  return createRestCommand('retransform', data);
 }
 
 export function fetchRetransformHistoryCommand(data: CommandCreateRequest<Record<string, never>>) {
-  return createRestCommand(`/command/creation/retransformHistory`, data);
+  return createRestCommand('retransformHistory', data);
 }
 
 export function fetchRetransformDetailCommand(data: CommandCreateRequest<RetransformDetailRequest>) {
-  return createRestCommand(`/command/creation/retransformDetail`, data);
+  return createRestCommand('retransformDetail', data);
 }
 
 export function fetchRetransformRevertCommand(data: CommandCreateRequest<RetransformRevertRequest>) {
-  return createRestCommand(`/command/creation/retransformRevert`, data);
+  return createRestCommand('retransformRevert', data);
 }
 
 export function fetchEnhanceTaskListCommand(data: CommandCreateRequest<Record<string, never>>) {
-  return createRestCommand(`/command/creation/traceTaskList`, data);
+  return createRestCommand('traceTaskList', data);
 }
 
 export function cancelCommandTask(instanceId: string, taskId: string) {

@@ -240,7 +240,11 @@ onMounted(() => {
       <SystemTab v-else-if="activeTab === 'system' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <ThreadTab v-else-if="activeTab === 'thread' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <JvmMemoryTab v-else-if="activeTab === 'jvmMemory' && instanceDetail" :instance-id="instanceDetail.instanceId" />
-      <JadTab v-else-if="activeTab === 'jad' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <JadTab
+        v-else-if="activeTab === 'jad' && instanceDetail"
+        :instance-id="instanceDetail.instanceId"
+        :app-name="instanceDetail.appName"
+      />
       <VmOptionTab v-else-if="activeTab === 'vmOption' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <LoggerTab v-else-if="activeTab === 'logger' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <TraceTab v-else-if="activeTab === 'trace' && instanceDetail" :instance-id="instanceDetail.instanceId" />
