@@ -4,7 +4,6 @@ import {
   NButton,
   NCard,
   NDataTable,
-  NEmpty,
   NForm,
   NFormItem,
   NGrid,
@@ -16,12 +15,11 @@ import {
   NTag
 } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
-import { fetchTraceCommand } from '@/service/api/instance';
+import { cancelCommandTask, fetchTraceCommand } from '@/service/api/instance';
 import { recoverEnhanceTaskResults } from '@/composables/useRecoveredEnhanceTasks';
 import eventbus from '@/utils/eventbus';
 import { div4Round } from '@/utils/math';
 import { commandEnum } from '@/enum/commandEnums';
-import EnhanceTaskRecords from '@/components/custom/enhance-task-records.vue';
 import type { CommandExecuteResponse } from '@/proto/CommandExecuteResponse';
 import type { TraceResponse } from '@/proto/command/result/TraceResponse';
 import type { TraceNode } from '@/proto/command/domain/TraceNode';
@@ -59,16 +57,40 @@ const isTracing = ref(false);
 const capturedCount = ref(0);
 const totalCount = ref(10);
 const currentTaskId = ref('');
-const taskRecordsRef = ref<InstanceType<typeof EnhanceTaskRecords> | null>(null);
 const handledLaunchActionId = ref(0);
+const traceStartedAt = ref(0);
+const nowTime = ref(Date.now());
+let durationTimer: ReturnType<typeof setInterval> | undefined;
+const traceResults = ref<TraceResponse[]>([]);
+const hasResults = computed(() => traceResults.value.length > 0);
 const progress = computed(() => {
   if (totalCount.value === 0) return 0;
   return Math.round((capturedCount.value / totalCount.value) * 100);
 });
-
-// 追踪结果
-const traceResults = ref<TraceResponse[]>([]);
-const hasResults = computed(() => traceResults.value.length > 0);
+const traceTarget = computed(() => {
+  if (!formData.value.className || !formData.value.methodName) return '-';
+  return `${formData.value.className}.${formData.value.methodName}()`;
+});
+const traceCondition = computed(() => {
+  if (typeof formData.value.minTime === 'number' && formData.value.minTime > 0) {
+    return `总耗时 >= ${formData.value.minTime}ms`;
+  }
+  return '全部调用';
+});
+const elapsedMs = computed(() => {
+  if (!isTracing.value || traceStartedAt.value === 0) return 0;
+  return Math.max(0, nowTime.value - traceStartedAt.value);
+});
+const elapsedLabel = computed(() => {
+  const totalSeconds = Math.floor(elapsedMs.value / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes > 0) return `${minutes}分${seconds.toString().padStart(2, '0')}秒`;
+  return `${seconds}秒`;
+});
+const isWaitingTraceResult = computed(() => isTracing.value && !hasResults.value);
+const hasWaitedTooLong = computed(() => isWaitingTraceResult.value && elapsedMs.value >= 60_000);
+const shouldLockTraceInputs = computed(() => isTracing.value && Boolean(formData.value.className && formData.value.methodName));
 
 // 详情模态框
 const showDetailModal = ref(false);
@@ -202,11 +224,6 @@ function handleTraceResult(data: CommandExecuteResponse<TraceResponse>) {
     const traceResponse = data.data as TraceResponse;
     traceResults.value.push(traceResponse);
     capturedCount.value = traceResponse.currentTimes || traceResults.value.length;
-
-    // 实时更新 running tasks 中的 currentTimes
-    if (data.taskId) {
-      taskRecordsRef.value?.updateRunningTaskTimes(data.taskId, traceResponse.currentTimes || capturedCount.value);
-    }
   }
 }
 
@@ -223,12 +240,15 @@ function handleEnhanceComplete(data: CommandExecuteResponse<EnhanceCommandComple
 
   if (isTraceComplete) {
     isTracing.value = false;
+    currentTaskId.value = '';
     window.$message?.success(`追踪完成! 已捕获 ${capturedCount.value} 条调用记录`);
-    taskRecordsRef.value?.refresh();
   }
 }
 
 onMounted(() => {
+  durationTimer = setInterval(() => {
+    nowTime.value = Date.now();
+  }, 1000);
   eventbus.on('command:trace', handleTraceResult);
   eventbus.on('command:enhance-complete', handleEnhanceComplete);
   recoverEnhanceTaskResults<TraceResponse>(
@@ -240,6 +260,10 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  if (durationTimer) {
+    clearInterval(durationTimer);
+    durationTimer = undefined;
+  }
   eventbus.off('command:trace', handleTraceResult);
   eventbus.off('command:enhance-complete', handleEnhanceComplete);
 });
@@ -259,8 +283,11 @@ const handleStartTrace = async () => {
   }
 
   isTracing.value = true;
+  traceStartedAt.value = Date.now();
+  nowTime.value = traceStartedAt.value;
   capturedCount.value = 0;
   totalCount.value = formData.value.count;
+  currentTaskId.value = '';
   traceResults.value = [];
 
   const params = {
@@ -284,8 +311,18 @@ const handleStartTrace = async () => {
 };
 
 // 停止追踪
-const handleStopTrace = () => {
-  isTracing.value = false;
+const handleStopTrace = async () => {
+  const taskId = currentTaskId.value;
+  try {
+    if (taskId) {
+      currentTaskId.value = '';
+      await cancelCommandTask(props.instanceId, taskId);
+    }
+  } catch {
+    window.$message?.warning('停止命令下发失败，已先结束本地追踪状态');
+  } finally {
+    isTracing.value = false;
+  }
   window.$message?.info('已停止追踪');
 };
 
@@ -337,13 +374,21 @@ const handleClear = () => {
         <NGrid :x-gap="16" :y-gap="16" :cols="2">
           <NGridItem>
             <NFormItem label="类全限定名" required>
-              <NInput v-model:value="formData.className" placeholder="例如: com.example.service.UserService" />
+              <NInput
+                v-model:value="formData.className"
+                :disabled="shouldLockTraceInputs"
+                placeholder="例如: com.example.service.UserService"
+              />
             </NFormItem>
           </NGridItem>
 
           <NGridItem>
             <NFormItem label="方法名称" required>
-              <NInput v-model:value="formData.methodName" placeholder="例如: getUserById" />
+              <NInput
+                v-model:value="formData.methodName"
+                :disabled="shouldLockTraceInputs"
+                placeholder="例如: getUserById"
+              />
             </NFormItem>
           </NGridItem>
 
@@ -353,6 +398,7 @@ const handleClear = () => {
                 v-model:value="formData.count"
                 :min="1"
                 :max="1000"
+                :disabled="shouldLockTraceInputs"
                 placeholder="例如: 10"
                 style="width: 100%"
               />
@@ -364,7 +410,13 @@ const handleClear = () => {
 
           <NGridItem>
             <NFormItem label="最低耗时 (ms)">
-              <NInputNumber v-model:value="formData.minTime" :min="0" placeholder="例如: 100" style="width: 100%" />
+              <NInputNumber
+                v-model:value="formData.minTime"
+                :min="0"
+                :disabled="shouldLockTraceInputs"
+                placeholder="例如: 100"
+                style="width: 100%"
+              />
               <template #feedback>
                 <span class="text-xs text-gray-500">只记录耗时超过此值的调用</span>
               </template>
@@ -380,19 +432,13 @@ const handleClear = () => {
             </template>
             开始追踪
           </NButton>
-          <NButton v-else type="error" @click="handleStopTrace">
-            <template #icon>
-              <SvgIcon icon="lucide:square" />
-            </template>
-            停止追踪
-          </NButton>
-          <NButton @click="handleLoadSample">
+          <NButton :disabled="shouldLockTraceInputs" @click="handleLoadSample">
             <template #icon>
               <SvgIcon icon="lucide:file-text" />
             </template>
             加载示例
           </NButton>
-          <NButton @click="handleReset">
+          <NButton :disabled="shouldLockTraceInputs" @click="handleReset">
             <template #icon>
               <SvgIcon icon="lucide:rotate-ccw" />
             </template>
@@ -402,33 +448,45 @@ const handleClear = () => {
       </NForm>
     </NCard>
 
-    <!-- Trace 任务记录 -->
-    <EnhanceTaskRecords
-      ref="taskRecordsRef"
-      :instance-id="props.instanceId"
-      :command-code="commandEnum.TRACE_METHOD.value as number"
-      running-label="进行中的追踪"
-      recent-label="最近完成"
-    />
-
     <!-- 追踪状态 -->
-    <NCard v-if="isTracing" class="id-card mb-6">
-      <div class="flex items-center justify-between gap-20px">
-        <div class="flex items-center gap-16px">
-          <div class="id-status-indicator">
-            <div class="id-status-dot bg-success" />
-            <span class="text-14px">追踪中...</span>
+    <NCard v-if="isTracing" class="trace-running-card id-card mb-6">
+      <div class="trace-running-panel">
+        <div class="trace-running-head">
+          <div class="trace-running-title">
+            <div class="trace-running-pulse" />
+            <div>
+              <div class="trace-running-name">进行中的追踪</div>
+              <div class="trace-running-subtitle">
+                <span class="font-mono">{{ traceTarget }}</span>
+                <span class="trace-running-divider">/</span>
+                <span>{{ traceCondition }}</span>
+              </div>
+            </div>
           </div>
-          <div class="text-12px text-gray">
-            已捕获:
-            <span class="font-600">{{ capturedCount }}</span>
-            /
-            <span class="font-600">{{ totalCount }}</span>
-          </div>
+          <NButton size="small" type="error" @click="handleStopTrace">
+            <template #icon>
+              <SvgIcon icon="lucide:square" />
+            </template>
+            停止追踪
+          </NButton>
         </div>
-        <div class="max-w-300px flex flex-1 items-center gap-12px">
-          <NProgress type="line" :percentage="progress" :show-indicator="false" />
-          <span class="min-w-40px text-12px text-gray">{{ progress }}%</span>
+
+        <div class="trace-running-body">
+          <div class="trace-running-metrics">
+            <div class="trace-running-metric">
+              <span class="trace-running-label">已收集</span>
+              <span class="trace-running-value">{{ capturedCount }} / {{ totalCount }}</span>
+            </div>
+            <div class="trace-running-metric">
+              <span class="trace-running-label">运行时长</span>
+              <span class="trace-running-value">{{ elapsedLabel }}</span>
+            </div>
+            <div class="trace-running-metric">
+              <span class="trace-running-label">进度</span>
+              <span class="trace-running-value">{{ progress }}%</span>
+            </div>
+          </div>
+          <NProgress type="line" :percentage="progress" :show-indicator="false" class="trace-running-progress" />
         </div>
       </div>
     </NCard>
@@ -462,16 +520,38 @@ const handleClear = () => {
       </template>
 
       <!-- 空状态 -->
-      <NEmpty v-if="!hasResults" description="暂无追踪数据" class="id-empty-state">
-        <template #icon>
-          <div class="id-empty-icon">
-            <SvgIcon icon="lucide:git-branch" class="text-48px text-gray-600" />
+      <div v-if="!hasResults" class="trace-empty-state">
+        <div class="trace-empty-icon">
+          <SvgIcon :icon="isWaitingTraceResult ? 'lucide:radar' : 'lucide:git-branch'" />
+        </div>
+        <template v-if="isWaitingTraceResult && !hasWaitedTooLong">
+          <div class="trace-empty-title">追踪命令已生效，正在等待目标方法被调用。</div>
+          <div class="trace-empty-body">
+            <div>你可以：</div>
+            <ol class="trace-empty-list">
+              <li>触发一次相关业务请求；</li>
+              <li>降低最低耗时阈值；</li>
+              <li>检查类名或方法名是否正确。</li>
+            </ol>
           </div>
         </template>
-        <template #extra>
-          <span class="text-xs text-gray-500">请配置追踪参数并点击"开始追踪"按钮</span>
+        <template v-else-if="hasWaitedTooLong">
+          <div class="trace-empty-title">未收集到调用结果</div>
+          <div class="trace-empty-body">
+            <div>可能原因：</div>
+            <ul class="trace-empty-list">
+              <li>目标方法在当前时间段没有被调用；</li>
+              <li>类名或方法名不匹配；</li>
+              <li>最低耗时阈值过高；</li>
+              <li>当前实例不是实际处理请求的实例。</li>
+            </ul>
+          </div>
         </template>
-      </NEmpty>
+        <template v-else>
+          <div class="trace-empty-title">尚未开始收集调用栈</div>
+          <div class="trace-empty-body">配置类名、方法名和采样条件后开始追踪。</div>
+        </template>
+      </div>
 
       <!-- 结果列表 -->
       <NDataTable
@@ -576,6 +656,167 @@ const handleClear = () => {
 <style lang="scss">
 .trace-container {
   padding: 0;
+}
+
+.trace-running-card {
+  :deep(.n-card__content) {
+    padding: 16px 18px;
+  }
+}
+
+.trace-running-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.trace-running-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.trace-running-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.trace-running-pulse {
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #18a058;
+  box-shadow: 0 0 0 5px rgba(24, 160, 88, 0.14);
+}
+
+.trace-running-name {
+  color: var(--n-text-color);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.trace-running-subtitle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+  color: var(--n-text-color-2);
+  font-size: 12px;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.trace-running-divider {
+  color: var(--n-text-color-3);
+}
+
+.trace-running-body {
+  display: grid;
+  grid-template-columns: minmax(260px, 420px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+}
+
+.trace-running-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.trace-running-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.trace-running-label {
+  color: var(--n-text-color-3);
+  font-size: 12px;
+}
+
+.trace-running-value {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--n-text-color);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trace-running-progress {
+  min-width: 160px;
+}
+
+.trace-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  padding: 32px 20px;
+  color: var(--n-text-color-2);
+  text-align: center;
+}
+
+.trace-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  background: var(--n-color-modal);
+  color: var(--n-text-color-3);
+  font-size: 28px;
+}
+
+.trace-empty-title {
+  color: var(--n-text-color);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.trace-empty-body {
+  margin-top: 10px;
+  color: var(--n-text-color-2);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.trace-empty-list {
+  margin: 4px 0 0;
+  padding-left: 20px;
+  text-align: left;
+}
+
+@media (max-width: 960px) {
+  .trace-running-body {
+    grid-template-columns: 1fr;
+  }
+
+  .trace-running-progress {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .trace-running-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .trace-running-metrics {
+    grid-template-columns: 1fr;
+  }
 }
 
 // 异常行样式
