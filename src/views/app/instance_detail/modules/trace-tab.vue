@@ -524,12 +524,6 @@ const handleReset = () => {
   };
 };
 
-// 导出结果
-const handleExport = () => {
-  console.log('导出追踪结果');
-  window.$message?.info('导出功能开发中');
-};
-
 // 清空结果
 const handleClear = () => {
   clearTraceResults();
@@ -709,12 +703,6 @@ const handleClear = () => {
             </span>
           </div>
           <div class="id-table-actions">
-            <NButton size="small" @click="handleExport">
-              <template #icon>
-                <SvgIcon icon="lucide:download" />
-              </template>
-              导出
-            </NButton>
             <NButton size="small" @click="handleClear">
               <template #icon>
                 <SvgIcon icon="lucide:trash-2" />

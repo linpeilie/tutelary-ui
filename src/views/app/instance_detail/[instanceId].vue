@@ -302,7 +302,11 @@ onMounted(() => {
         :browser-session-id="commandSessionId"
         :launch-action="traceLaunchAction"
       />
-      <StackTab v-else-if="activeTab === 'stack' && instanceDetail" :instance-id="instanceDetail.instanceId" />
+      <StackTab
+        v-else-if="activeTab === 'stack' && instanceDetail"
+        :instance-id="instanceDetail.instanceId"
+        :browser-session-id="commandSessionId"
+      />
       <WatchTab
         v-else-if="activeTab === 'watch' && instanceDetail"
         :instance-id="instanceDetail.instanceId"

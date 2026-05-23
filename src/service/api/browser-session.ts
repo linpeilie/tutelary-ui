@@ -42,3 +42,11 @@ export function fetchBrowserSessionTraceSession(data: Pick<BrowserSessionEnhance
     data
   });
 }
+
+export function fetchBrowserSessionStackSession(data: Pick<BrowserSessionEnhanceTasksRequest, 'instanceId' | 'sessionId'>) {
+  return request<Api.Instance.Command.BrowserSessionEnhanceTaskResponse | null>({
+    url: '/browser/instance-session/stack-session',
+    method: 'post',
+    data
+  });
+}
