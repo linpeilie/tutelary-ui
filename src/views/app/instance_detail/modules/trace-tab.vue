@@ -12,11 +12,12 @@ import {
   NInputNumber,
   NModal,
   NProgress,
-  NTag
+  NTag,
+  NAlert
 } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
 import { cancelCommandTask, fetchTraceCommand } from '@/service/api/instance';
-import { recoverEnhanceTaskResults } from '@/composables/useRecoveredEnhanceTasks';
+import { fetchBrowserSessionTraceSession } from '@/service/api/browser-session';
 import eventbus from '@/utils/eventbus';
 import { div4Round } from '@/utils/math';
 import { commandEnum } from '@/enum/commandEnums';
@@ -30,6 +31,7 @@ import CommandCreateRequest = Api.Instance.Command.CommandCreateRequest;
 // Props
 interface Props {
   instanceId: string;
+  browserSessionId: string;
   launchAction?: TraceLaunchAction | null;
 }
 
@@ -54,6 +56,9 @@ const formData = ref({
 
 // 追踪状态
 const isTracing = ref(false);
+const isRecovering = ref(false);
+const isRestoringTraceSession = ref(false);
+const connectionInterrupted = ref(false);
 const capturedCount = ref(0);
 const totalCount = ref(10);
 const currentTaskId = ref('');
@@ -62,6 +67,7 @@ const traceStartedAt = ref(0);
 const nowTime = ref(Date.now());
 let durationTimer: ReturnType<typeof setInterval> | undefined;
 const traceResults = ref<TraceResponse[]>([]);
+const traceResultKeys = new Set<string>();
 const hasResults = computed(() => traceResults.value.length > 0);
 const progress = computed(() => {
   if (totalCount.value === 0) return 0;
@@ -88,6 +94,7 @@ const elapsedLabel = computed(() => {
   if (minutes > 0) return `${minutes}分${seconds.toString().padStart(2, '0')}秒`;
   return `${seconds}秒`;
 });
+const elapsedClockLabel = computed(() => formatDurationClock(elapsedMs.value));
 const isWaitingTraceResult = computed(() => isTracing.value && !hasResults.value);
 const hasWaitedTooLong = computed(() => isWaitingTraceResult.value && elapsedMs.value >= 60_000);
 const shouldLockTraceInputs = computed(() => isTracing.value && Boolean(formData.value.className && formData.value.methodName));
@@ -109,10 +116,150 @@ const handleViewDetail = (trace: TraceResponse) => {
   showDetailModal.value = true;
 };
 
+function formatDurationClock(duration: number) {
+  const totalSeconds = Math.floor(Math.max(0, duration) / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function parseTime(value?: string) {
+  if (!value) return 0;
+  const timestamp = new Date(value).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function clearTraceResults() {
+  traceResults.value = [];
+  traceResultKeys.clear();
+  capturedCount.value = 0;
+}
+
+function buildTraceResultKey(trace: TraceResponse, taskId?: string) {
+  if (taskId && trace.currentTimes) {
+    return `${taskId}:${trace.currentTimes}`;
+  }
+
+  return [
+    taskId || 'unknown',
+    trace.finishTime || '',
+    trace.node?.className || '',
+    trace.node?.methodName || '',
+    trace.node?.totalCost || 0,
+    trace.thread?.id || ''
+  ].join('|');
+}
+
+function appendTraceResult(trace: TraceResponse, taskId?: string) {
+  const key = buildTraceResultKey(trace, taskId || currentTaskId.value);
+  if (traceResultKeys.has(key)) return false;
+
+  traceResultKeys.add(key);
+  traceResults.value.push(trace);
+  capturedCount.value = Math.max(capturedCount.value, trace.currentTimes || traceResults.value.length);
+  return true;
+}
+
+function appendTraceResults(results: unknown[] = [], taskId?: string) {
+  let appended = 0;
+  for (const result of results) {
+    if (appendTraceResult(result as TraceResponse, taskId)) {
+      appended += 1;
+    }
+  }
+  return appended;
+}
+
+function applyTraceParam(param?: string) {
+  if (!param) return;
+
+  try {
+    const traceParam = JSON.parse(param) as TraceRequest;
+    formData.value = {
+      ...formData.value,
+      className: traceParam.qualifiedClassName || '',
+      methodName: traceParam.methodNames?.[0] || '',
+      count: traceParam.times || 10,
+      minTime: typeof traceParam.cost === 'number' ? traceParam.cost : null
+    };
+    totalCount.value = traceParam.times || 10;
+  } catch {
+    window.$message?.warning('Trace 参数恢复失败，请检查历史任务数据');
+  }
+}
+
+function applyRecoveredTrace(task: Api.Instance.Command.BrowserSessionEnhanceTaskResponse, appendOnly = false) {
+  currentTaskId.value = task.taskId || '';
+  applyTraceParam(task.param);
+  traceStartedAt.value = parseTime(task.createTime) || Date.now();
+  nowTime.value = Date.now();
+
+  if (!appendOnly) {
+    clearTraceResults();
+  }
+
+  appendTraceResults(task.results || [], task.taskId);
+  totalCount.value = Math.max(totalCount.value, capturedCount.value);
+  isTracing.value = !task.completeTime;
+}
+
+async function loadLatestTraceSession(options: {
+  onlyActive?: boolean;
+  notifyRecovered?: boolean;
+  reconnectPull?: boolean;
+} = {}) {
+  if (!props.browserSessionId) return false;
+
+  isRecovering.value = true;
+  try {
+    const { data: task, error } = await fetchBrowserSessionTraceSession({
+      instanceId: props.instanceId,
+      sessionId: props.browserSessionId
+    });
+
+    if (error) return false;
+    if (!task) {
+      if (options.reconnectPull) {
+        connectionInterrupted.value = false;
+        window.$message?.success('页面连接已恢复，断开期间没有新的 Trace 结果');
+      }
+      return false;
+    }
+    if (options.onlyActive && task.completeTime) return false;
+
+    const isRunningTask = !task.completeTime;
+    isRestoringTraceSession.value = isRunningTask && !options.reconnectPull;
+    const beforeCount = traceResults.value.length;
+    applyRecoveredTrace(task, options.reconnectPull);
+    const appendedCount = Math.max(0, traceResults.value.length - beforeCount);
+
+    if (options.reconnectPull) {
+      connectionInterrupted.value = false;
+      const message =
+        appendedCount > 0
+          ? `页面连接已恢复，已补拉 ${appendedCount} 条新 Trace 结果`
+          : '页面连接已恢复，断开期间没有新的 Trace 结果';
+      window.$message?.success(message);
+    } else if (options.notifyRecovered && isRunningTask) {
+      window.$message?.success('已恢复 Trace 会话，继续等待目标方法调用');
+    }
+
+    return isRunningTask;
+  } finally {
+    isRecovering.value = false;
+    isRestoringTraceSession.value = false;
+  }
+}
+
 function launchTrace(action?: TraceLaunchAction | null) {
   if (!action || action.id === handledLaunchActionId.value) return;
 
   handledLaunchActionId.value = action.id;
+  if (isTracing.value) {
+    window.$message?.warning('已有进行中的 Trace，会话已恢复，停止后才能追踪新方法');
+    return;
+  }
+
   formData.value = {
     ...formData.value,
     className: action.className,
@@ -156,7 +303,7 @@ const columns: DataTableColumns<TraceResponse> = [
     key: 'method',
     width: 200,
     render: (row: TraceResponse) => {
-      if (row.node.isThrow) {
+      if (row.node.throwEx) {
         return h('div', [
           h('span', row.node.methodName),
           h(
@@ -220,10 +367,11 @@ const columns: DataTableColumns<TraceResponse> = [
 
 // 处理 trace 结果
 function handleTraceResult(data: CommandExecuteResponse<TraceResponse>) {
+  if (currentTaskId.value && data.taskId && data.taskId !== currentTaskId.value) return;
+
   if (data.data) {
     const traceResponse = data.data as TraceResponse;
-    traceResults.value.push(traceResponse);
-    capturedCount.value = traceResponse.currentTimes || traceResults.value.length;
+    appendTraceResult(traceResponse, data.taskId);
   }
 }
 
@@ -245,18 +393,33 @@ function handleEnhanceComplete(data: CommandExecuteResponse<EnhanceCommandComple
   }
 }
 
+function handleConnectionInterrupted() {
+  connectionInterrupted.value = true;
+}
+
+function handleConnectionError() {
+  connectionInterrupted.value = true;
+}
+
+function handleConnectionRestored() {
+  if (!connectionInterrupted.value) return;
+  loadLatestTraceSession({ reconnectPull: true });
+}
+
 onMounted(() => {
   durationTimer = setInterval(() => {
     nowTime.value = Date.now();
   }, 1000);
   eventbus.on('command:trace', handleTraceResult);
   eventbus.on('command:enhance-complete', handleEnhanceComplete);
-  recoverEnhanceTaskResults<TraceResponse>(
-    props.instanceId,
-    commandEnum.TRACE_METHOD.value as number,
-    handleTraceResult
-  );
-  launchTrace(props.launchAction);
+  eventbus.on('ws:reconnecting', handleConnectionInterrupted);
+  eventbus.on('ws:disconnected', handleConnectionInterrupted);
+  eventbus.on('ws:error', handleConnectionError);
+  eventbus.on('ws:connected', handleConnectionRestored);
+
+  loadLatestTraceSession({ notifyRecovered: true }).then(() => {
+    launchTrace(props.launchAction);
+  });
 });
 
 onUnmounted(() => {
@@ -266,6 +429,10 @@ onUnmounted(() => {
   }
   eventbus.off('command:trace', handleTraceResult);
   eventbus.off('command:enhance-complete', handleEnhanceComplete);
+  eventbus.off('ws:reconnecting', handleConnectionInterrupted);
+  eventbus.off('ws:disconnected', handleConnectionInterrupted);
+  eventbus.off('ws:error', handleConnectionError);
+  eventbus.off('ws:connected', handleConnectionRestored);
 });
 
 watch(
@@ -281,17 +448,24 @@ const handleStartTrace = async () => {
     window.$message?.warning('请填写完整的追踪参数');
     return;
   }
+  if (!props.browserSessionId) {
+    window.$message?.warning('浏览器会话尚未准备好，请稍后重试');
+    return;
+  }
+
+  const hasActiveTrace = await loadLatestTraceSession({ onlyActive: true, notifyRecovered: true });
+  if (hasActiveTrace) return;
 
   isTracing.value = true;
   traceStartedAt.value = Date.now();
   nowTime.value = traceStartedAt.value;
-  capturedCount.value = 0;
   totalCount.value = formData.value.count;
   currentTaskId.value = '';
-  traceResults.value = [];
+  clearTraceResults();
 
   const params = {
     instanceId: props.instanceId,
+    browserSessionId: props.browserSessionId,
     param: {
       qualifiedClassName: formData.value.className,
       methodNames: [formData.value.methodName],
@@ -307,6 +481,9 @@ const handleStartTrace = async () => {
   }
   if (taskResponse) {
     currentTaskId.value = taskResponse.taskId || '';
+    if (taskResponse.param) {
+      applyTraceParam(taskResponse.param);
+    }
   }
 };
 
@@ -355,8 +532,7 @@ const handleExport = () => {
 
 // 清空结果
 const handleClear = () => {
-  traceResults.value = [];
-  capturedCount.value = 0;
+  clearTraceResults();
   window.$message?.success('已清空追踪结果');
 };
 </script>
@@ -426,7 +602,7 @@ const handleClear = () => {
 
         <!-- 操作按钮 -->
         <div class="id-action-buttons">
-          <NButton v-if="!isTracing" type="primary" @click="handleStartTrace">
+          <NButton v-if="!isTracing" type="primary" :loading="isRecovering" @click="handleStartTrace">
             <template #icon>
               <SvgIcon icon="lucide:play" />
             </template>
@@ -445,11 +621,41 @@ const handleClear = () => {
             重置
           </NButton>
         </div>
+
+        <NAlert v-if="connectionInterrupted" type="warning" class="trace-connection-alert" :show-icon="true">
+          <div class="trace-connection-title">页面连接已断开，正在自动重连。</div>
+          <div class="trace-connection-body">重连成功后会自动补拉断开期间产生的结果。</div>
+        </NAlert>
       </NForm>
     </NCard>
 
+    <!-- 恢复状态 -->
+    <NCard v-if="isRestoringTraceSession" class="trace-recovering-card id-card mb-6">
+      <div class="trace-recovering-panel">
+        <div class="trace-recovering-title">
+          <SvgIcon icon="lucide:refresh-cw" class="trace-recovering-icon" />
+          <span>正在恢复 Trace 会话</span>
+        </div>
+        <div class="trace-recovering-grid">
+          <div>
+            <span class="trace-recovering-label">目标方法：</span>
+            <span class="font-mono">{{ traceTarget }}</span>
+          </div>
+          <div>
+            <span class="trace-recovering-label">已知进度：</span>
+            <span>{{ capturedCount }}/{{ totalCount }}</span>
+          </div>
+          <div>
+            <span class="trace-recovering-label">运行时长：</span>
+            <span>{{ elapsedClockLabel }}</span>
+          </div>
+        </div>
+        <div class="trace-recovering-hint">正在重新连接结果流，请稍后。</div>
+      </div>
+    </NCard>
+
     <!-- 追踪状态 -->
-    <NCard v-if="isTracing" class="trace-running-card id-card mb-6">
+    <NCard v-if="isTracing && !isRestoringTraceSession" class="trace-running-card id-card mb-6">
       <div class="trace-running-panel">
         <div class="trace-running-head">
           <div class="trace-running-title">
@@ -561,7 +767,7 @@ const handleClear = () => {
         :bordered="false"
         :single-line="false"
         :max-height="500"
-        :row-class-name="(row: TraceResponse) => (row.node.isThrow ? 'trace-row-error' : '')"
+        :row-class-name="(row: TraceResponse) => (row.node.throwEx ? 'trace-row-error' : '')"
         class="id-mono-table"
       />
     </NCard>
@@ -615,7 +821,7 @@ const handleClear = () => {
                 </span>
               </div>
             </NGridItem>
-            <NGridItem v-if="selectedTrace.node.isThrow">
+            <NGridItem v-if="selectedTrace.node.throwEx">
               <div class="info-item">
                 <span class="id-detail-label">异常:</span>
                 <NTag type="error" size="small" :bordered="false">抛出异常</NTag>
@@ -637,7 +843,7 @@ const handleClear = () => {
               class="tree-node"
               :style="{ paddingLeft: `${item.depth * 20 + 8}px` }"
             >
-              <span class="node-name" :class="{ 'text-red-400': item.node.isThrow }">
+              <span class="node-name" :class="{ 'text-red-400': item.node.throwEx }">
                 <span v-if="item.depth > 0" class="text-gray-500">{{ '└─ '.repeat(1) }}</span>
                 {{ item.node.className }}.{{ item.node.methodName }}()
                 <span v-if="item.node.line > 0" class="text-11px text-gray-500">:{{ item.node.line }}</span>
@@ -662,6 +868,66 @@ const handleClear = () => {
   :deep(.n-card__content) {
     padding: 16px 18px;
   }
+}
+
+.trace-connection-alert {
+  margin-top: 14px;
+}
+
+.trace-connection-title {
+  color: var(--n-text-color);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.trace-connection-body {
+  margin-top: 2px;
+  color: var(--n-text-color-2);
+  font-size: 12px;
+}
+
+.trace-recovering-card {
+  :deep(.n-card__content) {
+    padding: 16px 18px;
+  }
+}
+
+.trace-recovering-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trace-recovering-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--n-text-color);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.trace-recovering-icon {
+  color: rgb(var(--primary-color));
+  font-size: 17px;
+}
+
+.trace-recovering-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(120px, 1fr) minmax(120px, 1fr);
+  gap: 10px;
+  color: var(--n-text-color);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.trace-recovering-label {
+  color: var(--n-text-color-3);
+}
+
+.trace-recovering-hint {
+  color: var(--n-text-color-2);
+  font-size: 12px;
 }
 
 .trace-running-panel {
@@ -799,6 +1065,10 @@ const handleClear = () => {
 }
 
 @media (max-width: 960px) {
+  .trace-recovering-grid {
+    grid-template-columns: 1fr;
+  }
+
   .trace-running-body {
     grid-template-columns: 1fr;
   }

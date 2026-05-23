@@ -6,24 +6,24 @@ export const protobufPackage = '';
 /**  */
 export interface EnhanceAffect {
   methods: BaseMethod[];
-  cCnt: number;
-  mCnt: number;
+  classCount: number;
+  methodCount: number;
   jobId: number;
   state: number;
   message: string;
 }
 
 function createBaseEnhanceAffect(): EnhanceAffect {
-  return { methods: [], cCnt: 0, mCnt: 0, jobId: 0, state: 0, message: '' };
+  return { methods: [], classCount: 0, methodCount: 0, jobId: 0, state: 0, message: '' };
 }
 
 export const EnhanceAffect = {
   encode(message: EnhanceAffect, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.methods) BaseMethod.encode(v!, writer.uint32(10).fork()).ldelim();
 
-    if (message.cCnt !== 0) writer.uint32(16).int32(message.cCnt);
+    if (message.classCount !== 0) writer.uint32(16).int32(message.classCount);
 
-    if (message.mCnt !== 0) writer.uint32(24).int32(message.mCnt);
+    if (message.methodCount !== 0) writer.uint32(24).int32(message.methodCount);
 
     if (message.jobId !== 0) writer.uint32(32).int32(message.jobId);
 
@@ -49,12 +49,12 @@ export const EnhanceAffect = {
         case 2:
           if (tag !== 16) break;
 
-          message.cCnt = reader.int32();
+          message.classCount = reader.int32();
           continue;
         case 3:
           if (tag !== 24) break;
 
-          message.mCnt = reader.int32();
+          message.methodCount = reader.int32();
           continue;
         case 4:
           if (tag !== 32) break;

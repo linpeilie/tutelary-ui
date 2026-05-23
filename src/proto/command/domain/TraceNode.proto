@@ -1,10 +1,10 @@
 syntax="proto3";
 //
-message TraceNode {  
+message TraceNode {
  string className=1;
  string methodName=2;
  int32 line=3;
- bool isThrow=4;
+ bool throwEx=4;
  string mark=5;
  int64 beginTimestamp=6;
  int64 endTimestamp=7;

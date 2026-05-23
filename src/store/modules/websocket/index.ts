@@ -83,11 +83,13 @@ export const useWebSocketStore = defineStore(SetupStoreId.WebSocket, () => {
       onReconnect: () => {
         console.log('[WebSocket] 尝试重连...');
         window.$message?.warning('WebSocket 连接断开，正在重连...');
+        eventBus.emit('ws:reconnecting', 1);
       },
 
       onFailReconnect: () => {
         console.error('[WebSocket] 重连失败');
         window.$message?.error('WebSocket 重连失败，请刷新页面');
+        eventBus.emit('ws:error', new Error('WebSocket 重连失败'));
       }
     };
 

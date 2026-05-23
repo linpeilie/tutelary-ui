@@ -9,7 +9,7 @@ export interface TraceNode {
   className: string;
   methodName: string;
   line: number;
-  isThrow: boolean;
+  throwEx: boolean;
   mark: string;
   beginTimestamp: number;
   endTimestamp: number;
@@ -25,7 +25,7 @@ function createBaseTraceNode(): TraceNode {
     className: "",
     methodName: "",
     line: 0,
-    isThrow: false,
+    throwEx: false,
     mark: "",
     beginTimestamp: 0,
     endTimestamp: 0,
@@ -48,8 +48,8 @@ export const TraceNode = {
     if (message.line !== 0) {
       writer.uint32(24).int32(message.line);
     }
-    if (message.isThrow === true) {
-      writer.uint32(32).bool(message.isThrow);
+    if (message.throwEx === true) {
+      writer.uint32(32).bool(message.throwEx);
     }
     if (message.mark !== "") {
       writer.uint32(42).string(message.mark);
@@ -111,7 +111,7 @@ export const TraceNode = {
             break;
           }
 
-          message.isThrow = reader.bool();
+          message.throwEx = reader.bool();
           continue;
         case 5:
           if (tag !== 42) {

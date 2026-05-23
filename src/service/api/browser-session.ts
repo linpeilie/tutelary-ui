@@ -34,3 +34,11 @@ export function fetchBrowserSessionEnhanceTasks(data: BrowserSessionEnhanceTasks
     data
   });
 }
+
+export function fetchBrowserSessionTraceSession(data: Pick<BrowserSessionEnhanceTasksRequest, 'instanceId' | 'sessionId'>) {
+  return request<Api.Instance.Command.BrowserSessionEnhanceTaskResponse | null>({
+    url: '/browser/instance-session/trace-session',
+    method: 'post',
+    data
+  });
+}

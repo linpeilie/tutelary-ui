@@ -33,6 +33,7 @@ const activeTab = shallowRef(defaultTab);
 const infoCollapsed = shallowRef(false);
 const commandSession = useInstanceCommandSession(instanceId);
 const commandSessionReady = commandSession.ready;
+const commandSessionId = commandSession.sessionId;
 
 interface TabItem {
   label: string;
@@ -244,19 +245,6 @@ onMounted(() => {
     <div class="flex flex-col gap-16px">
       <!-- 实例信息 -->
       <NCard size="small" class="id-card">
-        <template #header>
-          <div class="flex-y-center justify-between">
-            <div class="flex-y-center gap-8px">
-              <SvgIcon icon="lucide:info" class="text-16px text-primary" />
-              <span class="text-13px font-600">{{ $t('page.instance.instanceInfo') }}</span>
-            </div>
-            <NButton quaternary size="tiny" @click="infoCollapsed = !infoCollapsed">
-              <template #icon>
-                <SvgIcon :icon="infoCollapsed ? 'lucide:chevron-down' : 'lucide:chevron-up'" />
-              </template>
-            </NButton>
-          </div>
-        </template>
         <div v-show="!infoCollapsed">
           <InstanceInfoCard v-if="instanceDetail" :instance="instanceDetail" />
         </div>
@@ -311,6 +299,7 @@ onMounted(() => {
       <TraceTab
         v-else-if="activeTab === 'trace' && instanceDetail"
         :instance-id="instanceDetail.instanceId"
+        :browser-session-id="commandSessionId"
         :launch-action="traceLaunchAction"
       />
       <StackTab v-else-if="activeTab === 'stack' && instanceDetail" :instance-id="instanceDetail.instanceId" />

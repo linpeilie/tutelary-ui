@@ -60,6 +60,7 @@ declare namespace Api {
         browserSessionId: string;
         param: string;
         enhanceAffect?: unknown;
+        createTime?: string;
         completeTime?: string;
         results: unknown[];
       }

@@ -254,7 +254,7 @@ function handleEnhanceAffect(response: CommandExecuteResponse<EnhanceAffect>) {
     return;
   }
 
-  if (data.mCnt === 0) {
+  if (data.methodCount === 0) {
     finishCapture('failed', '未匹配到可捕获的方法');
   }
 }
