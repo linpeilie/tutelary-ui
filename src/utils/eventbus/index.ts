@@ -19,6 +19,7 @@ import type { OgnlResponse } from '@/proto/command/result/OgnlResponse';
 import type { WatchResponse } from '@/proto/command/result/WatchResponse';
 import type { MonitorResponse } from '@/proto/command/result/MonitorResponse';
 import type { TimeTunnelResponse } from '@/proto/command/result/TimeTunnelResponse';
+import type { InspectResponse } from '@/proto/command/result/InspectResponse';
 import type { ProfilerStartResponse } from '@/proto/command/result/ProfilerStartResponse';
 import type { ProfilerStopResponse } from '@/proto/command/result/ProfilerStopResponse';
 import type { JfrStartResponse } from '@/proto/command/result/JfrStartResponse';
@@ -96,6 +97,7 @@ export interface GlobalEvents {
   'command:watch': CommandExecuteResponse<WatchResponse>; // 方法观察
   'command:monitor': CommandExecuteResponse<MonitorResponse>; // 方法监控
   'command:time-tunnel': CommandExecuteResponse<TimeTunnelResponse>; // 时空隧道
+  'command:inspect': CommandExecuteResponse<InspectResponse>; // 方法检查
 
   // Profiler 命令
   'command:profiler-start': CommandExecuteResponse<ProfilerStartResponse>; // 启动性能分析

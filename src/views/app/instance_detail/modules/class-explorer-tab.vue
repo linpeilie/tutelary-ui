@@ -20,6 +20,7 @@ interface Emits {
   decompile: [payload: { className: string; methodName?: string }];
   trace: [payload: { className: string; methodName: string }];
   watch: [payload: { className: string; methodName: string }];
+  inspect: [payload: { className: string; methodName: string }];
 }
 
 const props = defineProps<Props>();
@@ -249,6 +250,11 @@ const watchMethod = (className: string, methodName: string) => {
 // Trace 方法
 const traceMethod = (className: string, methodName: string) => {
   emit('trace', { className, methodName });
+};
+
+// Inspect 方法
+const inspectMethod = (className: string, methodName: string) => {
+  emit('inspect', { className, methodName });
 };
 
 // 获取方法修饰符颜色
@@ -678,6 +684,12 @@ onUnmounted(() => {
                         <SvgIcon icon="lucide:git-branch" />
                       </template>
                       Trace
+                    </NButton>
+                    <NButton size="tiny" type="success" @click="inspectMethod(smConfig.className, method.name)">
+                      <template #icon>
+                        <SvgIcon icon="lucide:scan-search" />
+                      </template>
+                      Inspect
                     </NButton>
                   </div>
                 </div>

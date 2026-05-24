@@ -29,6 +29,7 @@ import { OgnlResponse } from '@/proto/command/result/OgnlResponse';
 import { WatchResponse } from '@/proto/command/result/WatchResponse';
 import { MonitorResponse } from '@/proto/command/result/MonitorResponse';
 import { TimeTunnelResponse } from '@/proto/command/result/TimeTunnelResponse';
+import { InspectResponse } from '@/proto/command/result/InspectResponse';
 import { ProfilerStartResponse } from '@/proto/command/result/ProfilerStartResponse';
 import { ProfilerStopResponse } from '@/proto/command/result/ProfilerStopResponse';
 import { JfrStartResponse } from '@/proto/command/result/JfrStartResponse';
@@ -72,7 +73,8 @@ const commandDecoderMap = new Map<number, CommandDecoder>([
   [commandEnum.RETRANSFORM.value, RetransformResponse],
   [commandEnum.WATCH_METHOD.value, WatchResponse],
   [commandEnum.MONITOR_METHOD.value, MonitorResponse],
-  [commandEnum.TIME_TUNNEL.value, TimeTunnelResponse]
+  [commandEnum.TIME_TUNNEL.value, TimeTunnelResponse],
+  [commandEnum.INSPECT_METHOD.value, InspectResponse]
 ]);
 
 function decode(command: number, uint8Array?: Uint8Array) {

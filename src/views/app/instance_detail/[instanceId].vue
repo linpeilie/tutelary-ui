@@ -4,7 +4,6 @@ import { computed, onMounted, ref, shallowRef, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { fetchInstanceDetail } from '@/service/api/instance';
 import { useInstanceCommandSession } from '@/composables/useInstanceCommandSession';
-import { $t } from '@/locales';
 import InstanceInfoCard from '@/views/app/instance_detail/modules/instance-info-card.vue';
 import DashboardTab from '@/views/app/instance_detail/modules/dashboard-tab.vue';
 import SystemTab from '@/views/app/instance_detail/modules/system-tab.vue';
@@ -13,9 +12,7 @@ import JvmMemoryTab from '@/views/app/instance_detail/modules/jvm-memory-tab.vue
 import JadTab from '@/views/app/instance_detail/modules/jad-tab.vue';
 import VmOptionTab from '@/views/app/instance_detail/modules/vm-option-tab.vue';
 import LoggerTab from '@/views/app/instance_detail/modules/logger-tab.vue';
-import TraceTab from '@/views/app/instance_detail/modules/trace-tab.vue';
-import StackTab from '@/views/app/instance_detail/modules/stack-tab.vue';
-import WatchTab from '@/views/app/instance_detail/modules/watch-tab.vue';
+import InspectTab from '@/views/app/instance_detail/modules/inspect-tab.vue';
 import MonitorTab from '@/views/app/instance_detail/modules/monitor-tab.vue';
 import ClassExplorerTab from '@/views/app/instance_detail/modules/class-explorer-tab.vue';
 import TimeTunnelTab from '@/views/app/instance_detail/modules/time-tunnel-tab.vue';
@@ -64,6 +61,12 @@ interface WatchLaunchAction {
   methodName: string;
 }
 
+interface InspectLaunchAction {
+  id: number;
+  className: string;
+  methodName: string;
+}
+
 interface ClassExplorerActionPayload {
   className: string;
   methodName?: string;
@@ -72,6 +75,7 @@ interface ClassExplorerActionPayload {
 const decompileLaunchAction = shallowRef<DecompileLaunchAction | null>(null);
 const traceLaunchAction = shallowRef<TraceLaunchAction | null>(null);
 const watchLaunchAction = shallowRef<WatchLaunchAction | null>(null);
+const inspectLaunchAction = shallowRef<InspectLaunchAction | null>(null);
 let launchActionId = 0;
 
 const tabGroups: TabGroup[] = [
@@ -100,9 +104,7 @@ const tabGroups: TabGroup[] = [
   {
     label: '追踪与调试',
     tabs: [
-      { label: 'Trace', value: 'trace', icon: 'lucide:git-branch' },
-      { label: 'Stack', value: 'stack', icon: 'lucide:list-tree' },
-      { label: 'Watch', value: 'watch', icon: 'lucide:eye' },
+      { label: 'Inspect', value: 'inspect', icon: 'lucide:scan-search' },
       { label: 'Monitor', value: 'monitor', icon: 'lucide:bar-chart-2' },
       { label: 'TimeTunnel', value: 'timeTunnel', icon: 'lucide:clock' }
     ]
@@ -192,6 +194,15 @@ function handleClassExplorerWatch(payload: Required<ClassExplorerActionPayload>)
     methodName: payload.methodName
   };
   selectTab('watch');
+}
+
+function handleClassExplorerInspect(payload: Required<ClassExplorerActionPayload>) {
+  inspectLaunchAction.value = {
+    id: nextLaunchActionId(),
+    className: payload.className,
+    methodName: payload.methodName
+  };
+  selectTab('inspect');
 }
 
 function refreshInstance() {
@@ -296,21 +307,11 @@ onMounted(() => {
       />
       <VmOptionTab v-else-if="activeTab === 'vmOption' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <LoggerTab v-else-if="activeTab === 'logger' && instanceDetail" :instance-id="instanceDetail.instanceId" />
-      <TraceTab
-        v-else-if="activeTab === 'trace' && instanceDetail"
+      <InspectTab
+        v-else-if="activeTab === 'inspect' && instanceDetail"
         :instance-id="instanceDetail.instanceId"
         :browser-session-id="commandSessionId"
-        :launch-action="traceLaunchAction"
-      />
-      <StackTab
-        v-else-if="activeTab === 'stack' && instanceDetail"
-        :instance-id="instanceDetail.instanceId"
-        :browser-session-id="commandSessionId"
-      />
-      <WatchTab
-        v-else-if="activeTab === 'watch' && instanceDetail"
-        :instance-id="instanceDetail.instanceId"
-        :launch-action="watchLaunchAction"
+        :launch-action="inspectLaunchAction"
       />
       <MonitorTab v-else-if="activeTab === 'monitor' && instanceDetail" :instance-id="instanceDetail.instanceId" />
       <ClassExplorerTab
@@ -319,6 +320,7 @@ onMounted(() => {
         @decompile="handleClassExplorerDecompile"
         @trace="handleClassExplorerTrace"
         @watch="handleClassExplorerWatch"
+        @inspect="handleClassExplorerInspect"
       />
       <TimeTunnelTab
         v-else-if="activeTab === 'timeTunnel' && instanceDetail"

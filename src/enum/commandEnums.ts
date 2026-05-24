@@ -37,5 +37,6 @@ export const commandEnum = Object.freeze({
   RETRANSFORM: EnumItem.of(210013, 'Retransform'),
   WATCH_METHOD: EnumItem.of(210014, 'WatchMethod'),
   MONITOR_METHOD: EnumItem.of(210015, 'MonitorMethod'),
-  TIME_TUNNEL: EnumItem.of(210016, 'TimeTunnel')
+  TIME_TUNNEL: EnumItem.of(210016, 'TimeTunnel'),
+  INSPECT_METHOD: EnumItem.of(210017, 'InspectMethod')
 } as const);

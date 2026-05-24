@@ -5,6 +5,7 @@ import type { DecompileRequest } from '@/proto/command/param/DecompileRequest';
 import type { FileListRequest } from '@/proto/command/param/FileListRequest';
 import type { GetStaticRequest } from '@/proto/command/param/GetStaticRequest';
 import type { HeapDumpRequest } from '@/proto/command/param/HeapDumpRequest';
+import type { InspectRequest } from '@/proto/command/param/InspectRequest';
 import type { LoggerInfoRequest } from '@/proto/command/param/LoggerInfoRequest';
 import type { RetransformDetailRequest } from '@/proto/command/param/RetransformDetailRequest';
 import type { RetransformRequest } from '@/proto/command/param/RetransformRequest';
@@ -109,6 +110,10 @@ export function fetchOgnlCommand(data: CommandCreateRequest<any>) {
 
 export function fetchWatchCommand(data: CommandCreateRequest<any>) {
   return createRestCommand('watchMethod', data);
+}
+
+export function fetchInspectCommand(data: CommandCreateRequest<InspectRequest>) {
+  return createRestCommand('inspectMethod', data);
 }
 
 export function fetchMonitorCommand(data: CommandCreateRequest<any>) {

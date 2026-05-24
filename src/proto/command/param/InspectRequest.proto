@@ -1,0 +1,11 @@
+syntax="proto3";
+
+message InspectRequest {
+ string qualifiedClassName=1;
+repeated string methodNames=2;
+ int32 times=3;
+ int64 cost=4;
+ bool includeTrace=5;
+ bool includeStack=6;
+ bool includeReturn=7;
+}

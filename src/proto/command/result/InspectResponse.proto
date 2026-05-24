@@ -1,0 +1,24 @@
+syntax="proto3";
+
+import "src/proto/command/domain/BaseThreadInfo.proto";
+import "src/proto/command/domain/StackTraceNode.proto";
+import "src/proto/command/domain/TraceNode.proto";
+
+message InspectResponse {
+ string className=1;
+ string methodName=2;
+ string params=3;
+ string exception=4;
+ string finishTime=5;
+ int64 startTimestamp=6;
+ int64 endTimestamp=7;
+ int64 cost=8;
+ BaseThreadInfo thread=9;
+ string tccl=10;
+ string returnValue=11;
+ TraceNode traceNode=12;
+ repeated StackTraceNode stackTraceNodeList=13;
+ int32 jobId=14;
+ int32 state=15;
+ string message=16;
+}

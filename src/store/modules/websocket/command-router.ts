@@ -199,6 +199,11 @@ export const commandRouterConfig: CommandEventMapping[] = [
     eventName: 'command:time-tunnel',
     description: '时空隧道'
   },
+  {
+    code: commandEnum.INSPECT_METHOD.value as number,
+    eventName: 'command:inspect',
+    description: '方法检查'
+  },
 
   // Profiler 命令
   {

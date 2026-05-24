@@ -50,3 +50,11 @@ export function fetchBrowserSessionStackSession(data: Pick<BrowserSessionEnhance
     data
   });
 }
+
+export function fetchBrowserSessionInspectSession(data: Pick<BrowserSessionEnhanceTasksRequest, 'instanceId' | 'sessionId'>) {
+  return request<Api.Instance.Command.BrowserSessionEnhanceTaskResponse | null>({
+    url: '/browser/instance-session/inspect-session',
+    method: 'post',
+    data
+  });
+}
